@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Kế Hoạch Sản Xuất - Tháng 7/2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root{
+    --bg:#eef1f5; --card:#ffffff; --border:#e2e5eb; --text:#12141a; --text2:#65697a;
+    --primary:#1d4ed8; --primary-l:#eaf1ff; --primary-dark:#173da8;
+    --success:#0f8a4c; --success-l:#e9f8ef;
+    --warning:#b7791f; --warning-l:#fdf4e3;
+    --danger:#c0332f; --danger-l:#fbeaea;
+    --accent:#6d5bd0; --accent-l:#efecfb;
+    --shadow:0 1px 2px rgba(16,24,40,0.04), 0 1px 3px rgba(16,24,40,0.04);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1220px;margin:0 auto;padding:28px 22px 60px;}
+
+  header{margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  header .htext h1{font-size:21px;font-weight:700;margin:0 0 4px;letter-spacing:-0.2px;}
+  header .htext p{margin:0;color:var(--text2);font-size:13px;}
+  header .hbadge{background:var(--primary-l);color:var(--primary-dark);font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:20px;white-space:nowrap;}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:24px;}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);border-top:3px solid var(--primary);}
+  .kpi.k-success{border-top-color:var(--success);}
+  .kpi.k-warning{border-top-color:var(--warning);}
+  .kpi.k-accent{border-top-color:var(--accent);}
+  .kpi .label{font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;}
+  .kpi .value{font-size:25px;font-weight:700;letter-spacing:-0.3px;}
+
+  .tabs{display:flex;gap:4px;margin-bottom:20px;background:#e4e7ed;padding:5px;border-radius:12px;width:fit-content;max-width:100%;overflow-x:auto;}
+  .tab-btn{padding:9px 18px;border:none;background:none;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;border-radius:8px;white-space:nowrap;transition:all .15s ease;}
+  .tab-btn:hover{color:var(--text);}
+  .tab-btn.active{color:var(--primary);background:var(--card);box-shadow:var(--shadow);}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:var(--shadow);}
+  .card h3{font-size:14.5px;font-weight:700;margin:0 0 14px;color:var(--text);}
+
+  .day-select-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+  .day-select-row label{font-size:12.5px;color:var(--text2);font-weight:600;}
+  select, input{font-family:inherit;font-size:13px;padding:8px 12px;border-radius:9px;border:1px solid var(--border);background:#fbfbfc;color:var(--text);}
+  select:focus, input:focus{outline:none;border-color:var(--primary);background:#fff;}
+  input[type="text"]{min-width:220px;flex:1;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;padding:10px 10px;color:var(--text2);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;background:var(--card);}
+  td{padding:9px 10px;border-bottom:1px solid #f1f2f5;white-space:nowrap;}
+  tbody tr:hover td{background:#f8f9fb;}
+  .table-scroll{overflow-x:auto;max-height:520px;overflow-y:auto;border-radius:10px;border:1px solid var(--border);}
+  .table-scroll table{border:none;}
+
+  .note{color:var(--danger);font-style:italic;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media(max-width:800px){.grid2{grid-template-columns:1fr;} input[type="text"]{min-width:160px;}}
+  .chart-wrap{position:relative;width:100%;}
+
+  .team-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;}
+  .team-card{background:#f8f9fb;border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
+  .team-card .to-label{font-size:11.5px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;}
+  .team-card .rate{font-size:21px;font-weight:700;margin:5px 0;}
+
+  .alert-item{display:flex;gap:12px;padding:11px 4px;border-bottom:1px solid #f1f2f5;font-size:12.5px;align-items:flex-start;}
+  .alert-item:last-child{border-bottom:none;}
+  .alert-date{color:var(--text2);min-width:82px;font-weight:600;}
+
+  .legend-row{display:flex;gap:18px;font-size:12px;color:var(--text2);margin-bottom:12px;flex-wrap:wrap;}
+  .legend-row span{display:flex;align-items:center;gap:6px;font-weight:500;}
+  .dot{width:9px;height:9px;border-radius:3px;display:inline-block;}
+
+  footer{text-align:center;color:var(--text2);font-size:11.5px;margin-top:32px;padding-top:16px;border-top:1px solid var(--border);}
+
+  .primary-btn{font-family:inherit;font-size:13px;font-weight:600;padding:9px 18px;border-radius:9px;border:none;background:var(--primary);color:#fff;cursor:pointer;}
+  .primary-btn:disabled{background:#c7d2e0;cursor:not-allowed;}
+  .primary-btn:hover:not(:disabled){background:var(--primary-dark);}
+  textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;padding:10px;border-radius:9px;border:1px solid var(--border);background:#fbfbfc;width:100%;resize:vertical;}
+  textarea:focus{outline:none;border-color:var(--primary);background:#fff;}
+  .manual-entry-row{display:flex;align-items:center;justify-content:space-between;padding:9px 4px;border-bottom:1px solid #f1f2f5;font-size:12.5px;}
+  .manual-entry-row:last-child{border-bottom:none;}
+  .del-btn{background:none;border:1px solid var(--border);color:var(--danger);font-size:11.5px;padding:4px 10px;border-radius:7px;cursor:pointer;}
+  .del-btn:hover{background:var(--danger-l);}
+  .save-status{font-size:12.5px;margin-left:4px;}
+  .badge{display:inline-block;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;}
+  .badge-blue{background:var(--primary-l);color:var(--primary-dark);}
+  .badge-progress{background:var(--warning-l);color:var(--warning);}
+  .badge-done{background:var(--success-l);color:var(--success);}
+  .badge-rot{background:#fceceb;color:#c0332f;}
+  .badge-partial{background:#fdf0e0;color:#b7791f;}
+  tr.row-rot td{background:#fdf2f1;}
+  tr.row-rot:hover td{background:#fbe8e7;}
+  select.to-select{min-width:170px;}
+  select.to-select-empty{color:var(--text2);font-style:italic;}
+  select.spinoff-to-select{font-size:11.5px;padding:3px 6px;border-radius:6px;}
+  input.qty-input{width:110px;padding:6px 8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="htext">
+    <h1>Dashboard kế hoạch sản xuất</h1>
+    <p>Công ty CP Sản Xuất &amp; Thương Mại Nệm Thành Công</p>
+    <div class="day-select-row" style="margin-bottom:0;margin-top:8px;">
+      <label>Tháng:</label>
+      <select id="monthFilterSelect"></select>
+      <label>Năm:</label>
+      <select id="yearFilterSelect"></select>
+    </div>
+  </div>
+  <div class="hbadge">Dữ liệu demo</div>
+</header>
+
+<div id="emptyState" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:32px;text-align:center;color:var(--text2);font-size:14px;box-shadow:var(--shadow);"></div>
+
+<div id="mainContent">
+<div class="kpis" id="kpiRow"></div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="monthly">Tổng hợp tháng</button>
+  <button class="tab-btn" data-tab="daily">Theo ngày</button>
+  <button class="tab-btn" data-tab="autoplan">Kế hoạch tuần (tự động)</button>
+  <button class="tab-btn" data-tab="byteam">Theo tổ</button>
+  <button class="tab-btn" data-tab="progress">Tiến độ sản xuất</button>
+</div>
+
+<div class="panel active" id="panel-monthly">
+  <div class="card" style="margin-bottom:18px;">
+    <div class="day-select-row" style="margin-bottom:0;">
+      <label>Từ ngày:</label>
+      <select id="monthFromSelect"></select>
+      <label>Đến ngày:</label>
+      <select id="monthToSelect"></select>
+      <span id="monthRangeNote" style="font-size:12px;color:var(--text2);"></span>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Sản lượng kế hoạch theo sản phẩm</h3>
+      <div class="chart-wrap" style="height:380px;"><canvas id="productChart" role="img" aria-label="Bieu do san luong theo san pham"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Đơn hàng vs Hoàn thành theo tổ</h3>
+      <div class="chart-wrap" style="height:340px;"><canvas id="teamMonthChart" role="img" aria-label="Bieu do don hang va hoan thanh theo to"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Sản lượng theo ngày trong tháng</h3>
+    <div class="chart-wrap" style="height:260px;"><canvas id="dailyTrendChart" role="img" aria-label="Bieu do xu huong san luong theo ngay"></canvas></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-autoplan">
+  <div class="card">
+    <h3>Kế hoạch sản xuất tuần — Xưởng Foam (tự động từ Google Sheet)</h3>
+    <p style="font-size:12.5px;color:var(--text2);margin-top:-6px;">
+      Lấy trực tiếp từ sheet công ty, đã lọc sẵn theo Tổ = "Foam". Chọn <strong>Tổ phụ trách</strong> cho từng dòng — dòng nào đã chọn tổ sẽ tự chuyển sang tab "Tiến độ sản xuất" để nhân viên cập nhật số lượng hoàn thành.
+    </p>
+    <div class="day-select-row">
+      <button id="autoPlanRefreshBtn" class="primary-btn">↻ Làm mới dữ liệu</button>
+      <button id="addManualOrderBtn" class="primary-btn" style="background:var(--accent);">+ Thêm đơn hàng phát sinh</button>
+      <label>Ngày:</label>
+      <select id="autoPlanDaySelect"></select>
+      <input type="text" id="autoPlanSearchBox" placeholder="Tìm theo dòng, mã, kích thước...">
+      <label>Phân công:</label>
+      <select id="autoPlanAssignFilter">
+        <option value="all">Tất cả</option>
+        <option value="unassigned">Chưa có tổ phụ trách</option>
+        <option value="assigned">Đã có tổ phụ trách</option>
+      </select>
+      <span class="save-status" id="autoPlanStatus"></span>
+    </div>
+    <div id="manualOrderForm" style="display:none;background:#f8f9fb;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
+      <div class="day-select-row" style="margin-bottom:10px;">
+        <label>Ngày:</label>
+        <input type="date" id="manualOrderDate">
+        <label>Tên sản phẩm:</label>
+        <input type="text" id="manualOrderName" placeholder="VD: Sora" style="min-width:140px;">
+        <label>Kích thước:</label>
+        <input type="text" id="manualOrderSize" placeholder="VD: 160x200x15" style="min-width:150px;">
+        <label>Số lượng:</label>
+        <input type="number" id="manualOrderQty" min="1" style="width:90px;">
+      </div>
+      <div class="day-select-row" style="margin-bottom:0;">
+        <label>Ghi chú:</label>
+        <input type="text" id="manualOrderNote" placeholder="Ghi chú (tuỳ chọn)" style="flex:1;">
+        <button id="saveManualOrderBtn" class="primary-btn">Lưu đơn hàng</button>
+        <span class="save-status" id="manualOrderStatus"></span>
+      </div>
+    </div>
+    <div class="kpis" id="autoPlanKpis" style="margin-bottom:16px;"></div>
+    <div class="table-scroll">
+      <table id="autoPlanTable">
+        <thead>
+          <tr><th>Ngày</th><th>Mã</th><th>Dòng</th><th>Kích thước</th><th>Số lượng</th><th>Tổ phụ trách</th><th>Trạng thái</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-daily">
+  <div class="day-select-row">
+    <label>Chọn ngày:</label>
+    <select id="daySelect"></select>
+    <input type="text" id="searchBox" placeholder="Tìm theo tên hàng, tổ, ghi chú...">
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Tỷ lệ hoàn thành theo tổ</h3>
+      <div id="teamCards" class="team-cards"></div>
+    </div>
+    <div class="card">
+      <h3>Kế hoạch vs Đóng gói (ngày)</h3>
+      <div class="chart-wrap" style="height:220px;"><canvas id="dayStageChart" role="img" aria-label="Bieu do tien do san xuat theo ngay"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Chi tiết kế hoạch sản xuất ngày đã chọn</h3>
+    <div class="legend-row">
+      <span><span class="dot" style="background:#0f8a4c;"></span>Đủ tiến độ</span>
+      <span><span class="dot" style="background:#b7791f;"></span>Thiếu / chưa hoàn thành</span>
+      <span><span class="dot" style="background:#c0332f;"></span>Có ghi chú sự cố</span>
+    </div>
+    <div class="table-scroll">
+      <table id="dayTable">
+        <thead>
+          <tr><th>Tổ</th><th>Tên hàng</th><th>Kích thước</th><th>Nhóm KHSX</th><th>Kế hoạch</th><th>Đóng gói</th><th>Ghi chú</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-byteam">
+  <div class="card">
+    <h3>Chi tiết kế hoạch sản xuất theo tổ</h3>
+    <div class="day-select-row">
+      <label>Tổ:</label>
+      <select id="teamFilterSelect"></select>
+      <label>Ngày:</label>
+      <select id="teamDaySelect"></select>
+      <input type="text" id="teamSearchBox" placeholder="Tìm theo tên hàng hoặc kích thước...">
+    </div>
+    <div class="kpis" id="teamFilterKpis" style="margin-bottom:16px;"></div>
+    <div class="table-scroll">
+      <table id="byTeamTable">
+        <thead>
+          <tr><th>Ngày</th><th>Tổ</th><th>Tên hàng</th><th>Kích thước</th><th>Kế hoạch</th><th>Đóng gói</th><th>Ghi chú</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-progress">
+  <div class="card">
+    <h3>Tiến độ sản xuất — Xưởng Foam</h3>
+    <p style="font-size:12.5px;color:var(--text2);margin-top:-6px;">
+      Danh sách các đơn đã được chọn tổ phụ trách ở tab "Kế hoạch tuần". Tổ phụ trách chính chỉ chỉnh được ở tab đó; ở đây nhân viên chỉ nhập số lượng hoàn thành. Nếu số hoàn thành nhỏ hơn kế hoạch, cột "Tổ hỗ trợ" sẽ sáng lên để chọn tổ làm nốt phần còn lại.
+    </p>
+    <div class="day-select-row">
+      <button id="addManualOrderBtnProgress" class="primary-btn" style="background:var(--accent);">+ Thêm đơn hàng phát sinh</button>
+      <label>Ngày:</label>
+      <select id="progressDaySelect"></select>
+      <label>Tổ:</label>
+      <select id="progressTeamSelect"></select>
+      <input type="text" id="progressSearchBox" placeholder="Tìm theo dòng, mã, kích thước...">
+    </div>
+    <div id="manualOrderFormProgress" style="display:none;background:#f8f9fb;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
+      <div class="day-select-row" style="margin-bottom:10px;">
+        <label>Ngày:</label>
+        <input type="date" id="manualOrderDateProgress">
+        <label>Tên sản phẩm:</label>
+        <input type="text" id="manualOrderNameProgress" placeholder="VD: Sora" style="min-width:140px;">
+        <label>Kích thước:</label>
+        <input type="text" id="manualOrderSizeProgress" placeholder="VD: 160x200x15" style="min-width:150px;">
+        <label>Số lượng:</label>
+        <input type="number" id="manualOrderQtyProgress" min="1" style="width:90px;">
+      </div>
+      <div class="day-select-row" style="margin-bottom:0;">
+        <label>Tổ phụ trách:</label>
+        <select id="manualOrderTeamProgress">
+          <option value="">Chọn tổ...</option>
+          <option value="Tổ 1">Tổ 1</option>
+          <option value="Tổ 2">Tổ 2</option>
+          <option value="Tổ 3">Tổ 3</option>
+          <option value="Tổ 4">Tổ 4</option>
+        </select>
+        <label>Ghi chú:</label>
+        <input type="text" id="manualOrderNoteProgress" placeholder="Ghi chú (tuỳ chọn)" style="flex:1;">
+        <button id="saveManualOrderBtnProgress" class="primary-btn">Lưu đơn hàng</button>
+        <span class="save-status" id="manualOrderStatusProgress"></span>
+      </div>
+    </div>
+    <div class="kpis" id="progressKpis" style="margin-bottom:16px;"></div>
+    <div class="table-scroll">
+      <table id="progressTable">
+        <thead>
+          <tr><th>Ngày</th><th>Mã</th><th>Dòng</th><th>Kích thước</th><th>Kế hoạch</th><th>Tổ phụ trách</th><th>Số lượng hoàn thành</th><th>Tổ hỗ trợ</th><th>Trạng thái</th><th>Ghi chú</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<footer>Dashboard demo — dựng từ dữ liệu file Excel gốc. Giai đoạn tiếp theo: kết nối trực tiếp Google Sheet để tự động cập nhật.</footer>
+</div>
+
+<script id="raw-data" type="application/json">{"days":{"KHSX010726":{"date":"01/07/2026","rows":[{"to":1,"ten_hang":"Sora","dai":120,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"120x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":120,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"120x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":120,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"120x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":180,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"3-Zone","dai":180,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"180x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":10,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":"Hết NVL, Đổi KHSX"},{"to":2,"ten_hang":"Latex Gold","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":120,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"120x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Premium","dai":200,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"200x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Classic","dai":140,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"140x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"Latex Enzo","dai":180,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":3,"ten_hang":"Latex Enzo","dai":160,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":3,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":5,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":140,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"140x12","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":160,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"160x12","nhom_khsx":"THÀNH CÔNG","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":180,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"180x12","nhom_khsx":"THÀNH CÔNG","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":200,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"200x12","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":160,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"160x17","nhom_khsx":"THÀNH CÔNG","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":180,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"180x17","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":200,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"200x17","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":160,"rong":200,"cao":22,"phoi":17.5,"kich_thuoc":"160x22","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":180,"rong":200,"cao":22,"phoi":17.5,"kich_thuoc":"180x22","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":200,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"200x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":36,"hoan_thanh":34,"ty_le":0.9444444444444444},{"to":2,"don_hang":28,"hoan_thanh":30,"ty_le":1.0714285714285714},{"to":3,"don_hang":20,"hoan_thanh":30,"ty_le":1.5},{"to":4,"don_hang":15,"hoan_thanh":12,"ty_le":0.8},{"to":"Grand Total","don_hang":99,"hoan_thanh":106,"ty_le":1.078968253968254}]},"KHSX020626":{"date":"02/06/2026","rows":[{"to":1,"ten_hang":"Classic","dai":180,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Latex Gold","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":120,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"120x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Premium","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Premium","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":140,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"140x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":3,"ten_hang":"Hybrid","dai":160,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"Premium","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"GLOBAL","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":160,"rong":195,"cao":20,"phoi":17.5,"kich_thuoc":"160x195x20","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":100,"rong":190,"cao":10,"phoi":7.5,"kich_thuoc":"100x190x10","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Ưu tiên"},{"to":4,"ten_hang":"Sora","dai":120,"rong":175,"cao":10,"phoi":7.5,"kich_thuoc":"120x175x10","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":160,"rong":190,"cao":20,"phoi":17.5,"kich_thuoc":"160x190x20","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"GLOBAL","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":120,"rong":190,"cao":10,"phoi":7.5,"kich_thuoc":"120x190x10","nhom_khsx":"GLOBAL","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":220,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"220x20","nhom_khsx":"DIGITAL","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":" "},{"to":4,"ten_hang":"Classic","dai":200,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"200x20","nhom_khsx":"DIGITAL","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Hybrid","dai":160,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":200,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"200x17","nhom_khsx":"THÀNH CÔNG","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":200,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"200x12","nhom_khsx":"THÀNH CÔNG","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":38,"hoan_thanh":38,"ty_le":1},{"to":2,"don_hang":34,"hoan_thanh":35,"ty_le":1.0294117647058822},{"to":3,"don_hang":23,"hoan_thanh":26,"ty_le":1.1304347826086956},{"to":4,"don_hang":13,"hoan_thanh":15,"ty_le":1.1538461538461537},{"to":"Grand Total","don_hang":108,"hoan_thanh":114,"ty_le":1.0784231752901827}]},"KHSX030726":{"date":"03/07/2026","rows":[{"to":1,"ten_hang":"Standard","dai":140,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"140x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"Premium","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"Latex Enzo","dai":180,"rong":200,"cao":15,"phoi":null,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Latex Gold","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Latex Enzo","dai":180,"rong":200,"cao":15,"phoi":null,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Latex Enzo","dai":180,"rong":200,"cao":15,"phoi":null,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Latex Enzo","dai":180,"rong":200,"cao":15,"phoi":null,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":3,"ten_hang":"Standard","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"Latex Gold","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"Latex Enzo","dai":160,"rong":200,"cao":15,"phoi":null,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":4,"ten_hang":"Latex Enzo","dai":200,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"200x20","nhom_khsx":"DIGITAL","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Latex Enzo","dai":180,"rong":200,"cao":15,"phoi":null,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":150,"rong":190,"cao":15,"phoi":12.5,"kich_thuoc":"150x190x15","nhom_khsx":"Châu Âu","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Châu Âu"},{"to":4,"ten_hang":"Premium","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":36,"hoan_thanh":34,"ty_le":0.9444444444444444},{"to":2,"don_hang":24,"hoan_thanh":25,"ty_le":1.0416666666666667},{"to":3,"don_hang":24,"hoan_thanh":25,"ty_le":1.0416666666666667},{"to":4,"don_hang":15,"hoan_thanh":15,"ty_le":1},{"to":"Grand Total","don_hang":99,"hoan_thanh":99,"ty_le":1.0069444444444444}]},"KHSX040726":{"date":"04/07/2026","rows":[{"to":4,"ten_hang":"Hybrid Plus","dai":200,"rong":200,"cao":27,"phoi":null,"kich_thuoc":"200x27","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"DIGITAL","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":60,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"60x10","nhom_khsx":"DIGITAL","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":220,"rong":220,"cao":10,"phoi":7.5,"kich_thuoc":"220x220x10","nhom_khsx":"GLOBAL","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":2,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":13,"ghi_chu":null}],"team_progress":[{"to":2,"don_hang":null,"hoan_thanh":15,"ty_le":"#DIV/0!"},{"to":3,"don_hang":null,"hoan_thanh":13,"ty_le":"#DIV/0!"},{"to":4,"don_hang":4,"hoan_thanh":5,"ty_le":1.25},{"to":"Grand Total","don_hang":4,"hoan_thanh":33,"ty_le":"#DIV/0!"}]},"KHSX060726":{"date":"06/07/2026","rows":[{"to":1,"ten_hang":"Sora","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Latex Gold","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Hybrid","dai":180,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":"Thiếu dầu hỗ trợ cắt mút"},{"to":2,"ten_hang":"Latex Gold","dai":180,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Classic","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":"Thiếu dầu hỗ trợ cắt mút"},{"to":2,"ten_hang":"Sora","dai":140,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"140x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":"Thiếu dầu hỗ trợ cắt mút"},{"to":2,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Classic","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":140,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"140x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Latex Gold","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":"Thiếu dầu hỗ trợ cắt mút"},{"to":4,"ten_hang":"Latex Gold","dai":170,"rong":185,"cao":10,"phoi":7.5,"kich_thuoc":"170x185x10","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":38,"hoan_thanh":33,"ty_le":0.868421052631579},{"to":2,"don_hang":40,"hoan_thanh":34,"ty_le":0.85},{"to":3,"don_hang":48,"hoan_thanh":39,"ty_le":0.8125},{"to":4,"don_hang":2,"hoan_thanh":2,"ty_le":1},{"to":"Grand Total","don_hang":128,"hoan_thanh":108,"ty_le":0.8436403508771929}]},"KHSX070726":{"date":"07/07/2026","rows":[{"to":1,"ten_hang":"Sora","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Premium","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Hybrid","dai":180,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":"Không rớt"},{"to":1,"ten_hang":"Sora","dai":140,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"140x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":"Không rớt"},{"to":2,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":140,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"140x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":"Không rớt"},{"to":3,"ten_hang":"Classic","dai":180,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":3,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":"Không rớt"},{"to":3,"ten_hang":"Hybrid","dai":180,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":"Dời sang Thứ 4"},{"to":3,"ten_hang":"Classic","dai":220,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"220x20","nhom_khsx":"DIGITAL","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":220,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"220x17","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":100,"rong":190,"cao":10,"phoi":7.5,"kich_thuoc":"100x190x10","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":140,"rong":190,"cao":10,"phoi":7.5,"kich_thuoc":"140x190x10","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Latex Enzo","dai":194,"rong":220,"cao":15,"phoi":12.5,"kich_thuoc":"194x220x15","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":150,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"150x10","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":180,"rong":180,"cao":10,"phoi":7.5,"kich_thuoc":"180x180x10","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":200,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"200x15","nhom_khsx":"DIGITAL","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":70,"rong":185,"cao":10,"phoi":7.5,"kich_thuoc":"70x185x10","nhom_khsx":"THÀNH CÔNG","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":120,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"120x20","nhom_khsx":"DIGITAL","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Latex Enzo","dai":180,"rong":200,"cao":15,"phoi":null,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":30,"hoan_thanh":37,"ty_le":1.2333333333333334},{"to":2,"don_hang":35,"hoan_thanh":40,"ty_le":1.1428571428571428},{"to":3,"don_hang":40,"hoan_thanh":44,"ty_le":1.1},{"to":4,"don_hang":15,"hoan_thanh":16,"ty_le":1.1},{"to":"Grand Total","don_hang":120,"hoan_thanh":137,"ty_le":1.1587301587301588}]},"KHSX080726":{"date":"08/07/2026","rows":[{"to":1,"ten_hang":"Latex Gold","dai":140,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"140x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Premium","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":140,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"140x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Hybrid","dai":180,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":"Không rớt"},{"to":3,"ten_hang":"Premium","dai":180,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Standard","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Classic","dai":100,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"100x15","nhom_khsx":"DIGITAL","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":180,"rong":200,"cao":22,"phoi":17.5,"kich_thuoc":"180x22","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Ưu tiên"},{"to":4,"ten_hang":"KingHome","dai":220,"rong":200,"cao":22,"phoi":17.5,"kich_thuoc":"220x22","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Ưu tiên"},{"to":4,"ten_hang":"Standard","dai":140,"rong":180,"cao":10,"phoi":7.5,"kich_thuoc":"140x180x10","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":220,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"220x20","nhom_khsx":"THÀNH CÔNG","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"DIGITAL","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"DIGITAL","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":200,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"200x15","nhom_khsx":"DIGITAL","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":200,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"200x20","nhom_khsx":"DIGITAL","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":80,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"80x10","nhom_khsx":"GLOBAL","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":38,"hoan_thanh":38,"ty_le":1},{"to":2,"don_hang":24,"hoan_thanh":29,"ty_le":1.2083333333333333},{"to":3,"don_hang":33,"hoan_thanh":33,"ty_le":1},{"to":4,"don_hang":16,"hoan_thanh":16,"ty_le":1},{"to":"Grand Total","don_hang":111,"hoan_thanh":116,"ty_le":1.0520833333333333}]},"KHSX090726":{"date":"09/07/2026","rows":[{"to":1,"ten_hang":"Sora","dai":140,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"140x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":10,"ao":10,"dong_goi":10,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"3-Zone","dai":180,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"180x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":120,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"120x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":120,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"120x15","nhom_khsx":"DIGITAL","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":120,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"120x15","nhom_khsx":"GLOBAL","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Premium","dai":150,"rong":190,"cao":15,"phoi":12.5,"kich_thuoc":"150x190x15","nhom_khsx":"Châu Âu","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":120,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"120x15","nhom_khsx":"Châu Âu","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":2,"ten_hang":"Premium","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":4,"ten_hang":"Latex Enzo","dai":160,"rong":200,"cao":15,"phoi":null,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":4,"ten_hang":"Latex Enzo","dai":180,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":120,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"120x10","nhom_khsx":"Châu Âu","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":85,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"85x10","nhom_khsx":"GLOBAL","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":150,"rong":190,"cao":15,"phoi":12.5,"kich_thuoc":"150x190x15","nhom_khsx":"DIGITAL","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":160,"rong":170,"cao":20,"phoi":17.5,"kich_thuoc":"160x170x20","nhom_khsx":"THÀNH CÔNG","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":180,"rong":230,"cao":10,"phoi":7.5,"kich_thuoc":"180x230x10","nhom_khsx":"GLOBAL","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":2,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":40,"hoan_thanh":35,"ty_le":0.875},{"to":2,"don_hang":22,"hoan_thanh":22,"ty_le":1},{"to":4,"don_hang":17,"hoan_thanh":24,"ty_le":1.411764705882353},{"to":"Grand Total","don_hang":79,"hoan_thanh":81,"ty_le":1.0955882352941178}]},"KHSX100726":{"date":"10/07/2026","rows":[{"to":null,"ten_hang":"Ngưng SX","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null}],"team_progress":[]},"KHSX110726":{"date":"11/07/2026","rows":[{"to":null,"ten_hang":"Ngưng SX","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null}],"team_progress":[]},"KHSX130726":{"date":"13/07/2026","rows":[{"to":1,"ten_hang":"Standard","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":140,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"140x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":140,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"140x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":180,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null},{"to":2,"ten_hang":"Classic","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":220,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"220x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":"Bao 247"},{"to":2,"ten_hang":"Latex Gold","dai":120,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"120x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"Classic","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":3,"ten_hang":"Classic","dai":200,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"200x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":120,"rong":190,"cao":10,"phoi":7.5,"kich_thuoc":"120x190x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Ưu tiên"},{"to":4,"ten_hang":"Standard","dai":80,"rong":190,"cao":10,"phoi":7.5,"kich_thuoc":"80x190x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Ưu tiên"},{"to":4,"ten_hang":"Latex Gold","dai":180,"rong":180,"cao":15,"phoi":12.5,"kich_thuoc":"180x180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Ưu tiên"},{"to":4,"ten_hang":"Sora","dai":200,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"200x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":200,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"200x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":200,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"200x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":220,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"220x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":220,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"220x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":34,"hoan_thanh":32,"ty_le":0.9411764705882353},{"to":2,"don_hang":34,"hoan_thanh":28,"ty_le":0.8235294117647058},{"to":3,"don_hang":20,"hoan_thanh":20,"ty_le":1},{"to":4,"don_hang":19,"hoan_thanh":19,"ty_le":1},{"to":"Grand Total","don_hang":107,"hoan_thanh":99,"ty_le":0.9215686274509803}]},"KHSX140726":{"date":"14/07/2026","rows":[{"to":1,"ten_hang":"Sora","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":140,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"140x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Standard","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":"Không rớt"},{"to":2,"ten_hang":"Latex Gold","dai":120,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"120x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Không rớt"},{"to":3,"ten_hang":"Hybrid","dai":180,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":"Cắt + áo lưới"},{"to":3,"ten_hang":"Classic","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":140,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"140x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":"Không rớt"},{"to":3,"ten_hang":"Standard","dai":140,"rong":180,"cao":10,"phoi":7.5,"kich_thuoc":"140x180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"3-Zone","dai":120,"rong":180,"cao":12,"phoi":7.5,"kich_thuoc":"120x180x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"3-Zone","dai":120,"rong":190,"cao":12,"phoi":7.5,"kich_thuoc":"120x190x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":60,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"60x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":80,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"80x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":100,"rong":190,"cao":20,"phoi":17.5,"kich_thuoc":"100x190x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":100,"rong":180,"cao":15,"phoi":12.5,"kich_thuoc":"100x180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":100,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"100x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":140,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"140x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":150,"rong":190,"cao":10,"phoi":7.5,"kich_thuoc":"150x190x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Latex Enzo","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":38,"hoan_thanh":38,"ty_le":1},{"to":2,"don_hang":25,"hoan_thanh":31,"ty_le":1.24},{"to":3,"don_hang":17,"hoan_thanh":19,"ty_le":1.1176470588235294},{"to":4,"don_hang":18,"hoan_thanh":18,"ty_le":1},{"to":"Grand Total","don_hang":98,"hoan_thanh":106,"ty_le":1.0894117647058823}]},"KHSX150726":{"date":"15/07/2026","rows":[{"to":1,"ten_hang":"3-Zone","dai":160,"rong":190,"cao":12,"phoi":7.5,"kich_thuoc":"160x190x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":1,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":6,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":63,"rong":183,"cao":10,"phoi":7.5,"kich_thuoc":"63x183x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":2,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":9,"ghi_chu":null},{"to":3,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":7,"ghi_chu":null}],"team_progress":[]},"KHSX160726":{"date":"16/07/2026","rows":[{"to":1,"ten_hang":"Classic","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":120,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"120x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":120,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"120x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":140,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"140x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":147,"rong":197,"cao":10,"phoi":7.5,"kich_thuoc":"147x197x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":"Huỷ KHSX"},{"to":2,"ten_hang":"Latex Gold","dai":120,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"120x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Latex Gold","dai":140,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"140x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"3-Zone","dai":160,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"160x17","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Premium","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null},{"to":2,"ten_hang":"Premium","dai":220,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"220x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null},{"to":3,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":7,"ghi_chu":null},{"to":4,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":11,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":35,"hoan_thanh":34,"ty_le":0.9714285714285714},{"to":2,"don_hang":35,"hoan_thanh":32,"ty_le":0.9142857142857143},{"to":3,"don_hang":null,"hoan_thanh":7,"ty_le":null},{"to":4,"don_hang":null,"hoan_thanh":11,"ty_le":null},{"to":"Grand Total","don_hang":70,"hoan_thanh":84,"ty_le":0.9428571428571428}]},"KHSX170626":{"date":"17/06/2026","rows":[{"to":1,"ten_hang":"Sora","dai":100,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"100x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":120,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"120x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Classic","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":140,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"140x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":147,"rong":197,"cao":20,"phoi":17.5,"kich_thuoc":"147x197x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Standard","dai":90,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"90x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":80,"rong":190,"cao":10,"phoi":7.5,"kich_thuoc":"80x190x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Standard","dai":160,"rong":185,"cao":15,"phoi":12.5,"kich_thuoc":"160x185x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Standard","dai":140,"rong":190,"cao":15,"phoi":12.5,"kich_thuoc":"140x190x15","nhom_khsx":"Châu Âu","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":"Châu Âu"},{"to":3,"ten_hang":"Latex Gold","dai":160,"rong":180,"cao":10,"phoi":7.5,"kich_thuoc":"160x180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Premium","dai":40,"rong":40,"cao":10,"phoi":7.5,"kich_thuoc":"40x40x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":"Mãu"},{"to":3,"ten_hang":"Hybrid Plus","dai":40,"rong":40,"cao":27,"phoi":null,"kich_thuoc":"40x40x27","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":"Mãu"},{"to":3,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":220,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"220x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":34,"hoan_thanh":34,"ty_le":1},{"to":2,"don_hang":38,"hoan_thanh":38,"ty_le":1},{"to":3,"don_hang":32,"hoan_thanh":32,"ty_le":1},{"to":4,"don_hang":null,"hoan_thanh":3,"ty_le":null},{"to":"Grand Total","don_hang":104,"hoan_thanh":107,"ty_le":1}]},"KHSX180626":{"date":"18/06/2026","rows":[{"to":3,"ten_hang":"Sora","dai":160,"rong":195,"cao":10,"phoi":7.5,"kich_thuoc":"160x195x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Cắt góc"},{"to":3,"ten_hang":"Sora","dai":120,"rong":180,"cao":10,"phoi":7.5,"kich_thuoc":"120x180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Gia công"},{"to":3,"ten_hang":"Standard","dai":220,"rong":190,"cao":15,"phoi":12.5,"kich_thuoc":"220x190x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Classic","dai":120,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"120x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"Classic","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":3,"ten_hang":"Latex Gold","dai":100,"rong":160,"cao":10,"phoi":7.5,"kich_thuoc":"100x160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Gia công"},{"to":3,"ten_hang":"Latex Gold","dai":140,"rong":190,"cao":15,"phoi":12.5,"kich_thuoc":"140x190x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Gia công"},{"to":3,"ten_hang":"Standard","dai":100,"rong":152,"cao":10,"phoi":7.5,"kich_thuoc":"100x152x10","nhom_khsx":"Châu Âu","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Gia công, Châu Âu"},{"to":3,"ten_hang":"Hybrid","dai":160,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"160x20","nhom_khsx":"Châu Âu","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":"Châu Âu"},{"to":3,"ten_hang":"Hybrid","dai":180,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"180x20","nhom_khsx":"Châu Âu","ke_hoach":4,"dan":4,"ao":4,"dong_goi":4,"ghi_chu":"Châu Âu"},{"to":4,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":14,"ghi_chu":null}],"team_progress":[{"to":3,"don_hang":20,"hoan_thanh":20,"ty_le":1},{"to":4,"don_hang":null,"hoan_thanh":14,"ty_le":null},{"to":"Grand Total","don_hang":20,"hoan_thanh":34,"ty_le":1}]},"KHSX200726":{"date":"20/07/2026","rows":[{"to":1,"ten_hang":"Classic","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Classic","dai":180,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Classic","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Classic","dai":120,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"120x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"Hybrid Plus","dai":160,"rong":200,"cao":27,"phoi":null,"kich_thuoc":"160x27","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"KingHome","dai":220,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"220x17","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"KingHome","dai":220,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"220x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Standard","dai":135,"rong":185,"cao":10,"phoi":7.5,"kich_thuoc":"135x185x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":155,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"155x15","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":100,"rong":60,"cao":10,"phoi":7.5,"kich_thuoc":"100x60x10","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":140,"rong":180,"cao":10,"phoi":7.5,"kich_thuoc":"140x180x10","nhom_khsx":"THÀNH CÔNG","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":180,"rong":200,"cao":22,"phoi":17.5,"kich_thuoc":"180x22","nhom_khsx":"THÀNH CÔNG","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":220,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"220x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":38,"hoan_thanh":38,"ty_le":1},{"to":2,"don_hang":34,"hoan_thanh":34,"ty_le":1},{"to":3,"don_hang":5,"hoan_thanh":8,"ty_le":1.6},{"to":4,"don_hang":11,"hoan_thanh":11,"ty_le":1},{"to":"Grand Total","don_hang":88,"hoan_thanh":91,"ty_le":1.15}]},"KHSX210726":{"date":"21/07/2026","rows":[{"to":1,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"KingHome","dai":160,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"160x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":2,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Classic","dai":100,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"100x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Classic","dai":100,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"100x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Classic","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Hybrid","dai":200,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"200x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"KingHome","dai":180,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"180x17","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":3,"ten_hang":"KingHome","dai":200,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"200x17","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"KingHome","dai":200,"rong":200,"cao":22,"phoi":17.5,"kich_thuoc":"200x22","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":92,"rong":180,"cao":20,"phoi":17.5,"kich_thuoc":"92x180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":" "},{"to":4,"ten_hang":"Sora","dai":91,"rong":191,"cao":10,"phoi":7.5,"kich_thuoc":"91x191x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":34,"hoan_thanh":34,"ty_le":1},{"to":2,"don_hang":40,"hoan_thanh":40,"ty_le":1},{"to":3,"don_hang":9,"hoan_thanh":9,"ty_le":1},{"to":4,"don_hang":12,"hoan_thanh":12,"ty_le":1},{"to":"Grand Total","don_hang":95,"hoan_thanh":95,"ty_le":1}]},"KHSX220726":{"date":"22/07/2026","rows":[{"to":1,"ten_hang":"Standard","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Standard","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Latex Gold","dai":100,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"100x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":100,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"100x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Latex Gold","dai":100,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"100x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":100,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"100x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":120,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"120x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":120,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"120x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":200,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"200x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":2,"ten_hang":"Classic","dai":140,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"140x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"Latex Enzo","dai":220,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"220x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Latex Enzo","dai":200,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"200x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"Mẫu Latex Enzo","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"20 con mẫu nhỏ"},{"to":3,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":120,"rong":190,"cao":20,"phoi":17.5,"kich_thuoc":"120x190x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":120,"rong":190,"cao":15,"phoi":12.5,"kich_thuoc":"120x190x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":120,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"120x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":155,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"155x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Hàng hạ size"},{"to":4,"ten_hang":"Premium","dai":200,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"200x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"3-Zone","dai":200,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"200x17","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"KingHome","dai":220,"rong":200,"cao":22,"phoi":17.5,"kich_thuoc":"220x22","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Hybrid","dai":220,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"220x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":38,"hoan_thanh":38,"ty_le":1},{"to":2,"don_hang":39,"hoan_thanh":39,"ty_le":1},{"to":3,"don_hang":2,"hoan_thanh":6,"ty_le":3},{"to":4,"don_hang":15,"hoan_thanh":10,"ty_le":0.6666666666666666},{"to":"Grand Total","don_hang":94,"hoan_thanh":93,"ty_le":1.4166666666666667}]},"KHSX230726":{"date":"23/07/2026","rows":[{"to":2,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":null,"ke_hoach":null,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null}],"team_progress":[]},"KHSX240726":{"date":"24/07/2026","rows":[{"to":1,"ten_hang":"Sora","dai":120,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"120x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Latex Gold","dai":140,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"140x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":200,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"200x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":140,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"140x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":120,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"120x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Latex Gold","dai":180,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Standard","dai":164,"rong":198,"cao":10,"phoi":7.5,"kich_thuoc":"164x198x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"cắt góc theo hình"},{"to":3,"ten_hang":"Bảo hành","dai":null,"rong":null,"cao":null,"phoi":null,"kich_thuoc":null,"nhom_khsx":null,"ke_hoach":null,"dan":null,"ao":null,"dong_goi":18,"ghi_chu":null},{"to":4,"ten_hang":"3-Zone ","dai":220,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"220x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":120,"rong":180,"cao":15,"phoi":12.5,"kich_thuoc":"120x180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"tái chế thay áo từ con LTG 120*180*15"},{"to":4,"ten_hang":"Premium","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":180,"rong":230,"cao":10,"phoi":7.5,"kich_thuoc":"180x230x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":80,"rong":180,"cao":10,"phoi":7.5,"kich_thuoc":"80x180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"tái chế sora 140*190*10"},{"to":4,"ten_hang":"Sora","dai":90,"rong":190,"cao":10,"phoi":7.5,"kich_thuoc":"90x190x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"tái chế thay áo từ con STD 90*190*10 "}],"team_progress":[{"to":1,"don_hang":34,"hoan_thanh":34,"ty_le":1},{"to":2,"don_hang":39,"hoan_thanh":39,"ty_le":1},{"to":4,"don_hang":8,"hoan_thanh":8,"ty_le":1},{"to":3,"don_hang":1,"hoan_thanh":19,"ty_le":19},{"to":"Grand Total","don_hang":82,"hoan_thanh":100,"ty_le":5.5}]},"KHSX250726":{"date":"25/07/2026","rows":[{"to":1,"ten_hang":"Latex Gold","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Premium","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Latex Gold","dai":140,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"140x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":120,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"120x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":140,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"140x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Premium","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Latex Gold","dai":180,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":120,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"120x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":140,"rong":180,"cao":10,"phoi":7.5,"kich_thuoc":"140x180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Tái chế "},{"to":4,"ten_hang":"Standard","dai":117,"rong":180,"cao":10,"phoi":7.5,"kich_thuoc":"117x180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Tái chế "},{"to":4,"ten_hang":"Classic","dai":200,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"200x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":120,"rong":190,"cao":15,"phoi":12.5,"kich_thuoc":"120x190x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Tái chế "},{"to":4,"ten_hang":"Standard","dai":160,"rong":190,"cao":15,"phoi":12.5,"kich_thuoc":"160x190x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Tái chế "}],"team_progress":[{"to":1,"don_hang":23,"hoan_thanh":28,"ty_le":1.2173913043478262},{"to":2,"don_hang":32,"hoan_thanh":32,"ty_le":1},{"to":3,"don_hang":44,"hoan_thanh":39,"ty_le":0.8863636363636364},{"to":4,"don_hang":5,"hoan_thanh":5,"ty_le":1},{"to":"Grand Total","don_hang":104,"hoan_thanh":104,"ty_le":1.0259387351778657}]},"KHSX270726":{"date":"27/07/2026","rows":[{"to":1,"ten_hang":"Latex Enzo","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":20,"dan":20,"ao":20,"dong_goi":20,"ghi_chu":null},{"to":2,"ten_hang":"Latex Enzo","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":20,"dan":20,"ao":20,"dong_goi":20,"ghi_chu":null},{"to":4,"ten_hang":"Latex Enzo","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Latex Enzo","dai":200,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"200x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":"Hình tròn"},{"to":4,"ten_hang":"Sora","dai":200,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"200x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Luna","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Luna","dai":180,"rong":200,"cao":20,"phoi":null,"kich_thuoc":"180x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Luna","dai":140,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"140x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":200,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"200x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":20,"hoan_thanh":20,"ty_le":1},{"to":2,"don_hang":20,"hoan_thanh":20,"ty_le":1},{"to":4,"don_hang":12,"hoan_thanh":12,"ty_le":1},{"to":"Grand Total","don_hang":52,"hoan_thanh":52,"ty_le":1}]},"KHSX280726":{"date":"28/07/2026","rows":[{"to":1,"ten_hang":"Sora","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Classic","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"KingHome","dai":160,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"160x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":6,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":"Không rớt"},{"to":2,"ten_hang":"Sora","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":120,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"120x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":2,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"160x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":3,"ten_hang":"3-Zone","dai":180,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"180x17","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":"Không rớt"},{"to":3,"ten_hang":"KingHome","dai":140,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"140x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":"Không rớt"},{"to":3,"ten_hang":"Latex Gold","dai":140,"rong":190,"cao":15,"phoi":12.5,"kich_thuoc":"140x190x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":3,"ten_hang":"3-Zone","dai":200,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"200x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Không rớt"},{"to":3,"ten_hang":"3-Zone","dai":220,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"220x17","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Không rớt"},{"to":3,"ten_hang":"KingHome","dai":160,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"160x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":120,"rong":180,"cao":10,"phoi":7.5,"kich_thuoc":"120x180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":140,"rong":192,"cao":10,"phoi":7.5,"kich_thuoc":"140x192x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":150,"rong":197,"cao":10,"phoi":7.5,"kich_thuoc":"150x197x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":220,"rong":220,"cao":10,"phoi":7.5,"kich_thuoc":"220x220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":220,"rong":220,"cao":15,"phoi":12.5,"kich_thuoc":"220x220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":39,"hoan_thanh":36,"ty_le":0.9230769230769231},{"to":2,"don_hang":44,"hoan_thanh":44,"ty_le":1},{"to":3,"don_hang":19,"hoan_thanh":22,"ty_le":1.1578947368421053},{"to":4,"don_hang":11,"hoan_thanh":11,"ty_le":1},{"to":"Grand Total","don_hang":113,"hoan_thanh":113,"ty_le":1.0202429149797572}]},"KHSX290726":{"date":"29/07/2026","rows":[{"to":1,"ten_hang":"Sora","dai":63,"rong":183,"cao":10,"phoi":7.5,"kich_thuoc":"63x183x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":63,"rong":183,"cao":10,"phoi":7.5,"kich_thuoc":"63x183x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"3-Zone","dai":160,"rong":200,"cao":12,"phoi":7.5,"kich_thuoc":"160x12","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":1,"ten_hang":"Latex Enzo","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":"tổ 4 làm phụ"},{"to":2,"ten_hang":"Sora","dai":63,"rong":183,"cao":10,"phoi":7.5,"kich_thuoc":"63x183x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Sora","dai":63,"rong":183,"cao":10,"phoi":7.5,"kich_thuoc":"63x183x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":2,"ten_hang":"Standard","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":2,"ten_hang":"Premium","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":2,"ten_hang":"Latex Enzo","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":null,"ao":null,"dong_goi":null,"ghi_chu":"tổ 4 làm phụ "},{"to":3,"ten_hang":"Sora","dai":63,"rong":183,"cao":10,"phoi":7.5,"kich_thuoc":"63x183x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":63,"rong":183,"cao":10,"phoi":7.5,"kich_thuoc":"63x183x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":3,"ten_hang":"Classic","dai":200,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"200x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Latex Enzo","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":"tổ 4 làm phụ "},{"to":4,"ten_hang":"Latex Enzo","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":null,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":"tổ 4 làm phụ"},{"to":4,"ten_hang":"Standard","dai":90,"rong":180,"cao":10,"phoi":7.5,"kich_thuoc":"90x180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Tái chế con Classic 150×190×10"},{"to":4,"ten_hang":"Standard","dai":110,"rong":170,"cao":10,"phoi":7.5,"kich_thuoc":"110x170x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Tái chế con STD 140 × 175 × 10"},{"to":4,"ten_hang":"Luna","dai":120,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"120x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":120,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"120x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Premium","dai":140,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"140x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Ưu tiên 1"},{"to":4,"ten_hang":"Standard","dai":150,"rong":190,"cao":15,"phoi":12.5,"kich_thuoc":"150x190x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":"Tái chế con STD 180 × 190 × 15"},{"to":4,"ten_hang":"Latex Enzo","dai":160,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"160x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":"Vải premium cũ, có khoá kéo, đóng bao keo trong"},{"to":4,"ten_hang":"3-Zone","dai":180,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"180x17","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":"Ưu tiên 2"},{"to":4,"ten_hang":"Standard","dai":180,"rong":240,"cao":10,"phoi":7.5,"kich_thuoc":"180x240x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null}],"team_progress":[{"to":1,"don_hang":38,"hoan_thanh":35,"ty_le":0.9210526315789473},{"to":2,"don_hang":36,"hoan_thanh":34,"ty_le":0.9444444444444444},{"to":3,"don_hang":35,"hoan_thanh":35,"ty_le":1},{"to":4,"don_hang":11,"hoan_thanh":16,"ty_le":1.4545454545454546},{"to":"Grand Total","don_hang":120,"hoan_thanh":120,"ty_le":1.0800106326422116}]},"KHSX300726":{"date":"30/07/2026","rows":[{"to":1,"ten_hang":"Classic","dai":16,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"16x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"Sora","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":1,"ten_hang":"3-Zone","dai":160,"rong":200,"cao":17,"phoi":12.5,"kich_thuoc":"160x17","nhom_khsx":"KHSX Tuần Foam","ke_hoach":6,"dan":6,"ao":6,"dong_goi":6,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":180,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":180,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":15,"dan":15,"ao":15,"dong_goi":15,"ghi_chu":null},{"to":3,"ten_hang":"Sora","dai":180,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"180x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":9,"dan":9,"ao":9,"dong_goi":9,"ghi_chu":null},{"to":3,"ten_hang":"Latex Gold","dai":140,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"140x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":200,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"200x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":200,"rong":200,"cao":20,"phoi":17.5,"kich_thuoc":"200x20","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Standard","dai":220,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":1,"dan":1,"ao":1,"dong_goi":1,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":220,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"220x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":3,"dan":3,"ao":3,"dong_goi":3,"ghi_chu":null},{"to":4,"ten_hang":"Classic","dai":220,"rong":220,"cao":15,"phoi":12.5,"kich_thuoc":"220x220x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":200,"rong":200,"cao":10,"phoi":7.5,"kich_thuoc":"200x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null},{"to":4,"ten_hang":"Sora","dai":120,"rong":180,"cao":10,"phoi":7.5,"kich_thuoc":"120x180x10","nhom_khsx":"KHSX Tuần Foam","ke_hoach":2,"dan":2,"ao":2,"dong_goi":2,"ghi_chu":null},{"to":4,"ten_hang":"Latex Gold","dai":160,"rong":200,"cao":15,"phoi":12.5,"kich_thuoc":"160x15","nhom_khsx":"KHSX Tuần Foam","ke_hoach":5,"dan":5,"ao":5,"dong_goi":5,"ghi_chu":null}],"team_progress":[]}},"monthly":{"product_totals":[{"name":"3-Zone","total":34},{"name":"Bảo hành","total":113},{"name":"Classic","total":332},{"name":"KingHome","total":36},{"name":"Latex Gold","total":302},{"name":"Premium","total":114},{"name":"Sora","total":787},{"name":"Standard","total":259},{"name":"Luna","total":6},{"name":"Hybrid Plus","total":11},{"name":"Hybrid","total":36},{"name":"Latex Enzo","total":90},{"name":"Mẫu Latex Enzo","total":1},{"name":"Tổng Tháng","total":2121}],"team_totals":[{"to":1,"don_hang":701,"hoan_thanh":696},{"to":2,"don_hang":624,"hoan_thanh":652},{"to":3,"don_hang":436,"hoan_thanh":497},{"to":4,"don_hang":242,"hoan_thanh":278},{"to":"Tổng Tháng","don_hang":2003,"hoan_thanh":2123}]}}</script>
+<script>
+const RAW = JSON.parse(document.getElementById('raw-data').textContent);
+const allDays = {...RAW.days}; // mutable: manual entries get merged in
+const monthly = RAW.monthly;
+
+function parseDMY(dateStr){
+  const [d,m,y] = dateStr.split('/').map(Number);
+  return {d,m,y};
+}
+function isoToDMY(iso){
+  // iso: yyyy-mm-dd -> dd/mm/yyyy
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function dmyToIso(dmy){
+  const [d,m,y] = dmy.split('/');
+  return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+}
+
+// "to" values can be plain numbers (1-4, from the Excel plan) or already-labeled strings
+// like "Tổ 1" (from the Foam weekly-plan sync) — this avoids ever double-prefixing.
+function teamLabel(t){
+  const s = String(t);
+  return /^tổ\s/i.test(s) ? s : `Tổ ${s}`;
+}
+
+function computeTeamProgressFromRows(rows){
+  const map = {};
+  rows.forEach(r=>{
+    if(r.to===null || r.to===undefined) return;
+    if(!map[r.to]) map[r.to] = {don_hang:0, hoan_thanh:0};
+    map[r.to].don_hang += r.ke_hoach||0;
+    map[r.to].hoan_thanh += r.dong_goi||0;
+  });
+  return Object.entries(map).map(([to,v])=>({
+    to: isNaN(Number(to)) ? to : Number(to),
+    don_hang: v.don_hang,
+    hoan_thanh: v.hoan_thanh,
+    ty_le: v.don_hang>0 ? v.hoan_thanh/v.don_hang : null
+  })).sort((a,b)=>String(a.to).localeCompare(String(b.to)));
+}
+
+// full dataset day keys, sorted chronologically (recomputed after each merge)
+let allDayKeys = [];
+function recomputeAllDayKeys(){
+  allDayKeys = Object.keys(allDays).sort((a,b) => {
+    const da = allDays[a].date.split('/').reverse().join('');
+    const db = allDays[b].date.split('/').reverse().join('');
+    return da.localeCompare(db);
+  });
+}
+recomputeAllDayKeys();
+
+// ---- Header month/year filter (populated after manual entries are merged in) ----
+const monthFilterSelect = document.getElementById('monthFilterSelect');
+const yearFilterSelect = document.getElementById('yearFilterSelect');
+let defaultMY = {m:(new Date()).getMonth()+1, y:(new Date()).getFullYear()};
+
+let monthYearInitialized = false;
+function populateMonthYearFilters(){
+  const prevM = monthFilterSelect.value, prevY = yearFilterSelect.value;
+  const availableMonthYears = Array.from(new Set(allDayKeys.map(k=>{
+    const {m,y} = parseDMY(allDays[k].date);
+    return `${m}-${y}`;
+  }))).map(s=>{ const [m,y]=s.split('-').map(Number); return {m,y}; });
+  defaultMY = availableMonthYears[0] || defaultMY;
+
+  monthFilterSelect.innerHTML = '';
+  for(let m=1;m<=12;m++){
+    monthFilterSelect.innerHTML += `<option value="${m}">Tháng ${m}</option>`;
+  }
+  const yearsPresent = availableMonthYears.map(o=>o.y);
+  const minYear = Math.min(...yearsPresent, defaultMY.y) - 1;
+  const maxYear = Math.max(...yearsPresent, defaultMY.y) + 2;
+  yearFilterSelect.innerHTML = '';
+  for(let y=minYear;y<=maxYear;y++){
+    yearFilterSelect.innerHTML += `<option value="${y}">${y}</option>`;
+  }
+  if(monthYearInitialized && prevM && prevY){
+    monthFilterSelect.value = prevM;
+    yearFilterSelect.value = prevY;
+  } else {
+    monthFilterSelect.value = defaultMY.m;
+    yearFilterSelect.value = defaultMY.y;
+    monthYearInitialized = true;
+  }
+}
+
+const emptyState = document.getElementById('emptyState');
+const mainContent = document.getElementById('mainContent');
+
+// ---- module-level state, rebuilt every time month/year changes ----
+let dayKeys = [];
+let dayStageChart, productChart, teamMonthChart, dailyTrendChart;
+let PRODUCT_COLOR_MAP = {};
+
+const FIXED_PRODUCT_COLORS = {
+  'Sora': '#16a34a',       // xanh lá
+  'Classic': '#2563eb',    // xanh dương
+  'KingHome': '#dc2626'    // đỏ
+};
+const FALLBACK_PALETTE = ['#d97706','#7c3aed','#0d9488','#db2777','#64748b','#ea580c','#92400e','#a21caf','#eab308','#0f766e','#9333ea','#475569'];
+
+function buildProductColorMap(){
+  const totals = {};
+  dayKeys.forEach(k=>{
+    allDays[k].rows.forEach(r=>{
+      const name = (r.ten_hang||'').trim();
+      if(!name || name === 'Ngưng SX') return;
+      totals[name] = (totals[name]||0) + (r.ke_hoach||0);
+    });
+  });
+  const orderedNames = Object.entries(totals).sort((a,b)=>b[1]-a[1]).map(([n])=>n);
+  const map = {};
+  let paletteIdx = 0;
+  orderedNames.forEach(name=>{
+    if(FIXED_PRODUCT_COLORS[name]){
+      map[name] = FIXED_PRODUCT_COLORS[name];
+    } else {
+      map[name] = FALLBACK_PALETTE[paletteIdx % FALLBACK_PALETTE.length];
+      paletteIdx++;
+    }
+  });
+  PRODUCT_COLOR_MAP = map;
+}
+
+// Chart.js plugin: draw the total value at the head of each bar
+const totalLabelPlugin = {
+  id: 'totalLabelPlugin',
+  afterDatasetsDraw(chart){
+    if(!chart.options.plugins || !chart.options.plugins.totalLabels) return;
+    const {ctx} = chart;
+    ctx.save();
+    ctx.font = '600 11px -apple-system, sans-serif';
+    ctx.fillStyle = '#1a1d23';
+    const isHorizontal = chart.options.indexAxis === 'y';
+    chart.data.datasets.forEach((ds, dsIndex) => {
+      const meta = chart.getDatasetMeta(dsIndex);
+      if(meta.hidden) return;
+      meta.data.forEach((bar, i) => {
+        const val = ds.data[i];
+        if(val === undefined || val === null) return;
+        const pos = bar.getProps(['x','y'], true);
+        if(isHorizontal){
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(Math.round(val).toLocaleString(), pos.x + 6, pos.y);
+        } else {
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(Math.round(val).toLocaleString(), pos.x, pos.y - 4);
+        }
+      });
+    });
+    ctx.restore();
+  }
+};
+Chart.register(totalLabelPlugin);
+
+// ---- KPI row ----
+function computeAndRenderKpis(){
+  let totalPlan=0, totalDG=0, activeDays=0;
+  dayKeys.forEach(k=>{
+    const rows = allDays[k].rows;
+    if(rows.length>0) activeDays++;
+    rows.forEach(r=>{
+      totalPlan += r.ke_hoach||0;
+      totalDG += r.dong_goi||0;
+    });
+  });
+  const rate = totalPlan>0 ? Math.round((totalDG/totalPlan)*1000)/10 : 0;
+  const kpiRow = document.getElementById('kpiRow');
+  kpiRow.innerHTML = `
+    <div class="kpi"><div class="label">Tổng kế hoạch</div><div class="value">${totalPlan.toLocaleString()}</div></div>
+    <div class="kpi k-accent"><div class="label">Đã đóng gói</div><div class="value">${totalDG.toLocaleString()}</div></div>
+    <div class="kpi ${rate>=95?'k-success':'k-warning'}"><div class="label">Tỷ lệ hoàn thành đóng gói</div><div class="value" style="color:${rate>=95?'var(--success)':rate>=80?'var(--warning)':'var(--danger)'}">${rate}%</div></div>
+    <div class="kpi k-accent"><div class="label">Số ngày có sản xuất</div><div class="value">${activeDays}<span style="font-size:14px;color:var(--text2);"> / ${dayKeys.length}</span></div></div>
+  `;
+}
+
+// ---- Theo ngày tab ----
+const daySelect = document.getElementById('daySelect');
+const searchBox = document.getElementById('searchBox');
+
+function populateDaySelect(){
+  const prev = daySelect.value;
+  daySelect.innerHTML = dayKeys.map(k=>`<option value="${k}">Ngày ${allDays[k].date}</option>`).join('');
+  if(dayKeys.includes(prev)) daySelect.value = prev;
+}
+
+function renderDay(key){
+  if(!key) return;
+  const d = allDays[key];
+  const teamCardsEl = document.getElementById('teamCards');
+  if(d.team_progress.length===0){
+    teamCardsEl.innerHTML = '<div style="color:var(--text2);font-size:13px;padding:8px 0;">Không có dữ liệu tiến độ theo tổ cho ngày này (có thể ngưng sản xuất).</div>';
+  } else {
+    teamCardsEl.innerHTML = d.team_progress.map(t=>{
+      const rate = t.ty_le!=null ? Math.round(t.ty_le*1000)/10 : null;
+      const color = rate==null ? '#6b7280' : rate>=100 ? '#0f8a4c' : rate>=80 ? '#b7791f' : '#c0332f';
+      return `<div class="team-card">
+        <div class="to-label">${t.to==='Tổng Tháng'||t.to==='Grand Total' ? 'Tổng' : teamLabel(t.to)}</div>
+        <div class="rate" style="color:${color};">${rate!=null?rate+'%':'-'}</div>
+        <div style="font-size:11px;color:var(--text2);">${t.hoan_thanh??'-'} / ${t.don_hang??'-'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  let plan=0, dg=0;
+  d.rows.forEach(r=>{ plan += r.ke_hoach||0; dg += r.dong_goi||0; });
+  if(dayStageChart) dayStageChart.destroy();
+  dayStageChart = new Chart(document.getElementById('dayStageChart'), {
+    type:'bar',
+    data:{
+      labels:['Kế hoạch','Đóng gói'],
+      datasets:[{data:[plan,dg], backgroundColor:['#1d4ed8','#0f8a4c'], borderRadius:6, maxBarThickness:64}]
+    },
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}}}
+  });
+
+  const tbody = document.querySelector('#dayTable tbody');
+  const q = searchBox.value.trim().toLowerCase();
+  tbody.innerHTML = d.rows.filter(r=>{
+    if(!q) return true;
+    return String(r.ten_hang).toLowerCase().includes(q) || String(r.to).includes(q) || String(r.ghi_chu||'').toLowerCase().includes(q) || String(r.nhom_khsx||'').toLowerCase().includes(q);
+  }).map(r=>{
+    const done = r.dong_goi||0, plan = r.ke_hoach||0;
+    let rowBg = '';
+    if(r.ghi_chu) rowBg = 'background:#fbeaea60;';
+    else if(plan>0 && done < plan) rowBg = 'background:#fdf4e360;';
+    return `<tr style="${rowBg}">
+      <td>${r.to??'-'}</td>
+      <td>${r.ten_hang??'-'}</td>
+      <td>${r.kich_thuoc??'-'}</td>
+      <td>${r.nhom_khsx??'-'}</td>
+      <td>${r.ke_hoach??'-'}</td>
+      <td>${r.dong_goi??'-'}</td>
+      <td class="${r.ghi_chu?'note':''}">${r.ghi_chu??''}</td>
+    </tr>`;
+  }).join('');
+}
+
+daySelect.addEventListener('change', e => renderDay(e.target.value));
+searchBox.addEventListener('input', () => renderDay(daySelect.value));
+
+// ---- Tổng hợp tháng tab ----
+const monthFromSelect = document.getElementById('monthFromSelect');
+const monthToSelect = document.getElementById('monthToSelect');
+const monthRangeNote = document.getElementById('monthRangeNote');
+
+function populateMonthRangeSelects(){
+  const prevFrom = monthFromSelect.value, prevTo = monthToSelect.value;
+  const optsHtml = dayKeys.map(k=>`<option value="${k}">Ngày ${allDays[k].date}</option>`).join('');
+  monthFromSelect.innerHTML = optsHtml;
+  monthToSelect.innerHTML = optsHtml;
+  monthFromSelect.value = dayKeys.includes(prevFrom) ? prevFrom : dayKeys[0];
+  monthToSelect.value = dayKeys.includes(prevTo) ? prevTo : dayKeys[dayKeys.length-1];
+}
+
+function keysInRange(fromKey, toKey){
+  const fromIdx = dayKeys.indexOf(fromKey);
+  const toIdx = dayKeys.indexOf(toKey);
+  const lo = Math.min(fromIdx, toIdx), hi = Math.max(fromIdx, toIdx);
+  return dayKeys.slice(lo, hi+1);
+}
+
+function renderMonthly(){
+  const keysToUse = keysInRange(monthFromSelect.value, monthToSelect.value);
+  monthRangeNote.textContent = `(${keysToUse.length} ngày được chọn)`;
+
+  const productMap = {};
+  const teamMap = {};
+  keysToUse.forEach(k=>{
+    allDays[k].rows.forEach(r=>{
+      const name = (r.ten_hang||'').trim();
+      if(name && name !== 'Ngưng SX'){
+        productMap[name] = (productMap[name]||0) + (r.ke_hoach||0);
+      }
+      if(r.to !== null && r.to !== undefined){
+        if(!teamMap[r.to]) teamMap[r.to] = {don_hang:0, hoan_thanh:0};
+        teamMap[r.to].don_hang += r.ke_hoach||0;
+        teamMap[r.to].hoan_thanh += r.dong_goi||0;
+      }
+    });
+  });
+
+  const products = Object.entries(productMap).map(([name,total])=>({name,total})).sort((a,b)=>b.total-a.total);
+  if(productChart) productChart.destroy();
+  productChart = new Chart(document.getElementById('productChart'), {
+    type:'pie',
+    data:{
+      labels:products.map(p=>p.name),
+      datasets:[{
+        data:products.map(p=>p.total),
+        backgroundColor:products.map(p=>PRODUCT_COLOR_MAP[p.name] || '#94a3b8'),
+        borderWidth:2,
+        borderColor:'#ffffff'
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{
+          display:true, position:'right',
+          labels:{
+            boxWidth:11, font:{size:11.5},
+            generateLabels(chart){
+              const ds = chart.data.datasets[0];
+              const total = ds.data.reduce((a,b)=>a+b,0);
+              return chart.data.labels.map((label,i)=>{
+                const val = ds.data[i];
+                const pct = total>0 ? Math.round((val/total)*1000)/10 : 0;
+                return {
+                  text:`${label} — ${val.toLocaleString()} (${pct}%)`,
+                  fillStyle: ds.backgroundColor[i],
+                  strokeStyle: ds.backgroundColor[i],
+                  index:i
+                };
+              });
+            }
+          }
+        },
+        tooltip:{
+          callbacks:{
+            label(ctx){
+              const val = ctx.parsed;
+              const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+              const pct = total>0 ? Math.round((val/total)*1000)/10 : 0;
+              return ` ${ctx.label}: ${val.toLocaleString()} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  const teamKeys = Object.keys(teamMap).sort((a,b)=>String(a).localeCompare(String(b),'vi',{numeric:true}));
+  if(teamMonthChart) teamMonthChart.destroy();
+  teamMonthChart = new Chart(document.getElementById('teamMonthChart'), {
+    type:'bar',
+    data:{
+      labels:teamKeys.map(t=>teamLabel(t)),
+      datasets:[
+        {label:'Đơn hàng', data:teamKeys.map(t=>teamMap[t].don_hang), backgroundColor:'#6d5bd0', borderRadius:4, maxBarThickness:30},
+        {label:'Hoàn thành', data:teamKeys.map(t=>teamMap[t].hoan_thanh), backgroundColor:'#0f8a4c', borderRadius:4, maxBarThickness:30}
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:24}},
+      plugins:{legend:{display:true, position:'top', labels:{boxWidth:10, font:{size:11}}}, totalLabels:true},
+      scales:{y:{beginAtZero:true, ticks:{precision:0}}}
+    }
+  });
+
+  const dailyPlan = dayKeys.map(k=>{
+    let plan=0, dg=0;
+    allDays[k].rows.forEach(r=>{plan+=r.ke_hoach||0; dg+=r.dong_goi||0;});
+    return {date:allDays[k].date, plan, dg};
+  });
+  if(dailyTrendChart) dailyTrendChart.destroy();
+  dailyTrendChart = new Chart(document.getElementById('dailyTrendChart'), {
+    type:'line',
+    data:{
+      labels:dailyPlan.map(d=>d.date.slice(0,5)),
+      datasets:[
+        {label:'Kế hoạch', data:dailyPlan.map(d=>d.plan), borderColor:'#1d4ed8', backgroundColor:'rgba(29,78,216,0.1)', fill:true, tension:0.25, pointRadius:2},
+        {label:'Đóng gói', data:dailyPlan.map(d=>d.dg), borderColor:'#0f8a4c', backgroundColor:'rgba(15,138,76,0.1)', fill:true, tension:0.25, pointRadius:2}
+      ]
+    },
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:true, position:'top', labels:{boxWidth:10, font:{size:11}}}}, scales:{y:{beginAtZero:true}}}
+  });
+}
+monthFromSelect.addEventListener('change', renderMonthly);
+monthToSelect.addEventListener('change', renderMonthly);
+
+// ---- Theo tổ tab ----
+const teamFilterSelect = document.getElementById('teamFilterSelect');
+const teamDaySelect = document.getElementById('teamDaySelect');
+const teamSearchBox = document.getElementById('teamSearchBox');
+
+function populateTeamSelects(){
+  const prevTeam = teamFilterSelect.value, prevDay = teamDaySelect.value;
+  const teamNumbers = Array.from(new Set(
+    dayKeys.flatMap(k => allDays[k].rows.map(r => r.to)).filter(t => t !== null && t !== undefined)
+  )).sort((a,b)=>String(a).localeCompare(String(b),'vi',{numeric:true}));
+
+  teamFilterSelect.innerHTML = '<option value="all">Tất cả tổ</option>' +
+    teamNumbers.map(t => `<option value="${t}">${teamLabel(t)}</option>`).join('');
+  teamFilterSelect.value = teamNumbers.some(t=>String(t)===prevTeam) ? prevTeam : 'all';
+
+  teamDaySelect.innerHTML = '<option value="all">Tất cả ngày</option>' +
+    dayKeys.map(k => `<option value="${k}">Ngày ${allDays[k].date}</option>`).join('');
+  teamDaySelect.value = dayKeys.includes(prevDay) ? prevDay : 'all';
+}
+
+function renderByTeam(){
+  const teamVal = teamFilterSelect.value;
+  const dayVal = teamDaySelect.value;
+  const q = teamSearchBox.value.trim().toLowerCase();
+  const keysToUse = dayVal === 'all' ? dayKeys : [dayVal];
+
+  const results = [];
+  keysToUse.forEach(k=>{
+    allDays[k].rows.forEach(r=>{
+      if(teamVal === 'all' || String(r.to) === String(teamVal)){
+        if(q && !String(r.ten_hang||'').toLowerCase().includes(q) && !String(r.kich_thuoc||'').toLowerCase().includes(q)) return;
+        results.push({date: allDays[k].date, to: r.to, ten_hang: r.ten_hang, kich_thuoc: r.kich_thuoc, ke_hoach: r.ke_hoach, dong_goi: r.dong_goi, ghi_chu: r.ghi_chu});
+      }
+    });
+  });
+
+  let totalPlan=0, totalDG=0;
+  results.forEach(r=>{ totalPlan += r.ke_hoach||0; totalDG += r.dong_goi||0; });
+  const rate = totalPlan>0 ? Math.round((totalDG/totalPlan)*1000)/10 : 0;
+
+  document.getElementById('teamFilterKpis').innerHTML = `
+    <div class="kpi"><div class="label">Số đơn</div><div class="value">${results.length}</div></div>
+    <div class="kpi"><div class="label">Tổng kế hoạch</div><div class="value">${totalPlan.toLocaleString()}</div></div>
+    <div class="kpi"><div class="label">Tổng đóng gói</div><div class="value">${totalDG.toLocaleString()}</div></div>
+    <div class="kpi"><div class="label">Tỷ lệ hoàn thành</div><div class="value" style="color:${rate>=95?'#0f8a4c':rate>=80?'#b7791f':'#c0332f'}">${rate}%</div></div>
+  `;
+
+  const tbody = document.querySelector('#byTeamTable tbody');
+  tbody.innerHTML = results.map(r=>{
+    const done = r.dong_goi||0, plan = r.ke_hoach||0;
+    let rowBg = '';
+    if(r.ghi_chu) rowBg = 'background:#fbeaea60;';
+    else if(plan>0 && done < plan) rowBg = 'background:#fdf4e360;';
+    return `<tr style="${rowBg}">
+      <td>${r.date}</td>
+      <td>${r.to??'-'}</td>
+      <td>${r.ten_hang??'-'}</td>
+      <td>${r.kich_thuoc??'-'}</td>
+      <td>${r.ke_hoach??'-'}</td>
+      <td>${r.dong_goi??'-'}</td>
+      <td class="${r.ghi_chu?'note':''}">${r.ghi_chu??''}</td>
+    </tr>`;
+  }).join('');
+}
+
+teamFilterSelect.addEventListener('change', renderByTeam);
+teamDaySelect.addEventListener('change', renderByTeam);
+teamSearchBox.addEventListener('input', renderByTeam);
+
+// ============ Kế hoạch tuần (tự động) — fetch from company Google Sheet ============
+const SHEET_ID = '1qNC55iN4KKF9hJRrfc4egnHIqnC_-GKEKC2jwXDFxMQ';
+const SHEET_GID = '1960770014';
+const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`;
+
+// NOTE: live fetch is currently blocked by the artifact sandbox (CORS). This is a
+// snapshot of the real "Foam" rows pulled from the sheet by Claude, used here so you
+// can see what the tab looks like once it's actually connected live.
+const SIMULATED_AUTOPLAN_DATA = [{"date":"27/07/2026","ma":"LUN15-6","dong":"LUNA","ngang":160,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"27/07/2026","ma":"LUN20-8","dong":"LUNA","ngang":180,"dai":200,"day":20,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"27/07/2026","ma":"LUN15-4","dong":"LUNA","ngang":140,"dai":200,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"27/07/2026","ma":"SORA15-2020","dong":"SORA","ngang":200,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"27/07/2026","ma":"EZ20-3","dong":"LATEX ENZO","ngang":160,"dai":200,"day":20,"so_luong":41,"trang_thai":"","ghi_chu":"Vải premium cũ, có khoá kéo, đóng bao keo trong"},{"date":"27/07/2026","ma":"EZ20-5","dong":"LATEX ENZO","ngang":200,"dai":200,"day":20,"so_luong":2,"trang_thai":"","ghi_chu":"Làm nệm tròn đường kính 2m, Vải premium cũ, có khoá kéo"},{"date":"27/07/2026","ma":"CLS15-2020","dong":"CLASSIC","ngang":200,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"SORA10-63","dong":"SORA","ngang":63,"dai":183,"day":10,"so_luong":60,"trang_thai":"","ghi_chu":"Tái 1 con std 90x190x10, (áo standard không đít thêu + thêm tem cty khách)"},{"date":"28/07/2026","ma":"SORA10-6","dong":"SORA","ngang":160,"dai":200,"day":10,"so_luong":30,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA15-6","dong":"SORA","ngang":160,"dai":200,"day":15,"so_luong":27,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"SORA15-8","dong":"SORA","ngang":180,"dai":200,"day":15,"so_luong":27,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA15-2022","dong":"SORA","ngang":220,"dai":200,"day":15,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"SORA10-8","dong":"SORA","ngang":180,"dai":200,"day":10,"so_luong":30,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA10-2","dong":"SORA","ngang":120,"dai":200,"day":10,"so_luong":15,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"CLS15-2022","dong":"CLASSIC","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"CLS15-2020","dong":"CLASSIC","ngang":200,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"CLS10-6","dong":"CLASSIC","ngang":160,"dai":200,"day":10,"so_luong":15,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"CLS15-8","dong":"CLASSIC","ngang":180,"dai":200,"day":15,"so_luong":9,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"ZONE17-8","dong":"3'ZONE","ngang":180,"dai":200,"day":17,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA10-2022","dong":"SORA","ngang":220,"dai":200,"day":10,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"LAGO10-6","dong":"LATEX GOLD","ngang":160,"dai":200,"day":10,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"LAGO15-6","dong":"LATEX GOLD","ngang":160,"dai":200,"day":15,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"SORA10-2020","dong":"SORA","ngang":200,"dai":200,"day":10,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"ZONE12-6","dong":"3'ZONE","ngang":160,"dai":200,"day":12,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"ZONE17-6","dong":"3'ZONE","ngang":160,"dai":200,"day":17,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"LAGO10-4","dong":"LATEX GOLD","ngang":140,"dai":200,"day":10,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"STD20-2020","dong":"STANDARD","ngang":200,"dai":200,"day":20,"so_luong":3,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"ZONE17-6","dong":"3'ZONE","ngang":160,"dai":200,"day":17,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"CLS10-2022","dong":"CLASSIC","ngang":220,"dai":200,"day":10,"so_luong":3,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"STD15-2022","dong":"STANDARD","ngang":220,"dai":200,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"SORA10-2","dong":"SORA","ngang":120,"dai":180,"day":10,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"SORA10-63","dong":"SORA","ngang":63,"dai":183,"day":10,"so_luong":30,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"STD15-2022","dong":"STANDARD","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"STD20-2","dong":"STANDARD","ngang":120,"dai":200,"day":20,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"STD10-2022","dong":"STANDARD","ngang":220,"dai":240,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"SORA15-2022","dong":"SORA","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"LAEZ10-2022","dong":"LATEX ENZO","ngang":220,"dai":200,"day":10,"so_luong":3,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"LAEZ15-2022","dong":"LATEX ENZO","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"ZONE17-8","dong":"3'ZONE","ngang":180,"dai":200,"day":17,"so_luong":2,"trang_thai":"","ghi_chu":"Ưu tiên sáng sản xuất"},{"date":"29/07/2026","ma":"PRE15-4","dong":"PREMIUM","ngang":140,"dai":200,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":"Ưu tiên sáng sản xuất"},{"date":"29/07/2026","ma":"STD10-2","dong":"STANDARD","ngang":110,"dai":170,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":"tái chế con std 140x175x10"},{"date":"29/07/2026","ma":"STD10-1","dong":"STANDARD","ngang":90,"dai":180,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":"tái chế con classic 150x190x10"},{"date":"29/07/2026","ma":"STD15-6","dong":"STANDARD","ngang":150,"dai":190,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"EZ20-3","dong":"LATEX ENZO","ngang":160,"dai":200,"day":20,"so_luong":2,"trang_thai":"","ghi_chu":"Vải premium cũ, có khoá kéo, đóng bao keo trong"},{"date":"29/07/2026","ma":"PRE15-2022","dong":"PREMIUM","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"CLS20-2020","dong":"CLASSIC","ngang":200,"dai":200,"day":20,"so_luong":3,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"LUN10-2","dong":"LUNA","ngang":120,"dai":200,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"PRE10-6","dong":"PREMIUM","ngang":150,"dai":197,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA10-2","dong":"SORA","ngang":120,"dai":180,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"LAGO15-4","dong":"LATEX GOLD","ngang":140,"dai":190,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"ZONE17-2022","dong":"3'ZONE","ngang":220,"dai":200,"day":17,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"ZONE12-2020","dong":"3'ZONE","ngang":200,"dai":200,"day":12,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA10-4","dong":"SORA","ngang":140,"dai":192,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA15-2022","dong":"SORA","ngang":220,"dai":200,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"KH12-4","dong":"KING HOME","ngang":140,"dai":200,"day":12,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"KH12-6","dong":"KING HOME","ngang":160,"dai":200,"day":12,"so_luong":6,"trang_thai":"","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO10-6","dong":"LATEX GOLD","ngang":160,"dai":200,"day":10,"so_luong":15,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"STD15-2020","dong":"STANDARD","ngang":200,"dai":200,"day":15,"so_luong":2,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"SORA10-1","dong":"SORA","ngang":100,"dai":200,"day":10,"so_luong":15,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"STD15-4","dong":"STANDARD","ngang":140,"dai":200,"day":15,"so_luong":2,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"SORA10-4","dong":"SORA","ngang":140,"dai":200,"day":10,"so_luong":15,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO15-8","dong":"LATEX GOLD","ngang":180,"dai":200,"day":15,"so_luong":9,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO20-6","dong":"LATEX GOLD","ngang":160,"dai":200,"day":20,"so_luong":5,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO15-2022","dong":"LATEX GOLD","ngang":220,"dai":200,"day":15,"so_luong":3,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"STD15-6","dong":"STANDARD","ngang":160,"dai":200,"day":15,"so_luong":9,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO20-8","dong":"LATEX GOLD","ngang":180,"dai":200,"day":20,"so_luong":5,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO10-2022","dong":"LATEX GOLD","ngang":220,"dai":200,"day":10,"so_luong":2,"trang_thai":"Chốt","ghi_chu":""}];
+
+const TEAM_OPTIONS = ['Tổ 1','Tổ 2','Tổ 3','Tổ 4'];
+const ASSIGNMENT_STORAGE_KEY = 'khsx_autoplan_assignments';
+const DYNAMIC_ORDERS_KEY = 'khsx_dynamic_orders';
+
+let sheetRows = [];      // rows pulled fresh from the company sheet each fetch: {id, date, ma, dong, ngang, dai, day, so_luong, ghi_chu}
+let dynamicOrders = [];  // rows Claude/dashboard spins off when an order falls short (persisted)
+let assignments = {};    // { [orderId]: { to: string|null, so_luong_hoan_thanh: number|null, spinoff_id: string|null } }
+let autoPlanLoaded = false;
+
+function getOrders(){ return sheetRows.concat(dynamicOrders); }
+function getOrderById(id){ return getOrders().find(o=>o.id===id); }
+
+function getOrderStatus(o){
+  const a = assignments[o.id];
+  if(!a || !a.to) return o.is_drop ? 'rot' : 'moi';
+  if(a.spinoff_id) return 'partial'; // đã tách phần thiếu cho tổ khác -> phần của tổ này khoá lại, coi như đã đóng
+  if(a.so_luong_hoan_thanh == null) return 'dang_san_xuat';
+  if(a.so_luong_hoan_thanh >= o.so_luong) return 'hoan_thanh';
+  return 'dang_san_xuat';
+}
+
+// Human-readable note on which team is now handling the spun-off remainder of a split order
+function describeSpinoff(o){
+  const a = assignments[o.id];
+  if(!a || !a.spinoff_id) return '';
+  const spin = getOrderById(a.spinoff_id);
+  if(!spin) return '';
+  const spinStatus = getOrderStatus(spin);
+  const spinA = assignments[spin.id];
+  if(spinStatus === 'rot' || spinStatus === 'moi') return 'phần còn lại chưa phân công tổ';
+  if(spinStatus === 'dang_san_xuat') return `${spinA.to} đang làm phần còn lại`;
+  if(spinStatus === 'hoan_thanh') return `${spinA.to} đã hoàn tất phần còn lại`;
+  if(spinStatus === 'partial') return `${spinA.to} tiếp tục xử lý phần còn lại`;
+  return '';
+}
+
+// Shared status badge used by both Kế hoạch tuần and Tiến độ sản xuất tables.
+// When interactive=true (Tiến độ tab) and the spun-off remainder is still unassigned,
+// staff can pick its team right here instead of switching to Kế hoạch tuần.
+function statusBadgeHtml(o){
+  const status = getOrderStatus(o);
+  const a = assignments[o.id];
+  if(status === 'hoan_thanh') return '<span class="badge badge-done">Hoàn thành</span>';
+  if(status === 'rot') return '<span class="badge badge-rot">Đơn hàng rớt</span>';
+  if(status === 'dang_san_xuat') return '<span class="badge badge-progress">Đang sản xuất</span>';
+  if(status === 'partial'){
+    const pct = o.so_luong>0 ? Math.round(((a.so_luong_hoan_thanh||0)/o.so_luong)*1000)/10 : 0;
+    const desc = describeSpinoff(o);
+    return `<span class="badge badge-partial">Hoàn thành ${pct}%</span>${desc?` <span style="color:var(--text2);font-size:11px;">→ ${desc}</span>`:''}`;
+  }
+  return '';
+}
+// Dedicated "Tổ hỗ trợ" cell for the Tiến độ table: lights up (becomes an active picker)
+// only once an order has been split; picking a team there closes out the remainder.
+function spinoffCellHtml(o){
+  const status = getOrderStatus(o);
+  if(status !== 'partial') return '<span style="color:var(--text2);">—</span>';
+  const a = assignments[o.id];
+  const spin = a.spinoff_id ? getOrderById(a.spinoff_id) : null;
+  if(!spin) return '<span style="color:var(--text2);">—</span>';
+  const spinStatus = getOrderStatus(spin);
+  if(spinStatus === 'rot' || spinStatus === 'moi'){
+    return `<select class="spinoff-to-select" data-spinoff-id="${spin.id}">
+      <option value="">Chọn tổ hỗ trợ (${spin.so_luong})...</option>
+      ${TEAM_OPTIONS.map(t=>`<option value="${t}">${t}</option>`).join('')}
+    </select>`;
+  }
+  const spinA = assignments[spin.id];
+  return `<span style="font-weight:600;">${spinA.to}</span>`;
+}
+function isOrderLocked(o){
+  const status = getOrderStatus(o);
+  return status === 'hoan_thanh' || status === 'partial';
+}
+
+// ============ Lưu trữ ngoài Claude: gọi Apps Script Web App (đóng vai trò cơ sở dữ liệu) ============
+// Sau khi deploy Apps Script (xem HUONG_DAN_DEPLOY.md), dán URL Web App vào đây.
+const STORAGE_API_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+
+async function storageGet(key){
+  if(!STORAGE_API_URL || STORAGE_API_URL.startsWith('PASTE_')) return null;
+  try{
+    const res = await fetch(`${STORAGE_API_URL}?key=${encodeURIComponent(key)}`);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    return data.value ? JSON.parse(data.value) : null;
+  }catch(e){
+    console.warn('storageGet thất bại cho key', key, e);
+    return null;
+  }
+}
+async function storageSet(key, value){
+  if(!STORAGE_API_URL || STORAGE_API_URL.startsWith('PASTE_')) return;
+  try{
+    // dùng Content-Type: text/plain để tránh CORS preflight với Apps Script Web App
+    await fetch(STORAGE_API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({key, value: JSON.stringify(value)})
+    });
+  }catch(e){
+    console.error('storageSet thất bại cho key', key, e);
+  }
+}
+
+async function loadAssignments(){
+  assignments = (await storageGet(ASSIGNMENT_STORAGE_KEY)) || {};
+}
+async function saveAssignments(){
+  await storageSet(ASSIGNMENT_STORAGE_KEY, assignments);
+}
+async function loadDynamicOrders(){
+  dynamicOrders = (await storageGet(DYNAMIC_ORDERS_KEY)) || [];
+}
+async function saveDynamicOrders(){
+  await storageSet(DYNAMIC_ORDERS_KEY, dynamicOrders);
+}
+
+// minimal CSV parser that handles quoted fields with commas/newlines
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else {
+      if(c === '"') inQuotes = true;
+      else if(c === ','){ row.push(field); field=''; }
+      else if(c === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else if(c === '\r'){ /* skip */ }
+      else field += c;
+    }
+  }
+  if(field.length>0 || row.length>0){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+async function fetchAutoPlan(){
+  const statusEl = document.getElementById('autoPlanStatus');
+  statusEl.textContent = 'Đang tải dữ liệu từ Google Sheet...';
+  statusEl.style.color = 'var(--text2)';
+  try{
+    const res = await fetch(SHEET_CSV_URL);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text = await res.text();
+    const table = parseCSV(text);
+    const rows = [];
+    table.forEach(cols=>{
+      const ngay = (cols[1]||'').trim();
+      if(!/^\d{2}\/\d{2}\/\d{4}$/.test(ngay)) return; // skip title/header/blank rows
+      const to = (cols[3]||'').trim();
+      if(to.toLowerCase() !== 'foam') return;
+      rows.push({
+        date: ngay,
+        ma: (cols[4]||'').trim(),
+        dong: (cols[6]||'').trim(),
+        ngang: (cols[7]||'').trim(),
+        dai: (cols[8]||'').trim(),
+        day: (cols[9]||'').trim(),
+        so_luong: parseFloat(cols[11]) || 0,
+        ghi_chu: (cols[13]||'').trim()
+      });
+    });
+    sheetRows = rows;
+    autoPlanLoaded = true;
+    statusEl.textContent = `Đã tải lúc ${new Date().toLocaleTimeString('vi-VN')} — ${rows.length} dòng Foam`;
+    statusEl.style.color = 'var(--success)';
+  }catch(e){
+    // Live fetch blocked in this sandbox — fall back to the simulated snapshot so the UI can be previewed.
+    console.warn('Live fetch blocked, using simulated snapshot instead.', e);
+    sheetRows = SIMULATED_AUTOPLAN_DATA;
+    autoPlanLoaded = true;
+    statusEl.innerHTML = `⚠ Chưa gọi được API thật (bị chặn trong sandbox) — đang hiển thị <strong>dữ liệu mẫu</strong> chụp từ sheet lúc nãy để bạn xem trước giao diện.`;
+    statusEl.style.color = 'var(--warning)';
+  }
+  sheetRows = sheetRows.map((r,idx)=>({...r, id: r.id || ('r'+idx), is_drop:false}));
+  renderAutoPlanDaySelect();
+  renderAutoPlan();
+  renderProgress();
+  syncCompletedOrdersToMonthlyData();
+}
+
+function formatKichThuoc(r){
+  if(r.dai) return `${r.ngang}x${r.dai}${r.day?' (dày '+r.day+')':''}`;
+  return r.ngang || '-';
+}
+
+function renderAutoPlanDaySelect(){
+  const sel = document.getElementById('autoPlanDaySelect');
+  const prev = sel.value || 'all';
+  const dates = Array.from(new Set(getOrders().map(r=>r.date))).sort((a,b)=>{
+    const da = a.split('/').reverse().join(''), db = b.split('/').reverse().join('');
+    return da.localeCompare(db);
+  });
+  sel.innerHTML = '<option value="all">Tất cả ngày</option>' + dates.map(d=>`<option value="${d}">Ngày ${d}</option>`).join('');
+  sel.value = dates.includes(prev) ? prev : 'all';
+}
+
+function renderAutoPlan(){
+  const dayVal = document.getElementById('autoPlanDaySelect').value;
+  const q = document.getElementById('autoPlanSearchBox').value.trim().toLowerCase();
+  const assignFilter = document.getElementById('autoPlanAssignFilter').value;
+  const filtered = getOrders().filter(r=>{
+    if(dayVal !== 'all' && r.date !== dayVal) return false;
+    if(q && !r.dong.toLowerCase().includes(q) && !r.ma.toLowerCase().includes(q) && !formatKichThuoc(r).toLowerCase().includes(q)) return false;
+    const hasTeam = !!(assignments[r.id]?.to);
+    if(assignFilter === 'unassigned' && hasTeam) return false;
+    if(assignFilter === 'assigned' && !hasTeam) return false;
+    return true;
+  });
+  const totalQty = filtered.reduce((a,r)=>a+r.so_luong,0);
+  const rotCount = filtered.filter(r=>getOrderStatus(r)==='rot').length;
+  const dangSXCount = filtered.filter(r=>getOrderStatus(r)==='dang_san_xuat').length;
+  const splitCount = filtered.filter(r=>getOrderStatus(r)==='partial').length;
+  const doneCount = filtered.filter(r=>getOrderStatus(r)==='hoan_thanh').length;
+  document.getElementById('autoPlanKpis').innerHTML = `
+    <div class="kpi"><div class="label">Số dòng</div><div class="value">${filtered.length}</div></div>
+    <div class="kpi k-accent"><div class="label">Tổng số lượng</div><div class="value">${totalQty.toLocaleString()}</div></div>
+    <div class="kpi k-warning"><div class="label">Đang sản xuất</div><div class="value">${dangSXCount}</div></div>
+    <div class="kpi" style="border-top-color:var(--accent);"><div class="label">Đã chia tổ</div><div class="value" style="color:var(--accent);">${splitCount}</div></div>
+    <div class="kpi" style="border-top-color:var(--danger);"><div class="label">Đơn hàng rớt</div><div class="value" style="color:var(--danger);">${rotCount}</div></div>
+    <div class="kpi k-success"><div class="label">Hoàn thành</div><div class="value">${doneCount}</div></div>
+  `;
+  const tbody = document.querySelector('#autoPlanTable tbody');
+  tbody.innerHTML = filtered.map(r=>{
+    const status = getOrderStatus(r);
+    const a = assignments[r.id];
+    const assignedTo = a?.to || '';
+    const rowClass = status === 'rot' ? 'row-rot' : '';
+    let toCell;
+    if(isOrderLocked(r)){
+      toCell = `<span style="font-weight:600;">${assignedTo}</span>`;
+    } else {
+      toCell = `<select class="to-select ${!assignedTo?'to-select-empty':''}" data-order-id="${r.id}">
+          <option value="" ${!assignedTo?'selected':''}>Nhập tổ phụ trách</option>
+          ${TEAM_OPTIONS.map(t=>`<option value="${t}" ${assignedTo===t?'selected':''}>${t}</option>`).join('')}
+        </select>`;
+    }
+    return `
+    <tr class="${rowClass}">
+      <td>${r.date}</td>
+      <td>${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}</td>
+      <td>${r.dong||'-'}</td>
+      <td>${formatKichThuoc(r)}</td>
+      <td>${r.so_luong||'-'}</td>
+      <td>${toCell}</td>
+      <td>${statusBadgeHtml(r)}${r.ghi_chu?`<br><span class="note" style="font-size:11px;">${r.ghi_chu}</span>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+
+document.getElementById('autoPlanRefreshBtn').addEventListener('click', fetchAutoPlan);
+document.getElementById('autoPlanDaySelect').addEventListener('change', renderAutoPlan);
+document.getElementById('autoPlanSearchBox').addEventListener('input', renderAutoPlan);
+document.getElementById('autoPlanAssignFilter').addEventListener('change', renderAutoPlan);
+
+// ---- Thêm đơn hàng phát sinh — dùng chung cho cả tab Kế hoạch tuần và Tiến độ sản xuất ----
+async function createManualOrder({dateVal, name, size, qty, note, team}){
+  const newOrder = {
+    id: 'm' + Date.now() + Math.random().toString(36).slice(2,7),
+    date: isoToDMY(dateVal),
+    ma: '',
+    dong: name,
+    ngang: size || '-',
+    dai: '',
+    day: '',
+    so_luong: qty,
+    ghi_chu: note,
+    is_drop: false,
+    is_manual: true
+  };
+  dynamicOrders.push(newOrder);
+  if(team){
+    assignments[newOrder.id] = {to: team, so_luong_hoan_thanh: null, spinoff_id: null};
+    await saveAssignments();
+  }
+  await saveDynamicOrders();
+  renderAutoPlanDaySelect();
+  renderAutoPlan();
+  renderProgress();
+  return newOrder;
+}
+
+function wireManualOrderForm({btnId, formId, dateId, nameId, sizeId, qtyId, teamId, noteId, saveId, statusId}){
+  const btn = document.getElementById(btnId);
+  const form = document.getElementById(formId);
+  const dateEl = document.getElementById(dateId);
+  const nameEl = document.getElementById(nameId);
+  const sizeEl = document.getElementById(sizeId);
+  const qtyEl = document.getElementById(qtyId);
+  const teamEl = teamId ? document.getElementById(teamId) : null;
+  const noteEl = document.getElementById(noteId);
+  const statusEl = document.getElementById(statusId);
+
+  btn.addEventListener('click', ()=>{
+    const showing = form.style.display !== 'none';
+    form.style.display = showing ? 'none' : 'block';
+    if(!showing && !dateEl.value){
+      dateEl.value = new Date().toISOString().slice(0,10);
+    }
+  });
+
+  document.getElementById(saveId).addEventListener('click', async ()=>{
+    const dateVal = dateEl.value;
+    const name = nameEl.value.trim();
+    const size = sizeEl.value.trim();
+    const qty = parseFloat(qtyEl.value);
+    const team = teamEl ? teamEl.value : null;
+    if(!dateVal || !name || !qty || qty<=0){
+      statusEl.textContent = 'Vui lòng nhập đủ Ngày, Tên sản phẩm và Số lượng.';
+      statusEl.style.color = 'var(--danger)';
+      return;
+    }
+    if(teamEl && !team){
+      statusEl.textContent = 'Vui lòng chọn Tổ phụ trách.';
+      statusEl.style.color = 'var(--danger)';
+      return;
+    }
+    await createManualOrder({dateVal, name, size, qty, note: noteEl.value.trim(), team});
+    statusEl.textContent = 'Đã thêm đơn hàng ✓';
+    statusEl.style.color = 'var(--success)';
+    nameEl.value = ''; sizeEl.value = ''; qtyEl.value = ''; noteEl.value = ''; if(teamEl) teamEl.value = '';
+  });
+}
+
+wireManualOrderForm({
+  btnId:'addManualOrderBtn', formId:'manualOrderForm', dateId:'manualOrderDate',
+  nameId:'manualOrderName', sizeId:'manualOrderSize', qtyId:'manualOrderQty',
+  teamId:null, noteId:'manualOrderNote', saveId:'saveManualOrderBtn', statusId:'manualOrderStatus'
+});
+wireManualOrderForm({
+  btnId:'addManualOrderBtnProgress', formId:'manualOrderFormProgress', dateId:'manualOrderDateProgress',
+  nameId:'manualOrderNameProgress', sizeId:'manualOrderSizeProgress', qtyId:'manualOrderQtyProgress',
+  teamId:'manualOrderTeamProgress', noteId:'manualOrderNoteProgress', saveId:'saveManualOrderBtnProgress', statusId:'manualOrderStatusProgress'
+});
+
+
+async function handleAssignChange(orderId, val){
+  if(!assignments[orderId]) assignments[orderId] = {to:null, so_luong_hoan_thanh:null, spinoff_id:null};
+  assignments[orderId].to = val || null;
+  await saveAssignments();
+  renderAutoPlan();
+  renderProgress();
+}
+
+document.querySelector('#autoPlanTable tbody').addEventListener('change', async (e)=>{
+  if(!e.target.classList.contains('to-select')) return;
+  await handleAssignChange(e.target.dataset.orderId, e.target.value);
+});
+
+// When staff enters a completed quantity short of the plan, spin the remainder off as a new
+// unassigned "Đơn hàng rớt" row that reappears in Kế hoạch tuần for re-assignment.
+async function handleQtyChange(orderId, rawVal){
+  const o = getOrderById(orderId);
+  if(!o) return;
+  if(!assignments[orderId]) assignments[orderId] = {to:null, so_luong_hoan_thanh:null, spinoff_id:null};
+  const a = assignments[orderId];
+  const val = rawVal === '' ? null : parseFloat(rawVal);
+
+  if(val == null || isNaN(val) || val <= 0){
+    a.so_luong_hoan_thanh = null;
+  } else if(val >= o.so_luong){
+    a.so_luong_hoan_thanh = o.so_luong;
+    // fully completed after all — drop any still-unassigned spinoff created earlier
+    if(a.spinoff_id){
+      const spin = getOrderById(a.spinoff_id);
+      if(spin && !(assignments[spin.id]?.to)){
+        dynamicOrders = dynamicOrders.filter(d=>d.id!==a.spinoff_id);
+        delete assignments[spin.id];
+      }
+      a.spinoff_id = null;
+    }
+  } else {
+    a.so_luong_hoan_thanh = val;
+    const remainder = o.so_luong - val;
+    let spin = a.spinoff_id ? getOrderById(a.spinoff_id) : null;
+    if(spin && !(assignments[spin.id]?.to)){
+      spin.so_luong = remainder; // still unassigned, just update the outstanding qty
+    } else {
+      const newId = 'd' + Date.now() + Math.random().toString(36).slice(2,7);
+      spin = {id:newId, date:o.date, ma:o.ma, dong:o.dong, ngang:o.ngang, dai:o.dai, day:o.day, so_luong:remainder, ghi_chu:o.ghi_chu, is_drop:true};
+      dynamicOrders.push(spin);
+      a.spinoff_id = newId;
+    }
+  }
+  await saveAssignments();
+  await saveDynamicOrders();
+  renderAutoPlan();
+  renderProgress();
+  syncCompletedOrdersToMonthlyData();
+}
+
+// Feed fully-completed Foam orders into the "Tổng hợp tháng" data model (allDays), so they
+// show up in Tổng hợp tháng / Theo ngày / Theo tổ alongside the original Excel data.
+// The Foam weekly-plan sheet writes product lines in caps ("SORA", "KING HOME"...); normalize
+// them to match the naming used in the Excel plan ("Sora", "KingHome") so charts/colors merge.
+const PRODUCT_NAME_MAP = {
+  'SORA':'Sora', 'CLASSIC':'Classic', 'KING HOME':'KingHome', 'LATEX GOLD':'Latex Gold',
+  'LATEX ENZO':'Latex Enzo', 'STANDARD':'Standard', 'PREMIUM':'Premium', 'LUNA':'Luna',
+  "3'ZONE":'3-Zone', 'HYBRID':'Hybrid', 'HYBRID PLUS':'Hybrid Plus'
+};
+function normalizeProductName(dong){
+  const key = String(dong||'').trim().toUpperCase();
+  return PRODUCT_NAME_MAP[key] || dong;
+}
+
+// Both the Excel plan (numeric 1-4) and the Foam weekly-plan assignments ("Tổ 1".."Tổ 4")
+// represent the same team roster — normalize to a bare number so Theo tổ / Tổng hợp tháng
+// never show "Tổ 1" as two separate, duplicate-looking entries.
+function extractTeamNumber(t){
+  const m = String(t).match(/\d+/);
+  return m ? parseInt(m[0],10) : t;
+}
+
+function syncCompletedOrdersToMonthlyData(){
+  Object.keys(allDays).forEach(k=>{ allDays[k].rows = allDays[k].rows.filter(r=>!r._from_foam); });
+
+  // Both fully-completed orders AND locked "split" orders (Tổ đã chốt phần mình làm, phần
+  // còn thiếu đã chuyển cho tổ khác) count toward monthly totals — each contributes only its
+  // own closed quantity, so the sum across split pieces always equals the original order.
+  const closedByDate = {};
+  getOrders().forEach(o=>{
+    const status = getOrderStatus(o);
+    const a = assignments[o.id];
+    if(status === 'hoan_thanh'){
+      (closedByDate[o.date] = closedByDate[o.date]||[]).push({o, a, ke_hoach:o.so_luong, dong_goi:a.so_luong_hoan_thanh});
+    } else if(status === 'partial'){
+      (closedByDate[o.date] = closedByDate[o.date]||[]).push({o, a, ke_hoach:a.so_luong_hoan_thanh, dong_goi:a.so_luong_hoan_thanh});
+    }
+  });
+
+  Object.entries(closedByDate).forEach(([date, list])=>{
+    let key = Object.keys(allDays).find(k=>allDays[k].date===date);
+    if(!key){
+      key = 'foam_'+date.split('/').reverse().join('-');
+      allDays[key] = {date, rows:[], team_progress:[]};
+    }
+    list.forEach(({o, a, ke_hoach, dong_goi})=>{
+      allDays[key].rows.push({
+        to: extractTeamNumber(a.to), ten_hang: normalizeProductName(o.dong), kich_thuoc: `${o.ngang}x${o.dai}`, nhom_khsx: 'Foam (tự động)',
+        ke_hoach, dong_goi, ghi_chu: o.ghi_chu, _from_foam:true
+      });
+    });
+    allDays[key].team_progress = computeTeamProgressFromRows(allDays[key].rows);
+  });
+
+  // clean up any synthetic foam-only day that no longer has closed orders
+  Object.keys(allDays).forEach(k=>{
+    if(k.startsWith('foam_') && allDays[k].rows.length===0) delete allDays[k];
+  });
+
+  recomputeAllDayKeys();
+  populateMonthYearFilters();
+  refreshForMonthYear();
+}
+
+// ---- master refresh: called on load and whenever month/year filter changes ----
+function refreshForMonthYear(){
+  const m = parseInt(monthFilterSelect.value, 10);
+  const y = parseInt(yearFilterSelect.value, 10);
+
+  dayKeys = allDayKeys.filter(k=>{
+    const p = parseDMY(allDays[k].date);
+    return p.m === m && p.y === y;
+  });
+
+  if(dayKeys.length === 0){
+    mainContent.style.display = 'none';
+    emptyState.style.display = 'block';
+    emptyState.innerHTML = `Chưa có dữ liệu cho <strong>Tháng ${m}/${y}</strong>.<br>Hiện dashboard mới có dữ liệu Tháng ${defaultMY.m}/${defaultMY.y}.`;
+    return;
+  }
+  mainContent.style.display = 'block';
+  emptyState.style.display = 'none';
+
+  buildProductColorMap();
+  computeAndRenderKpis();
+  const prevDay = daySelect.value;
+  populateDaySelect();
+  const dayToShow = dayKeys.includes(prevDay) ? prevDay : (dayKeys.find(k=>allDays[k].rows.length>0) || dayKeys[0]);
+  daySelect.value = dayToShow;
+  renderDay(dayToShow);
+  populateMonthRangeSelects();
+  renderMonthly();
+  populateTeamSelects();
+  renderByTeam();
+}
+
+monthFilterSelect.addEventListener('change', refreshForMonthYear);
+yearFilterSelect.addEventListener('change', refreshForMonthYear);
+
+// ---- tabs ----
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ============ Tiến độ sản xuất tab ============
+const progressDaySelect = document.getElementById('progressDaySelect');
+const progressTeamSelect = document.getElementById('progressTeamSelect');
+const progressSearchBox = document.getElementById('progressSearchBox');
+
+function populateProgressSelects(){
+  const prevDay = progressDaySelect.value || 'all';
+  const assignedDates = Array.from(new Set(
+    getOrders().filter(r=>assignments[r.id]?.to).map(r=>r.date)
+  )).sort((a,b)=>{
+    const da = a.split('/').reverse().join(''), db = b.split('/').reverse().join('');
+    return da.localeCompare(db);
+  });
+  progressDaySelect.innerHTML = '<option value="all">Tất cả ngày</option>' + assignedDates.map(d=>`<option value="${d}">Ngày ${d}</option>`).join('');
+  progressDaySelect.value = assignedDates.includes(prevDay) ? prevDay : 'all';
+
+  if(!progressTeamSelect.dataset.initialized){
+    progressTeamSelect.innerHTML = '<option value="all">Tất cả tổ</option>' + TEAM_OPTIONS.map(t=>`<option value="${t}">${t}</option>`).join('');
+    progressTeamSelect.dataset.initialized = '1';
+  }
+}
+
+function renderProgress(){
+  populateProgressSelects();
+  const dayVal = progressDaySelect.value;
+  const teamVal = progressTeamSelect.value;
+  const q = progressSearchBox.value.trim().toLowerCase();
+
+  const assignedRows = getOrders().filter(r=>assignments[r.id]?.to);
+  const filtered = assignedRows.filter(r=>{
+    if(dayVal !== 'all' && r.date !== dayVal) return false;
+    if(teamVal !== 'all' && assignments[r.id].to !== teamVal) return false;
+    if(q && !r.dong.toLowerCase().includes(q) && !r.ma.toLowerCase().includes(q) && !formatKichThuoc(r).toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  const totalPlan = filtered.reduce((a,r)=>a+(r.so_luong||0),0);
+  const totalDone = filtered.reduce((a,r)=>a+(assignments[r.id].so_luong_hoan_thanh||0),0);
+  const doneCount = filtered.filter(r=>getOrderStatus(r)==='hoan_thanh').length;
+  const partialCount = filtered.filter(r=>getOrderStatus(r)==='partial').length;
+  const inProgressCount = filtered.length - doneCount - partialCount;
+  const rate = totalPlan>0 ? Math.round((totalDone/totalPlan)*1000)/10 : 0;
+
+  document.getElementById('progressKpis').innerHTML = `
+    <div class="kpi k-warning"><div class="label">Đang sản xuất</div><div class="value">${inProgressCount}</div></div>
+    <div class="kpi" style="border-top-color:var(--accent);"><div class="label">Đã chia tổ (dở dang)</div><div class="value" style="color:var(--accent);">${partialCount}</div></div>
+    <div class="kpi k-success"><div class="label">Hoàn thành</div><div class="value">${doneCount}</div></div>
+    <div class="kpi ${rate>=95?'k-success':'k-warning'}"><div class="label">Tỷ lệ hoàn thành</div><div class="value" style="color:${rate>=95?'var(--success)':rate>=80?'var(--warning)':'var(--danger)'}">${rate}%</div></div>
+  `;
+
+  const tbody = document.querySelector('#progressTable tbody');
+  if(filtered.length===0){
+    tbody.innerHTML = `<tr><td colspan="10" style="color:var(--text2);text-align:center;padding:20px;">Chưa có đơn nào được chọn tổ phụ trách. Vào tab "Kế hoạch tuần (tự động)" để phân công.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(r=>{
+    const a = assignments[r.id];
+    const locked = isOrderLocked(r);
+
+    // Tổ phụ trách chính chỉ được gán/đổi từ tab Kế hoạch tuần — ở đây luôn hiển thị tĩnh.
+    const toCell = `<span style="font-weight:600;">${a.to}</span>`;
+
+    return `<tr>
+      <td>${r.date}</td>
+      <td>${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}</td>
+      <td>${r.dong||'-'}</td>
+      <td>${formatKichThuoc(r)}</td>
+      <td>${r.so_luong||'-'}</td>
+      <td>${toCell}</td>
+      <td><input type="number" class="qty-input" data-order-id="${r.id}" min="0" max="${r.so_luong}" value="${a.so_luong_hoan_thanh??''}" placeholder="Nhập số..." ${locked?'disabled':''}></td>
+      <td>${spinoffCellHtml(r)}</td>
+      <td>${statusBadgeHtml(r)}</td>
+      <td class="${r.ghi_chu?'note':''}">${r.ghi_chu||''}</td>
+    </tr>`;
+  }).join('');
+}
+
+progressDaySelect.addEventListener('change', renderProgress);
+progressTeamSelect.addEventListener('change', renderProgress);
+progressSearchBox.addEventListener('input', renderProgress);
+document.querySelector('#progressTable tbody').addEventListener('keydown', (e)=>{
+  if(e.target.classList.contains('qty-input') && e.key === 'Enter'){
+    e.target.blur();
+  }
+});
+document.querySelector('#progressTable tbody').addEventListener('change', async (e)=>{
+  if(e.target.classList.contains('qty-input')){
+    await handleQtyChange(e.target.dataset.orderId, e.target.value);
+  } else if(e.target.classList.contains('spinoff-to-select')){
+    const val = e.target.value;
+    if(!val) return;
+    await handleAssignChange(e.target.dataset.spinoffId, val);
+  }
+});
+
+// ---- startup ----
+async function bootstrap(){
+  recomputeAllDayKeys();
+  populateMonthYearFilters();
+  refreshForMonthYear();
+  await loadAssignments();
+  await loadDynamicOrders();
+  await fetchAutoPlan();
+}
+bootstrap();
+
+</script>
+</body>
+</html>
