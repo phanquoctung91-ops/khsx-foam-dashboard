@@ -853,7 +853,7 @@ function isOrderLocked(o){
 
 // ============ Lưu trữ ngoài Claude: gọi Apps Script Web App (đóng vai trò cơ sở dữ liệu) ============
 // Sau khi deploy Apps Script (xem HUONG_DAN_DEPLOY.md), dán URL Web App vào đây.
-const STORAGE_API_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+const STORAGE_API_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
 
 async function storageGet(key){
   if(!STORAGE_API_URL || STORAGE_API_URL.startsWith('PASTE_')) return null;
