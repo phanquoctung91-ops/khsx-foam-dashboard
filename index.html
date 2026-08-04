@@ -853,15 +853,29 @@ function isOrderLocked(o){
 
 // ============ Lưu trữ ngoài Claude: gọi Apps Script Web App (đóng vai trò cơ sở dữ liệu) ============
 // Sau khi deploy Apps Script (xem HUONG_DAN_DEPLOY.md), dán URL Web App vào đây.
-const STORAGE_API_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
+const STORAGE_API_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+
+// Apps Script Web App không hỗ trợ header CORS chuẩn cho fetch() thông thường, nên:
+// - Đọc dữ liệu (GET) dùng kỹ thuật JSONP (thẻ <script>, không bị chặn CORS)
+// - Ghi dữ liệu (POST) dùng fetch chế độ 'no-cors' (gửi được, không đọc lại phản hồi — không cần thiết)
+function jsonpRequest(url){
+  return new Promise((resolve, reject)=>{
+    const cbName = 'khsx_jsonp_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
+    const script = document.createElement('script');
+    const cleanup = () => { delete window[cbName]; script.remove(); };
+    window[cbName] = (data) => { cleanup(); resolve(data); };
+    script.onerror = () => { cleanup(); reject(new Error('JSONP request failed')); };
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName;
+    document.body.appendChild(script);
+    setTimeout(() => { if(window[cbName]){ cleanup(); reject(new Error('JSONP timeout')); } }, 10000);
+  });
+}
 
 async function storageGet(key){
   if(!STORAGE_API_URL || STORAGE_API_URL.startsWith('PASTE_')) return null;
   try{
-    const res = await fetch(`${STORAGE_API_URL}?key=${encodeURIComponent(key)}`);
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const data = await res.json();
-    return data.value ? JSON.parse(data.value) : null;
+    const data = await jsonpRequest(`${STORAGE_API_URL}?key=${encodeURIComponent(key)}`);
+    return data && data.value ? JSON.parse(data.value) : null;
   }catch(e){
     console.warn('storageGet thất bại cho key', key, e);
     return null;
@@ -870,9 +884,11 @@ async function storageGet(key){
 async function storageSet(key, value){
   if(!STORAGE_API_URL || STORAGE_API_URL.startsWith('PASTE_')) return;
   try{
-    // dùng Content-Type: text/plain để tránh CORS preflight với Apps Script Web App
+    // Content-Type: text/plain + mode: no-cors để trình duyệt không chặn request lúc gửi đi.
+    // Không đọc được response (bình thường với no-cors) nhưng Apps Script vẫn ghi vào Sheet.
     await fetch(STORAGE_API_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body: JSON.stringify({key, value: JSON.stringify(value)})
     });
