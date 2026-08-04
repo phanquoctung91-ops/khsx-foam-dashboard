@@ -853,7 +853,7 @@ function isOrderLocked(o){
 
 // ============ Lưu trữ ngoài Claude: gọi Apps Script Web App (đóng vai trò cơ sở dữ liệu) ============
 // Sau khi deploy Apps Script (xem HUONG_DAN_DEPLOY.md), dán URL Web App vào đây.
-const STORAGE_API_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+const STORAGE_API_URL = '/https://script.google.com/macros/s/AKfycbxqrbrDm9eGu6NuwhNYZLznho6SWgbSE6l9EcaI8xM9VyP2FE--bGcQNRhfJI751lyI/exec';
 
 // Apps Script Web App không hỗ trợ header CORS chuẩn cho fetch() thông thường, nên:
 // - Đọc dữ liệu (GET) dùng kỹ thuật JSONP (thẻ <script>, không bị chặn CORS)
