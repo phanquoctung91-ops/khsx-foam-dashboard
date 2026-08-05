@@ -933,6 +933,18 @@ function parseCSV(text){
   return rows;
 }
 
+// Gán ID ổn định theo NỘI DUNG đơn hàng (ngày+mã+kích thước+số lượng), không theo vị trí dòng.
+// Quan trọng: sheet công ty đổi thứ tự dòng mỗi ngày — nếu dùng ID theo vị trí (r0, r1...),
+// một đơn mới có thể "thừa kế" nhầm lịch sử (tổ/số lượng hoàn thành) của đơn cũ từng ở vị trí đó.
+function assignStableIds(rows){
+  const seenCounts = {};
+  return rows.map(r=>{
+    const base = [r.date, r.ma, r.ngang, r.dai, r.day, r.so_luong].join('|').replace(/[^a-zA-Z0-9À-ỹ]/g,'_');
+    const n = (seenCounts[base] = (seenCounts[base]||0) + 1);
+    return {...r, id: 'r_' + base + '_' + n, is_drop:false};
+  });
+}
+
 async function fetchAutoPlan(){
   const statusEl = document.getElementById('autoPlanStatus');
   statusEl.textContent = 'Đang tải dữ liệu từ Google Sheet...';
@@ -971,7 +983,7 @@ async function fetchAutoPlan(){
     statusEl.innerHTML = `⚠ Chưa gọi được API thật (bị chặn trong sandbox) — đang hiển thị <strong>dữ liệu mẫu</strong> chụp từ sheet lúc nãy để bạn xem trước giao diện.`;
     statusEl.style.color = 'var(--warning)';
   }
-  sheetRows = sheetRows.map((r,idx)=>({...r, id: r.id || ('r'+idx), is_drop:false}));
+  sheetRows = assignStableIds(sheetRows);
   renderAutoPlanDaySelect();
   renderAutoPlan();
   renderProgress();
@@ -1098,7 +1110,8 @@ function wireManualOrderForm({btnId, formId, dateId, nameId, sizeId, qtyId, team
     }
   });
 
-  document.getElementById(saveId).addEventListener('click', async ()=>{
+  const saveBtn = document.getElementById(saveId);
+  saveBtn.addEventListener('click', async ()=>{
     const dateVal = dateEl.value;
     const name = nameEl.value.trim();
     const size = sizeEl.value.trim();
@@ -1114,10 +1127,14 @@ function wireManualOrderForm({btnId, formId, dateId, nameId, sizeId, qtyId, team
       statusEl.style.color = 'var(--danger)';
       return;
     }
+    saveBtn.disabled = true; // chặn bấm nhiều lần liên tiếp tạo trùng đơn
+    statusEl.textContent = 'Đang lưu...';
+    statusEl.style.color = 'var(--text2)';
     await createManualOrder({dateVal, name, size, qty, note: noteEl.value.trim(), team});
     statusEl.textContent = 'Đã thêm đơn hàng ✓';
     statusEl.style.color = 'var(--success)';
     nameEl.value = ''; sizeEl.value = ''; qtyEl.value = ''; noteEl.value = ''; if(teamEl) teamEl.value = '';
+    saveBtn.disabled = false;
   });
 }
 
@@ -1393,6 +1410,44 @@ document.querySelector('#progressTable tbody').addEventListener('change', async 
 });
 
 // ---- startup ----
+// ============ Tự động đồng bộ giữa các thiết bị (không cần tắt mở lại) ============
+const POLL_INTERVAL_MS = 20000; // 20 giây — kiểm tra dữ liệu mới định kỳ
+
+async function pollForUpdates(){
+  if(document.hidden) return; // không tải khi tab đang ẩn, đỡ tốn tài nguyên
+  try{
+    const [newAssignments, newDynamicOrders] = await Promise.all([
+      storageGet(ASSIGNMENT_STORAGE_KEY),
+      storageGet(DYNAMIC_ORDERS_KEY)
+    ]);
+    const newAssignJson = JSON.stringify(newAssignments || {});
+    const newOrdersJson = JSON.stringify(newDynamicOrders || []);
+    const changed = newAssignJson !== JSON.stringify(assignments) || newOrdersJson !== JSON.stringify(dynamicOrders);
+    if(!changed) return;
+
+    // Nếu đang gõ dở trong 1 ô nhập liệu, bỏ qua lượt này để không bị mất thao tác đang làm —
+    // lần poll kế tiếp (20s sau) sẽ tự thử lại.
+    const activeTag = document.activeElement ? document.activeElement.tagName : '';
+    if(activeTag === 'INPUT' || activeTag === 'SELECT' || activeTag === 'TEXTAREA') return;
+
+    assignments = newAssignments || {};
+    dynamicOrders = newDynamicOrders || [];
+    renderAutoPlan();
+    renderProgress();
+    syncCompletedOrdersToMonthlyData();
+  }catch(e){
+    console.warn('pollForUpdates lỗi', e);
+  }
+}
+
+function startPolling(){
+  setInterval(pollForUpdates, POLL_INTERVAL_MS);
+  // quay lại tab (mở app khác rồi mở lại) → kiểm tra ngay, không cần chờ đủ 20s
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden) pollForUpdates();
+  });
+}
+
 async function bootstrap(){
   recomputeAllDayKeys();
   populateMonthYearFilters();
@@ -1400,6 +1455,7 @@ async function bootstrap(){
   await loadAssignments();
   await loadDynamicOrders();
   await fetchAutoPlan();
+  startPolling();
 }
 bootstrap();
 
