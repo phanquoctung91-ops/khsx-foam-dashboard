@@ -243,7 +243,16 @@
         <option value="assigned">Đã có tổ phụ trách</option>
       </select>
       <button id="unlockEditBtn" class="primary-btn" style="background:var(--danger);">⚠ Sửa đổi số liệu</button>
+      <button id="lockPlanBtn" class="primary-btn" style="background:var(--text2);">🔒 Chốt đầu vào</button>
       <span class="save-status" id="autoPlanStatus"></span>
+    </div>
+    <div id="lockPlanPanel" style="display:none;background:#f8f9fb;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:12.5px;color:var(--text2);margin-bottom:9px;">
+        Tick chọn ngày muốn <strong>chốt dữ liệu đầu vào</strong>. Ngày đã chốt sẽ giữ nguyên danh sách đơn, không nhận thay đổi từ sheet công ty nữa (sheet bị sửa/xoá/lọc cũng không ảnh hưởng). Bạn vẫn phân công tổ, thêm đơn phát sinh và xoá đơn được như bình thường.
+      </div>
+      <div id="lockPlanDates" style="margin-bottom:10px;"></div>
+      <button id="saveLockPlanBtn" class="primary-btn">Lưu</button>
+      <span class="save-status" id="lockPlanStatus"></span>
     </div>
     <div id="unlockEditNotice" style="display:none;background:#fdecea;border:1px solid var(--danger);color:var(--danger);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;">
       <strong>Đang mở khoá sửa đổi.</strong> Bạn có thể đổi tổ phụ trách, sửa/xoá số lượng hoàn thành và bỏ tổ hỗ trợ của các đơn đã chốt. Nhớ bấm lại nút đỏ để khoá khi xong.
@@ -326,11 +335,20 @@
     <div class="day-select-row">
       <button id="addManualOrderBtnProgress" class="primary-btn" style="background:var(--accent);">+ Thêm đơn hàng phát sinh</button>
       <button id="bulkCompleteBtn" class="primary-btn" style="background:var(--success);">✓ Hoàn thành</button>
+      <button id="lockProgressBtn" class="primary-btn" style="background:var(--text2);">🔒 Chốt tiến độ</button>
       <label>Ngày:</label>
       <select id="progressDaySelect"></select>
       <label>Tổ:</label>
       <select id="progressTeamSelect"></select>
       <input type="text" id="progressSearchBox" placeholder="Tìm theo dòng, mã, kích thước...">
+    </div>
+    <div id="lockProgressPanel" style="display:none;background:#f8f9fb;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:12.5px;color:var(--text2);margin-bottom:9px;">
+        Tick chọn ngày muốn <strong>chốt tiến độ</strong>. Ngày đã chốt thì nhân viên chỉ xem được số đã nhập, không sửa được nữa. Khi cần chỉnh, bạn bấm nút đỏ "⚠ Sửa đổi số liệu" ở tab Kế hoạch tuần để mở tạm.
+      </div>
+      <div id="lockProgressDates" style="margin-bottom:10px;"></div>
+      <button id="saveLockProgressBtn" class="primary-btn">Lưu</button>
+      <span class="save-status" id="lockProgressStatus"></span>
     </div>
     <div id="manualOrderFormProgress" style="display:none;background:#f8f9fb;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
       <div class="day-select-row" style="margin-bottom:10px;">
@@ -831,6 +849,26 @@ function isPlannedOrder(o){
 const ASSIGNMENT_STORAGE_KEY = 'khsx_autoplan_assignments';
 const DYNAMIC_ORDERS_KEY = 'khsx_dynamic_orders';
 const DELETED_ORDERS_KEY = 'khsx_deleted_orders';
+const LOCKED_PLAN_KEY = 'khsx_locked_plan_dates';
+const LOCKED_PROGRESS_KEY = 'khsx_locked_progress_dates';
+const SNAPSHOT_KEY_PREFIX = 'khsx_snap_'; // + dd-mm-yyyy — ảnh chụp danh sách đơn của ngày đã chốt
+
+// ---- Hai khoá độc lập, do quản trị tự chọn theo từng ngày ----
+// lockedPlanDates    : ngày đã CHỐT ĐẦU VÀO  -> danh sách đơn đóng băng, bỏ qua thay đổi từ sheet
+// lockedProgressDates: ngày đã CHỐT TIẾN ĐỘ  -> nhân viên không sửa được số hoàn thành nữa
+let lockedPlanDates = [];
+let lockedProgressDates = [];
+let planSnapshots = {}; // { 'dd/mm/yyyy': [rows đã chụp] }
+
+function snapshotKey(date){ return SNAPSHOT_KEY_PREFIX + date.replace(/\//g,'-'); }
+function isPlanLocked(date){ return lockedPlanDates.includes(date); }
+function isProgressLocked(date){ return !editUnlocked && lockedProgressDates.includes(date); }
+function lockBadgeHtml(date){
+  const p = isPlanLocked(date), t = lockedProgressDates.includes(date);
+  if(!p && !t) return '';
+  const title = [p?'đã chốt đầu vào':'', t?'đã chốt tiến độ':''].filter(Boolean).join(' + ');
+  return ` <span title="Ngày ${title}" style="font-size:11px;">🔒</span>`;
+}
 
 let sheetRows = [];      // rows pulled fresh from the company sheet each fetch: {id, date, ma, dong, ngang, dai, day, so_luong, ghi_chu}
 let dynamicOrders = [];  // rows Claude/dashboard spins off when an order falls short (persisted)
@@ -840,7 +878,10 @@ let autoPlanLoaded = false;
 let deletedOrderIds = []; // id các đơn đã bị xoá tay — không hiện lại dù sheet vẫn còn dòng đó
 
 function getOrders(){
-  return sheetRows.concat(dynamicOrders).filter(o=>!deletedOrderIds.includes(o.id));
+  // Ngày đã chốt đầu vào -> lấy từ ảnh chụp đã lưu, bỏ qua dữ liệu sheet của ngày đó.
+  const live = sheetRows.filter(o=>!isPlanLocked(o.date));
+  const frozen = lockedPlanDates.reduce((acc,d)=>acc.concat(planSnapshots[d] || []), []);
+  return live.concat(frozen, dynamicOrders).filter(o=>!deletedOrderIds.includes(o.id));
 }
 function getOrderById(id){ return getOrders().find(o=>o.id===id); }
 
@@ -893,6 +934,10 @@ function spinoffCellHtml(o){
   const spin = a.spinoff_id ? getOrderById(a.spinoff_id) : null;
   if(!spin) return '<span style="color:var(--text2);">—</span>';
   const spinStatus = getOrderStatus(spin);
+  if(isProgressLocked(o.date)){
+    const spinA = assignments[spin.id];
+    return spinA && spinA.to ? `<span style="font-weight:600;">${spinA.to}</span>` : '<span style="color:var(--text2);">Chưa có</span>';
+  }
   if(spinStatus === 'rot' || spinStatus === 'moi'){
     return `<select class="spinoff-to-select" data-spinoff-id="${spin.id}">
       <option value="">Chọn tổ hỗ trợ (${spin.so_luong})...</option>
@@ -912,6 +957,7 @@ function spinoffCellHtml(o){
 // Nút "Sửa" từng dòng ở tab Tiến độ: đưa đơn về trạng thái như chưa từng nhập số lượng hoàn thành.
 function resetQtyCellHtml(o){
   const a = assignments[o.id];
+  if(isProgressLocked(o.date)) return '<span title="Ngày đã chốt tiến độ" style="color:var(--text2);">🔒</span>';
   if(!a || a.so_luong_hoan_thanh == null) return '<span style="color:var(--text2);">—</span>';
   return `<button class="reset-qty-btn" data-order-id="${o.id}" style="font-size:11.5px;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;">Sửa</button>`;
 }
@@ -921,6 +967,7 @@ let editUnlocked = false;
 
 function isOrderLocked(o){
   if(editUnlocked) return false;
+  if(isProgressLocked(o.date)) return true; // ngày đã chốt tiến độ -> không cho sửa số
   const status = getOrderStatus(o);
   return status === 'hoan_thanh' || status === 'partial';
 }
@@ -978,7 +1025,8 @@ const LOCAL_CACHE_KEY = 'khsx_local_cache_v1';
 function saveLocalCache(){
   try{
     localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify({
-      t: Date.now(), sheetRows, assignments, dynamicOrders, deletedOrderIds
+      t: Date.now(), sheetRows, assignments, dynamicOrders, deletedOrderIds,
+      lockedPlanDates, lockedProgressDates, planSnapshots
     }));
   }catch(e){ /* trình duyệt chặn lưu cục bộ -> bỏ qua, dashboard vẫn chạy bình thường */ }
 }
@@ -1107,12 +1155,20 @@ async function fetchAutoPlan(){
     statusEl.textContent = `Đã tải lúc ${new Date().toLocaleTimeString('vi-VN')} — ${rows.length} dòng Foam`;
     statusEl.style.color = 'var(--success)';
   }catch(e){
-    // Live fetch blocked in this sandbox — fall back to the simulated snapshot so the UI can be previewed.
-    console.warn('Live fetch blocked, using simulated snapshot instead.', e);
-    sheetRows = SIMULATED_AUTOPLAN_DATA;
-    autoPlanLoaded = true;
-    statusEl.innerHTML = `⚠ Chưa gọi được API thật (bị chặn trong sandbox) — đang hiển thị <strong>dữ liệu mẫu</strong> chụp từ sheet lúc nãy để bạn xem trước giao diện.`;
+    console.warn('Không tải được dữ liệu từ Google Sheet lần này.', e);
+    // KHÔNG nạp dữ liệu mẫu và KHÔNG xử lý lại sheetRows — giữ nguyên đúng những gì đang có
+    // (từ bản lưu trên máy), để một lần mạng hụt không làm mất dữ liệu đang hiển thị.
+    const cached = loadLocalCache();
+    const when = cached && cached.t ? new Date(cached.t).toLocaleTimeString('vi-VN') : null;
+    statusEl.innerHTML = sheetRows.length
+      ? `⚠ Chưa tải được bản mới — đang dùng bản lưu${when ? ' lúc ' + when : ''}. Bấm "Làm mới dữ liệu" để thử lại.`
+      : `⚠ Chưa tải được dữ liệu từ Google Sheet. Kiểm tra kết nối rồi bấm "Làm mới dữ liệu".`;
     statusEl.style.color = 'var(--warning)';
+    renderAutoPlanDaySelect();
+    renderAutoPlan();
+    renderProgress();
+    scheduleMonthlySync();
+    return;
   }
   sheetRows = applyLotSplitRule(assignStableIds(sheetRows));
   renderAutoPlanDaySelect();
@@ -1227,7 +1283,7 @@ function renderAutoPlan(){
       : 0;
     return `
     <tr class="${rowClass}">
-      <td>${r.date}</td>
+      <td>${r.date}${lockBadgeHtml(r.date)}</td>
       <td>${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}${lotBadgeHtml(r)}</td>
       <td>${r.dong||'-'}</td>
       <td>${formatKichThuoc(r)}</td>
@@ -1616,7 +1672,7 @@ function renderProgress(){
     const toCell = `<span style="font-weight:600;">${a.to}</span>`;
 
     return `<tr>
-      <td>${r.date}</td>
+      <td>${r.date}${lockBadgeHtml(r.date)}</td>
       <td>${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}${lotBadgeHtml(r)}</td>
       <td>${r.dong||'-'}</td>
       <td>${formatKichThuoc(r)}</td>
@@ -1650,7 +1706,7 @@ document.querySelector('#progressTable tbody').addEventListener('change', async 
 
 // ---- Nút "Hoàn thành": điền nhanh số hoàn thành = kế hoạch cho các đơn CHƯA nhập, trong phạm vi đang lọc ----
 document.getElementById('bulkCompleteBtn').addEventListener('click', async ()=>{
-  const targets = getFilteredProgressRows().filter(r=>assignments[r.id].so_luong_hoan_thanh == null);
+  const targets = getFilteredProgressRows().filter(r=>assignments[r.id].so_luong_hoan_thanh == null && !isProgressLocked(r.date));
   if(targets.length === 0){
     alert('Không có đơn nào cần điền — tất cả đơn đang hiển thị đều đã có số lượng hoàn thành.');
     return;
@@ -1706,27 +1762,44 @@ const POLL_INTERVAL_MS = 30000; // 30 giây — kiểm tra dữ liệu mới đ�
 async function pollForUpdates(){
   if(document.hidden) return; // không tải khi tab đang ẩn, đỡ tốn tài nguyên
   try{
-    const [newAssignments, newDynamicOrders, newDeleted] = await Promise.all([
+    const [newAssignments, newDynamicOrders, newDeleted, newLockPlan, newLockProg] = await Promise.all([
       storageGet(ASSIGNMENT_STORAGE_KEY),
       storageGet(DYNAMIC_ORDERS_KEY),
-      storageGet(DELETED_ORDERS_KEY)
+      storageGet(DELETED_ORDERS_KEY),
+      storageGet(LOCKED_PLAN_KEY),
+      storageGet(LOCKED_PROGRESS_KEY)
     ]);
-    const newAssignJson = JSON.stringify(newAssignments || {});
-    const newOrdersJson = JSON.stringify(newDynamicOrders || []);
-    const newDeletedJson = JSON.stringify(newDeleted || []);
-    const changed = newAssignJson !== JSON.stringify(assignments)
-      || newOrdersJson !== JSON.stringify(dynamicOrders)
-      || newDeletedJson !== JSON.stringify(deletedOrderIds);
+
+    // QUAN TRỌNG: lượt kiểm tra thất bại (mạng hụt) sẽ trả về rỗng — KHÔNG được hiểu là
+    // "server không có dữ liệu" rồi xoá trắng những gì đang hiển thị. Chỉ nhận khi có dữ liệu thật.
+    const okAssign = newAssignments && typeof newAssignments === 'object';
+    const okOrders = Array.isArray(newDynamicOrders);
+    if(!okAssign && !okOrders) return; // không đọc được gì -> giữ nguyên, thử lại lượt sau
+
+    const nextAssignments = okAssign ? newAssignments : assignments;
+    const nextDynamic = okOrders ? newDynamicOrders : dynamicOrders;
+    const nextDeleted = Array.isArray(newDeleted) ? newDeleted : deletedOrderIds;
+    const nextLockPlan = Array.isArray(newLockPlan) ? newLockPlan : lockedPlanDates;
+    const nextLockProg = Array.isArray(newLockProg) ? newLockProg : lockedProgressDates;
+
+    const changed = JSON.stringify(nextAssignments) !== JSON.stringify(assignments)
+      || JSON.stringify(nextDynamic) !== JSON.stringify(dynamicOrders)
+      || JSON.stringify(nextDeleted) !== JSON.stringify(deletedOrderIds)
+      || JSON.stringify(nextLockPlan) !== JSON.stringify(lockedPlanDates)
+      || JSON.stringify(nextLockProg) !== JSON.stringify(lockedProgressDates);
     if(!changed) return;
 
     // Nếu đang gõ dở trong 1 ô nhập liệu, bỏ qua lượt này để không bị mất thao tác đang làm —
-    // lần poll kế tiếp (20s sau) sẽ tự thử lại.
+    // lần poll kế tiếp sẽ tự thử lại.
     const activeTag = document.activeElement ? document.activeElement.tagName : '';
     if(activeTag === 'INPUT' || activeTag === 'SELECT' || activeTag === 'TEXTAREA') return;
 
-    assignments = newAssignments || {};
-    dynamicOrders = newDynamicOrders || [];
-    deletedOrderIds = newDeleted || [];
+    assignments = nextAssignments;
+    dynamicOrders = nextDynamic;
+    deletedOrderIds = nextDeleted;
+    lockedPlanDates = nextLockPlan;
+    lockedProgressDates = nextLockProg;
+    await loadMissingSnapshots();
     saveLocalCache();
     renderAutoPlanDaySelect();
     renderAutoPlan();
@@ -1745,6 +1818,93 @@ function startPolling(){
   });
 }
 
+// ============ Chốt đầu vào (KHSX) & chốt tiến độ (TDSX) ============
+function renderLockDateList(containerId, dates, lockedList){
+  const box = document.getElementById(containerId);
+  if(!dates.length){
+    box.innerHTML = '<span style="color:var(--text2);font-size:12.5px;">Chưa có ngày nào có dữ liệu.</span>';
+    return;
+  }
+  box.innerHTML = dates.map(d=>`
+    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;margin:3px 14px 3px 0;white-space:nowrap;">
+      <input type="checkbox" value="${d}" ${lockedList.includes(d)?'checked':''} style="width:15px;height:15px;">${d}
+    </label>`).join('');
+}
+
+function allOrderDatesSorted(){
+  return Array.from(new Set(getOrders().map(o=>o.date))).sort((a,b)=>{
+    return a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join(''));
+  });
+}
+function assignedOrderDatesSorted(){
+  return Array.from(new Set(getOrders().filter(o=>assignments[o.id]?.to).map(o=>o.date))).sort((a,b)=>{
+    return a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join(''));
+  });
+}
+
+document.getElementById('lockPlanBtn').addEventListener('click', ()=>{
+  const panel = document.getElementById('lockPlanPanel');
+  const show = panel.style.display === 'none';
+  panel.style.display = show ? 'block' : 'none';
+  if(show) renderLockDateList('lockPlanDates', allOrderDatesSorted(), lockedPlanDates);
+});
+
+document.getElementById('saveLockPlanBtn').addEventListener('click', async ()=>{
+  const picked = Array.from(document.querySelectorAll('#lockPlanDates input:checked')).map(i=>i.value);
+  const statusEl = document.getElementById('lockPlanStatus');
+  statusEl.textContent = 'Đang lưu...';
+  statusEl.style.color = 'var(--text2)';
+
+  // Ngày mới được chốt -> chụp lại danh sách đơn hiện tại của ngày đó và lưu lên Google.
+  const added = picked.filter(d=>!lockedPlanDates.includes(d));
+  const removed = lockedPlanDates.filter(d=>!picked.includes(d));
+  added.forEach(d=>{
+    planSnapshots[d] = sheetRows.filter(o=>o.date === d);
+  });
+  removed.forEach(d=>{ delete planSnapshots[d]; });
+  lockedPlanDates = picked;
+
+  await storageSet(LOCKED_PLAN_KEY, lockedPlanDates);
+  for(const d of added){ await storageSet(snapshotKey(d), planSnapshots[d]); }
+  saveLocalCache();
+
+  statusEl.textContent = `Đã chốt đầu vào ${picked.length} ngày.`;
+  statusEl.style.color = 'var(--success)';
+  renderAutoPlanDaySelect();
+  renderAutoPlan();
+  renderProgress();
+  scheduleMonthlySync();
+});
+
+document.getElementById('lockProgressBtn').addEventListener('click', ()=>{
+  const panel = document.getElementById('lockProgressPanel');
+  const show = panel.style.display === 'none';
+  panel.style.display = show ? 'block' : 'none';
+  if(show) renderLockDateList('lockProgressDates', assignedOrderDatesSorted(), lockedProgressDates);
+});
+
+document.getElementById('saveLockProgressBtn').addEventListener('click', async ()=>{
+  const picked = Array.from(document.querySelectorAll('#lockProgressDates input:checked')).map(i=>i.value);
+  const statusEl = document.getElementById('lockProgressStatus');
+  statusEl.textContent = 'Đang lưu...';
+  statusEl.style.color = 'var(--text2)';
+  lockedProgressDates = picked;
+  await storageSet(LOCKED_PROGRESS_KEY, lockedProgressDates);
+  saveLocalCache();
+  statusEl.textContent = `Đã chốt tiến độ ${picked.length} ngày.`;
+  statusEl.style.color = 'var(--success)';
+  renderAutoPlan();
+  renderProgress();
+});
+
+// Tải ảnh chụp của các ngày đã chốt mà máy này chưa có (tải song song cho nhanh)
+async function loadMissingSnapshots(){
+  const missing = lockedPlanDates.filter(d=>!planSnapshots[d]);
+  if(!missing.length) return;
+  const results = await Promise.all(missing.map(d=>storageGet(snapshotKey(d))));
+  missing.forEach((d,i)=>{ if(results[i]) planSnapshots[d] = results[i]; });
+}
+
 async function bootstrap(){
   recomputeAllDayKeys();
   populateMonthYearFilters();
@@ -1757,6 +1917,9 @@ async function bootstrap(){
     assignments = cached.assignments || {};
     dynamicOrders = cached.dynamicOrders || [];
     deletedOrderIds = cached.deletedOrderIds || [];
+    lockedPlanDates = cached.lockedPlanDates || [];
+    lockedProgressDates = cached.lockedProgressDates || [];
+    planSnapshots = cached.planSnapshots || {};
     autoPlanLoaded = true;
     renderAutoPlanDaySelect();
     renderAutoPlan();
@@ -1770,14 +1933,19 @@ async function bootstrap(){
   // Bước 2: tải tất cả CÙNG LÚC thay vì chờ lần lượt (trước đây phải chờ 4 lượt mạng nối tiếp).
   await Promise.all([
     (async ()=>{
-      const [a, d, x] = await Promise.all([
+      const [a, d, x, lp, lt] = await Promise.all([
         storageGet(ASSIGNMENT_STORAGE_KEY),
         storageGet(DYNAMIC_ORDERS_KEY),
-        storageGet(DELETED_ORDERS_KEY)
+        storageGet(DELETED_ORDERS_KEY),
+        storageGet(LOCKED_PLAN_KEY),
+        storageGet(LOCKED_PROGRESS_KEY)
       ]);
       if(a) assignments = a;
       if(d) dynamicOrders = d;
       if(x) deletedOrderIds = x;
+      if(lp) lockedPlanDates = lp;
+      if(lt) lockedProgressDates = lt;
+      await loadMissingSnapshots();
     })(),
     fetchAutoPlan()
   ]);
