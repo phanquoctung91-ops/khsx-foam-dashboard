@@ -1505,8 +1505,15 @@ async function handleQtyChange(orderId, rawVal){
     a.so_luong_hoan_thanh = val;
     const remainder = o.so_luong - val;
     let spin = a.spinoff_id ? getOrderById(a.spinoff_id) : null;
-    if(spin && !(assignments[spin.id]?.to)){
-      spin.so_luong = remainder; // still unassigned, just update the outstanding qty
+    if(spin){
+      // Mỗi đơn gốc chỉ được có DUY NHẤT một phần thiếu -> cập nhật lại dòng đang có,
+      // tuyệt đối không tạo thêm dòng mới (trước đây gây ra đơn rớt trùng lặp).
+      spin.so_luong = remainder;
+      const sa = assignments[spin.id];
+      if(sa && sa.to){
+        // Tổ hỗ trợ đã nhận thì hiểu là làm đủ phần thiếu (kể cả khi phần thiếu vừa đổi số).
+        sa.so_luong_hoan_thanh = remainder;
+      }
     } else {
       const newId = 'd' + Date.now() + Math.random().toString(36).slice(2,7);
       spin = {id:newId, date:o.date, ma:o.ma, dong:o.dong, ngang:o.ngang, dai:o.dai, day:o.day, so_luong:remainder, ghi_chu:o.ghi_chu, is_drop:true};
