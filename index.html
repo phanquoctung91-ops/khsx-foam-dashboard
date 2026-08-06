@@ -971,22 +971,43 @@ async function storageSet(key, value){
   }
 }
 
+// ============ Bản lưu trên máy: mở lên là thấy dữ liệu ngay, không phải chờ mạng ============
+// Mỗi lần có thay đổi, dữ liệu được lưu thêm một bản ngay trong trình duyệt. Lần sau mở lên,
+// dashboard hiện bản lưu này trước (gần như tức thì), rồi âm thầm tải bản mới nhất về cập nhật.
+const LOCAL_CACHE_KEY = 'khsx_local_cache_v1';
+function saveLocalCache(){
+  try{
+    localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify({
+      t: Date.now(), sheetRows, assignments, dynamicOrders, deletedOrderIds
+    }));
+  }catch(e){ /* trình duyệt chặn lưu cục bộ -> bỏ qua, dashboard vẫn chạy bình thường */ }
+}
+function loadLocalCache(){
+  try{
+    const raw = localStorage.getItem(LOCAL_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
 async function loadAssignments(){
   assignments = (await storageGet(ASSIGNMENT_STORAGE_KEY)) || {};
 }
 async function saveAssignments(){
+  saveLocalCache();
   await storageSet(ASSIGNMENT_STORAGE_KEY, assignments);
 }
 async function loadDynamicOrders(){
   dynamicOrders = (await storageGet(DYNAMIC_ORDERS_KEY)) || [];
 }
 async function saveDynamicOrders(){
+  saveLocalCache();
   await storageSet(DYNAMIC_ORDERS_KEY, dynamicOrders);
 }
 async function loadDeletedOrders(){
   deletedOrderIds = (await storageGet(DELETED_ORDERS_KEY)) || [];
 }
 async function saveDeletedOrders(){
+  saveLocalCache();
   await storageSet(DELETED_ORDERS_KEY, deletedOrderIds);
 }
 
@@ -1097,7 +1118,7 @@ async function fetchAutoPlan(){
   renderAutoPlanDaySelect();
   renderAutoPlan();
   renderProgress();
-  syncCompletedOrdersToMonthlyData();
+  scheduleMonthlySync();
 }
 
 function formatKichThuoc(r){
@@ -1327,7 +1348,7 @@ async function handleAssignChange(orderId, val){
   await saveAssignments();
   renderAutoPlan();
   renderProgress();
-  syncCompletedOrdersToMonthlyData();
+  scheduleMonthlySync();
 }
 
 document.querySelector('#autoPlanTable tbody').addEventListener('change', async (e)=>{
@@ -1360,7 +1381,7 @@ document.querySelector('#autoPlanTable tbody').addEventListener('click', async (
   renderAutoPlanDaySelect();
   renderAutoPlan();
   renderProgress();
-  syncCompletedOrdersToMonthlyData();
+  scheduleMonthlySync();
 });
 
 // When staff enters a completed quantity short of the plan, spin the remainder off as a new
@@ -1402,7 +1423,7 @@ async function handleQtyChange(orderId, rawVal){
   await saveDynamicOrders();
   renderAutoPlan();
   renderProgress();
-  syncCompletedOrdersToMonthlyData();
+  scheduleMonthlySync();
 }
 
 // Feed fully-completed Foam orders into the "Tổng hợp tháng" data model (allDays), so they
@@ -1425,6 +1446,14 @@ function normalizeProductName(dong){
 function extractTeamNumber(t){
   const m = String(t).match(/\d+/);
   return m ? parseInt(m[0],10) : t;
+}
+
+// Gộp nhiều lần cập nhật liên tiếp thành 1 lần vẽ lại biểu đồ/tổng hợp tháng,
+// tránh giật lag khi nhân viên nhập số lượng liên tục.
+let monthlySyncTimer = null;
+function scheduleMonthlySync(){
+  clearTimeout(monthlySyncTimer);
+  monthlySyncTimer = setTimeout(syncCompletedOrdersToMonthlyData, 350);
 }
 
 function syncCompletedOrdersToMonthlyData(){
@@ -1632,7 +1661,7 @@ document.getElementById('bulkCompleteBtn').addEventListener('click', async ()=>{
   await saveAssignments();
   renderAutoPlan();
   renderProgress();
-  syncCompletedOrdersToMonthlyData();
+  scheduleMonthlySync();
 });
 
 // ---- Nút "Sửa" từng dòng: xoá số đã nhập, đưa đơn về đúng trạng thái như chưa từng cập nhật ----
@@ -1652,7 +1681,7 @@ async function handleResetQty(orderId){
   await saveDynamicOrders();
   renderAutoPlan();
   renderProgress();
-  syncCompletedOrdersToMonthlyData();
+  scheduleMonthlySync();
 }
 document.querySelector('#progressTable tbody').addEventListener('click', async (e)=>{
   const btn = e.target.closest('.reset-qty-btn');
@@ -1672,7 +1701,7 @@ document.getElementById('unlockEditBtn').addEventListener('click', ()=>{
 
 // ---- startup ----
 // ============ Tự động đồng bộ giữa các thiết bị (không cần tắt mở lại) ============
-const POLL_INTERVAL_MS = 20000; // 20 giây — kiểm tra dữ liệu mới định kỳ
+const POLL_INTERVAL_MS = 30000; // 30 giây — kiểm tra dữ liệu mới định kỳ (nhẹ mạng hơn)
 
 async function pollForUpdates(){
   if(document.hidden) return; // không tải khi tab đang ẩn, đỡ tốn tài nguyên
@@ -1698,6 +1727,7 @@ async function pollForUpdates(){
     assignments = newAssignments || {};
     dynamicOrders = newDynamicOrders || [];
     deletedOrderIds = newDeleted || [];
+    saveLocalCache();
     renderAutoPlanDaySelect();
     renderAutoPlan();
     renderProgress();
@@ -1719,10 +1749,44 @@ async function bootstrap(){
   recomputeAllDayKeys();
   populateMonthYearFilters();
   refreshForMonthYear();
-  await loadAssignments();
-  await loadDynamicOrders();
-  await loadDeletedOrders();
-  await fetchAutoPlan();
+
+  // Bước 1: hiện ngay bản lưu trên máy (nếu có) — người dùng thấy dữ liệu tức thì.
+  const cached = loadLocalCache();
+  if(cached && cached.sheetRows && cached.sheetRows.length){
+    sheetRows = cached.sheetRows;
+    assignments = cached.assignments || {};
+    dynamicOrders = cached.dynamicOrders || [];
+    deletedOrderIds = cached.deletedOrderIds || [];
+    autoPlanLoaded = true;
+    renderAutoPlanDaySelect();
+    renderAutoPlan();
+    renderProgress();
+    syncCompletedOrdersToMonthlyData();
+    const el = document.getElementById('autoPlanStatus');
+    el.textContent = `Đang hiện bản lưu lúc ${new Date(cached.t).toLocaleTimeString('vi-VN')} — đang tải bản mới...`;
+    el.style.color = 'var(--text2)';
+  }
+
+  // Bước 2: tải tất cả CÙNG LÚC thay vì chờ lần lượt (trước đây phải chờ 4 lượt mạng nối tiếp).
+  await Promise.all([
+    (async ()=>{
+      const [a, d, x] = await Promise.all([
+        storageGet(ASSIGNMENT_STORAGE_KEY),
+        storageGet(DYNAMIC_ORDERS_KEY),
+        storageGet(DELETED_ORDERS_KEY)
+      ]);
+      if(a) assignments = a;
+      if(d) dynamicOrders = d;
+      if(x) deletedOrderIds = x;
+    })(),
+    fetchAutoPlan()
+  ]);
+
+  renderAutoPlanDaySelect();
+  renderAutoPlan();
+  renderProgress();
+  scheduleMonthlySync();
+  saveLocalCache();
   startPolling();
 }
 bootstrap();
