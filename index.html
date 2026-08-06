@@ -1025,6 +1025,35 @@ function assignStableIds(rows){
   });
 }
 
+// ---- Rule tự động chia lô theo độ dày (do người dùng quy định) ----
+// dày 10 & 12 -> lô 15 con | dày 15 & 17 -> lô 9 con | dày 20 & 22 -> lô 5 con
+// Các độ dày khác (vd 27) giữ nguyên 1 dòng, tự tách tay khi cần.
+// Số lượng không chia hết thì phần dư thành 1 dòng riêng (vd dày 10, SL 40 -> 15 + 15 + 10).
+const LOT_SIZE_BY_THICKNESS = {10:15, 12:15, 15:9, 17:9, 20:5, 22:5};
+
+function applyLotSplitRule(rows){
+  const out = [];
+  rows.forEach(r=>{
+    const lot = LOT_SIZE_BY_THICKNESS[parseFloat(r.day)];
+    const qty = Number(r.so_luong) || 0;
+    if(!lot || qty <= lot){ out.push(r); return; }
+    const parts = [];
+    let remaining = qty;
+    while(remaining > lot){ parts.push(lot); remaining -= lot; }
+    if(remaining > 0) parts.push(remaining);
+    parts.forEach((q,i)=>{
+      // ID bám theo ID gốc + số lô -> ổn định qua mỗi lần tải lại, không mất tổ/tiến độ đã nhập.
+      out.push({...r, id:`${r.id}__lo${i+1}`, so_luong:q, is_lot:true, lot_label:`Lô ${i+1}/${parts.length}`});
+    });
+  });
+  return out;
+}
+
+// Nhãn hiển thị để phân biệt dòng đã chia lô với đơn bình thường
+function lotBadgeHtml(r){
+  return r.is_lot ? ` <span class="badge badge-blue">${r.lot_label}</span>` : '';
+}
+
 async function fetchAutoPlan(){
   const statusEl = document.getElementById('autoPlanStatus');
   statusEl.textContent = 'Đang tải dữ liệu từ Google Sheet...';
@@ -1064,7 +1093,7 @@ async function fetchAutoPlan(){
     statusEl.innerHTML = `⚠ Chưa gọi được API thật (bị chặn trong sandbox) — đang hiển thị <strong>dữ liệu mẫu</strong> chụp từ sheet lúc nãy để bạn xem trước giao diện.`;
     statusEl.style.color = 'var(--warning)';
   }
-  sheetRows = assignStableIds(sheetRows);
+  sheetRows = applyLotSplitRule(assignStableIds(sheetRows));
   renderAutoPlanDaySelect();
   renderAutoPlan();
   renderProgress();
@@ -1072,8 +1101,11 @@ async function fetchAutoPlan(){
 }
 
 function formatKichThuoc(r){
-  if(r.dai) return `${r.ngang}x${r.dai}${r.day?' (dày '+r.day+')':''}`;
-  return r.ngang || '-';
+  // Chiều dài 200 là cỡ chuẩn -> viết gọn "180x15" (ngang x dày).
+  // Các chiều dài khác 200 ghi đầy đủ 3 chiều, vd "160x195x20".
+  if(!r.dai) return r.ngang || '-';
+  if(Number(r.dai) === 200 && r.day) return `${r.ngang}x${r.day}`;
+  return `${r.ngang}x${r.dai}${r.day?'x'+r.day:''}`;
 }
 
 // Vẽ 5 ô "Tổ 1..5" dạng vòng tròn: Kế hoạch chỉ tính đơn trong kế hoạch (isPlannedOrder),
@@ -1175,7 +1207,7 @@ function renderAutoPlan(){
     return `
     <tr class="${rowClass}">
       <td>${r.date}</td>
-      <td>${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}</td>
+      <td>${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}${lotBadgeHtml(r)}</td>
       <td>${r.dong||'-'}</td>
       <td>${formatKichThuoc(r)}</td>
       <td>${r.so_luong||'-'}</td>
@@ -1556,7 +1588,7 @@ function renderProgress(){
 
     return `<tr>
       <td>${r.date}</td>
-      <td>${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}</td>
+      <td>${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}${lotBadgeHtml(r)}</td>
       <td>${r.dong||'-'}</td>
       <td>${formatKichThuoc(r)}</td>
       <td>${r.so_luong||'-'}</td>
