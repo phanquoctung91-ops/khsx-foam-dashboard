@@ -363,6 +363,33 @@ function dmyToIso(dmy){
   const [d,m,y] = dmy.split('/');
   return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
 }
+function formatDMY(dateObj){
+  const dd = String(dateObj.getDate()).padStart(2,'0');
+  const mm = String(dateObj.getMonth()+1).padStart(2,'0');
+  return `${dd}/${mm}/${dateObj.getFullYear()}`;
+}
+function daysBetween(dateObjA, dateObjB){
+  return Math.round((dateObjB - dateObjA) / 86400000);
+}
+
+// Đơn rớt (is_drop=true) chưa được ai nhận sẽ "trôi" theo NGÀY THẬT: vẫn hiện ở ngày gốc,
+// và hiện thêm ở mọi ngày thật kể từ ngày gốc cho tới hôm nay, cho đến khi có tổ hỗ trợ nhận.
+// Đơn đã được gán tổ (kể cả rớt trước đó) thì không trôi nữa — chỉ còn đúng 1 ngày gốc.
+function getCarryForwardDates(o){
+  if(!o.is_drop) return [o.date];
+  if(getOrderStatus(o) !== 'rot') return [o.date]; // đã có tổ nhận rồi, dừng trôi
+  const origin = parseDMY(o.date);
+  const originDate = new Date(origin.y, origin.m-1, origin.d);
+  const today = new Date(); today.setHours(0,0,0,0);
+  if(isNaN(originDate.getTime()) || originDate > today) return [o.date];
+  const dates = [];
+  const cursor = new Date(originDate);
+  while(cursor <= today){
+    dates.push(formatDMY(cursor));
+    cursor.setDate(cursor.getDate()+1);
+  }
+  return dates.length ? dates : [o.date];
+}
 
 // "to" values can be plain numbers (1-4, from the Excel plan) or already-labeled strings
 // like "Tổ 1" (from the Foam weekly-plan sync) — this avoids ever double-prefixing.
@@ -1005,7 +1032,7 @@ function renderTeamRings(containerId, orders){
 function renderAutoPlanDaySelect(){
   const sel = document.getElementById('autoPlanDaySelect');
   const prev = sel.value || 'all';
-  const dates = Array.from(new Set(getOrders().map(r=>r.date))).sort((a,b)=>{
+  const dates = Array.from(new Set(getOrders().flatMap(r=>getCarryForwardDates(r)))).sort((a,b)=>{
     const da = a.split('/').reverse().join(''), db = b.split('/').reverse().join('');
     return da.localeCompare(db);
   });
@@ -1018,7 +1045,7 @@ function renderAutoPlan(){
   const q = document.getElementById('autoPlanSearchBox').value.trim().toLowerCase();
   const assignFilter = document.getElementById('autoPlanAssignFilter').value;
   const filtered = getOrders().filter(r=>{
-    if(dayVal !== 'all' && r.date !== dayVal) return false;
+    if(dayVal !== 'all' && !getCarryForwardDates(r).includes(dayVal)) return false;
     if(q && !r.dong.toLowerCase().includes(q) && !r.ma.toLowerCase().includes(q) && !formatKichThuoc(r).toLowerCase().includes(q)) return false;
     const hasTeam = !!(assignments[r.id]?.to);
     if(assignFilter === 'unassigned' && hasTeam) return false;
@@ -1051,6 +1078,9 @@ function renderAutoPlan(){
           ${TEAM_OPTIONS.map(t=>`<option value="${t}" ${assignedTo===t?'selected':''}>${t}</option>`).join('')}
         </select>`;
     }
+    const daysLate = (dayVal !== 'all' && dayVal !== r.date && status === 'rot')
+      ? daysBetween(new Date(...parseDMYForDate(r.date)), new Date(...parseDMYForDate(dayVal)))
+      : 0;
     return `
     <tr class="${rowClass}">
       <td>${r.date}</td>
@@ -1059,9 +1089,14 @@ function renderAutoPlan(){
       <td>${formatKichThuoc(r)}</td>
       <td>${r.so_luong||'-'}</td>
       <td>${toCell}</td>
-      <td>${statusBadgeHtml(r)}${r.ghi_chu?`<br><span class="note" style="font-size:11px;">${r.ghi_chu}</span>`:''}</td>
+      <td>${statusBadgeHtml(r)}${daysLate>0?` <span class="badge badge-rot">Trễ ${daysLate} ngày</span>`:''}${r.ghi_chu?`<br><span class="note" style="font-size:11px;">${r.ghi_chu}</span>`:''}</td>
     </tr>`;
   }).join('');
+}
+
+function parseDMYForDate(dmy){
+  const {d,m,y} = parseDMY(dmy);
+  return [y, m-1, d];
 }
 
 document.getElementById('autoPlanRefreshBtn').addEventListener('click', fetchAutoPlan);
