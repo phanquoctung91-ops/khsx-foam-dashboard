@@ -426,8 +426,11 @@ function daysBetween(dateObjA, dateObjB){
 // và hiện thêm ở mọi ngày thật kể từ ngày gốc cho tới hôm nay, cho đến khi có tổ hỗ trợ nhận.
 // Đơn đã được gán tổ (kể cả rớt trước đó) thì không trôi nữa — chỉ còn đúng 1 ngày gốc.
 function getCarryForwardDates(o){
-  if(!o.is_drop) return [o.date];
-  if(getOrderStatus(o) !== 'rot') return [o.date]; // đã có tổ nhận rồi, dừng trôi
+  // Chốt tiến độ chỉ chốt THÀNH TÍCH của ngày đó — đơn chưa xong vẫn trôi tiếp
+  // sang các ngày liền kề cho tới khi được xử lý xong ở một ngày nào đó phía sau.
+  // Chỉ đơn rớt (chưa xong khi đã qua ngày) mới trôi; đơn đã xong hoặc đã chuyển
+  // phần thiếu cho tổ hỗ trợ thì chỉ hiện ở ngày gốc.
+  if(getOrderStatus(o) !== 'rot') return [o.date];
   const origin = parseDMY(o.date);
   const originDate = new Date(origin.y, origin.m-1, origin.d);
   const today = new Date(); today.setHours(0,0,0,0);
@@ -865,7 +868,15 @@ let backupRowsByDate = {};
 
 function snapshotKey(date){ return SNAPSHOT_KEY_PREFIX + date.replace(/\//g,'-'); }
 function isPlanLocked(date){ return lockedPlanDates.includes(date); }
-function isProgressLocked(date){ return !editUnlocked && lockedProgressDates.includes(date); }
+// Đơn bị khoá sửa khi NGÀY CUỐI mà nó còn xuất hiện đã được chốt tiến độ.
+// Nhờ vậy đơn chưa xong trôi từ ngày đã chốt sang ngày sau vẫn nhập được bình thường,
+// còn đơn đã xong (chỉ nằm ở ngày gốc) thì khoá theo đúng ngày gốc đó.
+function isProgressLocked(o){
+  if(editUnlocked) return false;
+  if(!o || !o.date) return false;
+  const days = getCarryForwardDates(o);
+  return lockedProgressDates.includes(days[days.length-1]);
+}
 function lockBadgeHtml(date){
   const p = isPlanLocked(date), t = lockedProgressDates.includes(date);
   if(!p && !t) return '';
@@ -895,13 +906,25 @@ function getOrders(){
 }
 function getOrderById(id){ return getOrders().find(o=>o.id===id); }
 
+// Ngày đã qua (trước hôm nay) — dùng để xác định đơn chưa xong thì thành "đơn rớt"
+function isPastDate(dateStr){
+  const p = parseDMY(dateStr);
+  if(!p) return false;
+  const d = new Date(p.y, p.m-1, p.d);
+  const today = new Date(); today.setHours(0,0,0,0);
+  return !isNaN(d.getTime()) && d < today;
+}
+
 function getOrderStatus(o){
   const a = assignments[o.id];
-  if(!a || !a.to) return o.is_drop ? 'rot' : 'moi';
+  // Qua ngày mà chưa hoàn thành đủ kế hoạch -> hiểu là ĐƠN RỚT (áp dụng cho mọi loại đơn:
+  // đơn từ sheet công ty, đơn phát sinh, phần thiếu chưa có tổ hỗ trợ).
+  const late = isPastDate(o.date);
+  if(!a || !a.to) return (o.is_drop || late) ? 'rot' : 'moi';
   if(a.spinoff_id) return 'partial'; // đã tách phần thiếu cho tổ khác -> phần của tổ này khoá lại, coi như đã đóng
-  if(a.so_luong_hoan_thanh == null) return 'dang_san_xuat';
+  if(a.so_luong_hoan_thanh == null) return late ? 'rot' : 'dang_san_xuat';
   if(a.so_luong_hoan_thanh >= o.so_luong) return 'hoan_thanh';
-  return 'dang_san_xuat';
+  return late ? 'rot' : 'dang_san_xuat';
 }
 
 // Human-readable note on which team is now handling the spun-off remainder of a split order
@@ -944,7 +967,7 @@ function spinoffCellHtml(o){
   const spin = a.spinoff_id ? getOrderById(a.spinoff_id) : null;
   if(!spin) return '<span style="color:var(--text2);">—</span>';
   const spinStatus = getOrderStatus(spin);
-  if(isProgressLocked(o.date)){
+  if(isProgressLocked(o)){
     const spinA = assignments[spin.id];
     return spinA && spinA.to ? `<span style="font-weight:600;">${spinA.to}</span>` : '<span style="color:var(--text2);">Chưa có</span>';
   }
@@ -967,7 +990,7 @@ function spinoffCellHtml(o){
 // Nút "Sửa" từng dòng ở tab Tiến độ: đưa đơn về trạng thái như chưa từng nhập số lượng hoàn thành.
 function resetQtyCellHtml(o){
   const a = assignments[o.id];
-  if(isProgressLocked(o.date)) return '<span title="Ngày đã chốt tiến độ" style="color:var(--text2);">🔒</span>';
+  if(isProgressLocked(o)) return '<span title="Ngày đã chốt tiến độ" style="color:var(--text2);">🔒</span>';
   if(!a || a.so_luong_hoan_thanh == null) return '<span style="color:var(--text2);">—</span>';
   return `<button class="reset-qty-btn" data-order-id="${o.id}" style="font-size:11.5px;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;">Sửa</button>`;
 }
@@ -977,7 +1000,7 @@ let editUnlocked = false;
 
 function isOrderLocked(o){
   if(editUnlocked) return false;
-  if(isProgressLocked(o.date)) return true; // ngày đã chốt tiến độ -> không cho sửa số
+  if(isProgressLocked(o)) return true; // ngày đã chốt tiến độ -> không cho sửa số
   const status = getOrderStatus(o);
   return status === 'hoan_thanh' || status === 'partial';
 }
@@ -1752,7 +1775,7 @@ document.querySelector('#progressTable tbody').addEventListener('change', async 
 
 // ---- Nút "Hoàn thành": điền nhanh số hoàn thành = kế hoạch cho các đơn CHƯA nhập, trong phạm vi đang lọc ----
 document.getElementById('bulkCompleteBtn').addEventListener('click', async ()=>{
-  const targets = getFilteredProgressRows().filter(r=>assignments[r.id].so_luong_hoan_thanh == null && !isProgressLocked(r.date));
+  const targets = getFilteredProgressRows().filter(r=>assignments[r.id].so_luong_hoan_thanh == null && !isProgressLocked(r));
   if(targets.length === 0){
     alert('Không có đơn nào cần điền — tất cả đơn đang hiển thị đều đã có số lượng hoàn thành.');
     return;
