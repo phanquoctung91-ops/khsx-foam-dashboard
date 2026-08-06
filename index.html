@@ -137,7 +137,35 @@
   .team-ring{width:66px;height:66px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;}
   .team-ring-inner{width:48px;height:48px;background:var(--card);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
   .team-ring-label{font-size:12px;font-weight:700;margin-bottom:2px;}
-  .team-ring-detail{font-size:11px;color:var(--text2);}
+  .trash-btn{background:none;border:1px solid var(--border);color:var(--danger);font-size:13px;line-height:1;padding:5px 9px;border-radius:7px;cursor:pointer;}
+  .trash-btn:hover{background:var(--danger-l);border-color:var(--danger);}
+
+  /* ---- Co giãn theo thiết bị: PC / tablet / điện thoại ---- */
+  .table-scroll{-webkit-overflow-scrolling:touch;}
+  @media(max-width:900px){
+    .table-scroll{max-height:70vh;}
+  }
+  @media(max-width:700px){
+    .team-ring{width:58px;height:58px;}
+    .team-ring-inner{width:42px;height:42px;font-size:11px;}
+    .primary-btn{padding:8px 14px;font-size:12.5px;}
+    select, input{font-size:12.5px;padding:7px 10px;}
+    select.to-select{min-width:130px;}
+    input.qty-input{width:80px;}
+    .chart-wrap{height:200px !important;}
+  }
+  @media(max-width:480px){
+    .table-scroll{max-height:62vh;}
+    .day-select-row{gap:7px;}
+    .day-select-row .primary-btn{flex:1 1 100%;}
+    .day-select-row select{flex:1 1 45%;min-width:0;}
+    .team-ring-row{grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:7px;}
+    .team-ring-card{padding:10px 6px;}
+    .tabs{padding:4px;}
+    .tab-btn{padding:8px 12px;font-size:12px;}
+    header .hbadge{font-size:10.5px;padding:5px 10px;}
+    footer{font-size:10.5px;}
+  }
   .team-ring-extra{font-size:10.5px;color:var(--accent);font-weight:600;margin-top:2px;}
 </style>
 </head>
@@ -165,7 +193,6 @@
 
 <div class="tabs">
   <button class="tab-btn active" data-tab="monthly">Tổng hợp tháng</button>
-  <button class="tab-btn" data-tab="daily">Theo ngày</button>
   <button class="tab-btn" data-tab="autoplan">Kế hoạch tuần (tự động)</button>
   <button class="tab-btn" data-tab="progress">Tiến độ sản xuất</button>
 </div>
@@ -244,7 +271,7 @@
     <div class="table-scroll">
       <table id="autoPlanTable">
         <thead>
-          <tr><th>Ngày</th><th>Mã</th><th>Dòng</th><th>Kích thước</th><th>Số lượng</th><th>Tổ phụ trách</th><th>Trạng thái</th></tr>
+          <tr><th>Ngày</th><th>Mã</th><th>Dòng</th><th>Kích thước</th><th>Số lượng</th><th>Tổ phụ trách</th><th>Trạng thái</th><th style="text-align:right;">Xoá</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -436,6 +463,7 @@ const yearFilterSelect = document.getElementById('yearFilterSelect');
 let defaultMY = {m:(new Date()).getMonth()+1, y:(new Date()).getFullYear()};
 
 let monthYearInitialized = false;
+let userChoseMonth = false; // true khi người dùng tự đổi tháng/năm -> tôn trọng lựa chọn đó
 function populateMonthYearFilters(){
   const prevM = monthFilterSelect.value, prevY = yearFilterSelect.value;
   const availableMonthYears = Array.from(new Set(allDayKeys.map(k=>{
@@ -458,10 +486,12 @@ function populateMonthYearFilters(){
   for(let y=minYear;y<=maxYear;y++){
     yearFilterSelect.innerHTML += `<option value="${y}">${y}</option>`;
   }
-  if(monthYearInitialized && prevM && prevY){
+  if(userChoseMonth && prevM && prevY){
     monthFilterSelect.value = prevM;
     yearFilterSelect.value = prevY;
   } else {
+    // Dữ liệu tháng hiện tại có thể đến muộn (sau khi tải xong Google Sheet) — nên phải
+    // tính lại mặc định mỗi lần, cho tới khi người dùng tự chọn tháng khác.
     monthFilterSelect.value = defaultMY.m;
     yearFilterSelect.value = defaultMY.y;
     monthYearInitialized = true;
@@ -800,13 +830,18 @@ function isPlannedOrder(o){
 }
 const ASSIGNMENT_STORAGE_KEY = 'khsx_autoplan_assignments';
 const DYNAMIC_ORDERS_KEY = 'khsx_dynamic_orders';
+const DELETED_ORDERS_KEY = 'khsx_deleted_orders';
 
 let sheetRows = [];      // rows pulled fresh from the company sheet each fetch: {id, date, ma, dong, ngang, dai, day, so_luong, ghi_chu}
 let dynamicOrders = [];  // rows Claude/dashboard spins off when an order falls short (persisted)
 let assignments = {};    // { [orderId]: { to: string|null, so_luong_hoan_thanh: number|null, spinoff_id: string|null } }
 let autoPlanLoaded = false;
 
-function getOrders(){ return sheetRows.concat(dynamicOrders); }
+let deletedOrderIds = []; // id các đơn đã bị xoá tay — không hiện lại dù sheet vẫn còn dòng đó
+
+function getOrders(){
+  return sheetRows.concat(dynamicOrders).filter(o=>!deletedOrderIds.includes(o.id));
+}
 function getOrderById(id){ return getOrders().find(o=>o.id===id); }
 
 function getOrderStatus(o){
@@ -947,6 +982,12 @@ async function loadDynamicOrders(){
 }
 async function saveDynamicOrders(){
   await storageSet(DYNAMIC_ORDERS_KEY, dynamicOrders);
+}
+async function loadDeletedOrders(){
+  deletedOrderIds = (await storageGet(DELETED_ORDERS_KEY)) || [];
+}
+async function saveDeletedOrders(){
+  await storageSet(DELETED_ORDERS_KEY, deletedOrderIds);
 }
 
 // minimal CSV parser that handles quoted fields with commas/newlines
@@ -1140,6 +1181,7 @@ function renderAutoPlan(){
       <td>${r.so_luong||'-'}</td>
       <td>${toCell}</td>
       <td>${statusBadgeHtml(r)}${daysLate>0?` <span class="badge badge-rot">Trễ ${daysLate} ngày</span>`:''}${r.ghi_chu?`<br><span class="note" style="font-size:11px;">${r.ghi_chu}</span>`:''}</td>
+      <td style="text-align:right;"><button class="trash-btn" data-order-id="${r.id}" title="Xoá đơn này">🗑</button></td>
     </tr>`;
   }).join('');
 }
@@ -1259,6 +1301,34 @@ async function handleAssignChange(orderId, val){
 document.querySelector('#autoPlanTable tbody').addEventListener('change', async (e)=>{
   if(!e.target.classList.contains('to-select')) return;
   await handleAssignChange(e.target.dataset.orderId, e.target.value);
+});
+
+// ---- Xoá đơn (biểu tượng thùng rác cuối mỗi dòng) ----
+document.querySelector('#autoPlanTable tbody').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('.trash-btn');
+  if(!btn) return;
+  const id = btn.dataset.orderId;
+  const o = getOrderById(id);
+  if(!o) return;
+  if(!confirm(`Xoá đơn này khỏi dashboard?\n\n${o.date} — ${o.dong || o.ma} — ${formatKichThuoc(o)} — SL ${o.so_luong}\n\nĐơn sẽ không hiện lại kể cả khi làm mới dữ liệu từ Google Sheet (dòng trong Sheet không bị ảnh hưởng).`)) return;
+
+  const a = assignments[id];
+  // Xoá luôn phần đã tách cho tổ hỗ trợ của đơn này (nếu có)
+  if(a && a.spinoff_id){
+    dynamicOrders = dynamicOrders.filter(d=>d.id !== a.spinoff_id);
+    delete assignments[a.spinoff_id];
+  }
+  delete assignments[id];
+  dynamicOrders = dynamicOrders.filter(d=>d.id !== id);
+  if(!deletedOrderIds.includes(id)) deletedOrderIds.push(id);
+
+  await saveAssignments();
+  await saveDynamicOrders();
+  await saveDeletedOrders();
+  renderAutoPlanDaySelect();
+  renderAutoPlan();
+  renderProgress();
+  syncCompletedOrdersToMonthlyData();
 });
 
 // When staff enters a completed quantity short of the plan, spin the remainder off as a new
@@ -1396,8 +1466,8 @@ function refreshForMonthYear(){
   renderMonthly();
 }
 
-monthFilterSelect.addEventListener('change', refreshForMonthYear);
-yearFilterSelect.addEventListener('change', refreshForMonthYear);
+monthFilterSelect.addEventListener('change', ()=>{ userChoseMonth = true; refreshForMonthYear(); });
+yearFilterSelect.addEventListener('change', ()=>{ userChoseMonth = true; refreshForMonthYear(); });
 
 // ---- tabs ----
 document.querySelectorAll('.tab-btn').forEach(btn=>{
@@ -1575,13 +1645,17 @@ const POLL_INTERVAL_MS = 20000; // 20 giây — kiểm tra dữ liệu mới đ�
 async function pollForUpdates(){
   if(document.hidden) return; // không tải khi tab đang ẩn, đỡ tốn tài nguyên
   try{
-    const [newAssignments, newDynamicOrders] = await Promise.all([
+    const [newAssignments, newDynamicOrders, newDeleted] = await Promise.all([
       storageGet(ASSIGNMENT_STORAGE_KEY),
-      storageGet(DYNAMIC_ORDERS_KEY)
+      storageGet(DYNAMIC_ORDERS_KEY),
+      storageGet(DELETED_ORDERS_KEY)
     ]);
     const newAssignJson = JSON.stringify(newAssignments || {});
     const newOrdersJson = JSON.stringify(newDynamicOrders || []);
-    const changed = newAssignJson !== JSON.stringify(assignments) || newOrdersJson !== JSON.stringify(dynamicOrders);
+    const newDeletedJson = JSON.stringify(newDeleted || []);
+    const changed = newAssignJson !== JSON.stringify(assignments)
+      || newOrdersJson !== JSON.stringify(dynamicOrders)
+      || newDeletedJson !== JSON.stringify(deletedOrderIds);
     if(!changed) return;
 
     // Nếu đang gõ dở trong 1 ô nhập liệu, bỏ qua lượt này để không bị mất thao tác đang làm —
@@ -1591,6 +1665,8 @@ async function pollForUpdates(){
 
     assignments = newAssignments || {};
     dynamicOrders = newDynamicOrders || [];
+    deletedOrderIds = newDeleted || [];
+    renderAutoPlanDaySelect();
     renderAutoPlan();
     renderProgress();
     syncCompletedOrdersToMonthlyData();
@@ -1613,6 +1689,7 @@ async function bootstrap(){
   refreshForMonthYear();
   await loadAssignments();
   await loadDynamicOrders();
+  await loadDeletedOrders();
   await fetchAutoPlan();
   startPolling();
 }
