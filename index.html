@@ -1212,7 +1212,7 @@ async function handleQtyChange(orderId, rawVal){
   const a = assignments[orderId];
   const val = rawVal === '' ? null : parseFloat(rawVal);
 
-  if(val == null || isNaN(val) || val <= 0){
+  if(val == null || isNaN(val) || val < 0){
     a.so_luong_hoan_thanh = null;
   } else if(val >= o.so_luong){
     a.so_luong_hoan_thanh = o.so_luong;
