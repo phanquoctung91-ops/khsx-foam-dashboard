@@ -57,7 +57,41 @@
 
   .note{color:var(--danger);font-style:italic;}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
-  @media(max-width:800px){.grid2{grid-template-columns:1fr;} input[type="text"]{min-width:160px;}}
+
+  html{overflow-x:hidden;}
+  body{overflow-x:hidden;}
+
+  /* Tablet / máy tính bảng, cả 2 chiều xoay */
+  @media(max-width:900px){
+    .grid2{grid-template-columns:1fr;}
+    .wrap{padding:20px 16px 44px;}
+  }
+  /* Điện thoại nằm ngang & tablet nhỏ */
+  @media(max-width:700px){
+    input[type="text"]{min-width:140px;}
+    header .htext h1{font-size:18px;}
+    .kpi .value{font-size:21px;}
+    .card{padding:16px;}
+    table{font-size:11.5px;}
+    th, td{padding:7px 8px;}
+  }
+  /* Điện thoại nằm dọc (chiều hẹp nhất) */
+  @media(max-width:480px){
+    .wrap{padding:14px 10px 36px;}
+    .kpis{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;}
+    .kpi{padding:12px 14px;}
+    .day-select-row{gap:8px;}
+    input[type="text"]{min-width:100%;}
+    .tabs{width:100%;}
+  }
+  /* Điện thoại nằm ngang (chiều thấp, rộng) — ưu tiên hạ chiều cao thay vì bề rộng */
+  @media(max-height:480px) and (orientation:landscape){
+    .wrap{padding:14px 16px 30px;}
+    header{margin-bottom:14px;padding-bottom:10px;}
+    .kpis{margin-bottom:14px;}
+    .tabs{margin-bottom:12px;}
+  }
+
   .chart-wrap{position:relative;width:100%;}
 
   .team-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;}
@@ -97,6 +131,14 @@
   select.to-select-empty{color:var(--text2);font-style:italic;}
   select.spinoff-to-select{font-size:11.5px;padding:3px 6px;border-radius:6px;}
   input.qty-input{width:110px;padding:6px 8px;}
+
+  .team-ring-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+  .team-ring-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;box-shadow:var(--shadow);}
+  .team-ring{width:66px;height:66px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;}
+  .team-ring-inner{width:48px;height:48px;background:var(--card);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+  .team-ring-label{font-size:12px;font-weight:700;margin-bottom:2px;}
+  .team-ring-detail{font-size:11px;color:var(--text2);}
+  .team-ring-extra{font-size:10.5px;color:var(--accent);font-weight:600;margin-top:2px;}
 </style>
 </head>
 <body>
@@ -125,7 +167,6 @@
   <button class="tab-btn active" data-tab="monthly">Tổng hợp tháng</button>
   <button class="tab-btn" data-tab="daily">Theo ngày</button>
   <button class="tab-btn" data-tab="autoplan">Kế hoạch tuần (tự động)</button>
-  <button class="tab-btn" data-tab="byteam">Theo tổ</button>
   <button class="tab-btn" data-tab="progress">Tiến độ sản xuất</button>
 </div>
 
@@ -139,6 +180,7 @@
       <span id="monthRangeNote" style="font-size:12px;color:var(--text2);"></span>
     </div>
   </div>
+  <div class="kpis" id="monthlyKpis" style="margin-bottom:18px;"></div>
   <div class="grid2">
     <div class="card">
       <h3>Sản lượng kế hoạch theo sản phẩm</h3>
@@ -194,6 +236,7 @@
       </div>
     </div>
     <div class="kpis" id="autoPlanKpis" style="margin-bottom:16px;"></div>
+    <div class="team-ring-row" id="autoPlanTeamRings" style="margin-bottom:16px;"></div>
     <div class="table-scroll">
       <table id="autoPlanTable">
         <thead>
@@ -211,6 +254,8 @@
     <select id="daySelect"></select>
     <input type="text" id="searchBox" placeholder="Tìm theo tên hàng, tổ, ghi chú...">
   </div>
+
+  <div class="kpis" id="dayKpis" style="margin-bottom:16px;"></div>
 
   <div class="grid2">
     <div class="card">
@@ -234,28 +279,6 @@
       <table id="dayTable">
         <thead>
           <tr><th>Tổ</th><th>Tên hàng</th><th>Kích thước</th><th>Nhóm KHSX</th><th>Kế hoạch</th><th>Đóng gói</th><th>Ghi chú</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<div class="panel" id="panel-byteam">
-  <div class="card">
-    <h3>Chi tiết kế hoạch sản xuất theo tổ</h3>
-    <div class="day-select-row">
-      <label>Tổ:</label>
-      <select id="teamFilterSelect"></select>
-      <label>Ngày:</label>
-      <select id="teamDaySelect"></select>
-      <input type="text" id="teamSearchBox" placeholder="Tìm theo tên hàng hoặc kích thước...">
-    </div>
-    <div class="kpis" id="teamFilterKpis" style="margin-bottom:16px;"></div>
-    <div class="table-scroll">
-      <table id="byTeamTable">
-        <thead>
-          <tr><th>Ngày</th><th>Tổ</th><th>Tên hàng</th><th>Kích thước</th><th>Kế hoạch</th><th>Đóng gói</th><th>Ghi chú</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -296,6 +319,7 @@
           <option value="Tổ 2">Tổ 2</option>
           <option value="Tổ 3">Tổ 3</option>
           <option value="Tổ 4">Tổ 4</option>
+          <option value="Tổ 5">Tổ 5</option>
         </select>
         <label>Ghi chú:</label>
         <input type="text" id="manualOrderNoteProgress" placeholder="Ghi chú (tuỳ chọn)" style="flex:1;">
@@ -529,8 +553,22 @@ function renderDay(key){
     }).join('');
   }
 
+  const q = searchBox.value.trim().toLowerCase();
+  const filteredRows = d.rows.filter(r=>{
+    if(!q) return true;
+    return String(r.ten_hang).toLowerCase().includes(q) || String(r.to).includes(q) || String(r.ghi_chu||'').toLowerCase().includes(q) || String(r.nhom_khsx||'').toLowerCase().includes(q);
+  });
+
   let plan=0, dg=0;
-  d.rows.forEach(r=>{ plan += r.ke_hoach||0; dg += r.dong_goi||0; });
+  filteredRows.forEach(r=>{ plan += r.ke_hoach||0; dg += r.dong_goi||0; });
+  const dayRate = plan>0 ? Math.round((dg/plan)*1000)/10 : 0;
+  document.getElementById('dayKpis').innerHTML = `
+    <div class="kpi k-accent"><div class="label">Kế hoạch</div><div class="value">${plan.toLocaleString()}</div></div>
+    <div class="kpi k-success"><div class="label">Đóng gói</div><div class="value">${dg.toLocaleString()}</div></div>
+    <div class="kpi ${dayRate>=95?'k-success':'k-warning'}"><div class="label">Tỷ lệ hoàn thành</div><div class="value" style="color:${dayRate>=95?'var(--success)':dayRate>=80?'var(--warning)':'var(--danger)'}">${dayRate}%</div></div>
+    <div class="kpi k-accent"><div class="label">Số đơn</div><div class="value">${filteredRows.length}</div></div>
+  `;
+
   if(dayStageChart) dayStageChart.destroy();
   dayStageChart = new Chart(document.getElementById('dayStageChart'), {
     type:'bar',
@@ -542,11 +580,7 @@ function renderDay(key){
   });
 
   const tbody = document.querySelector('#dayTable tbody');
-  const q = searchBox.value.trim().toLowerCase();
-  tbody.innerHTML = d.rows.filter(r=>{
-    if(!q) return true;
-    return String(r.ten_hang).toLowerCase().includes(q) || String(r.to).includes(q) || String(r.ghi_chu||'').toLowerCase().includes(q) || String(r.nhom_khsx||'').toLowerCase().includes(q);
-  }).map(r=>{
+  tbody.innerHTML = filteredRows.map(r=>{
     const done = r.dong_goi||0, plan = r.ke_hoach||0;
     let rowBg = '';
     if(r.ghi_chu) rowBg = 'background:#fbeaea60;';
@@ -593,6 +627,7 @@ function renderMonthly(){
 
   const productMap = {};
   const teamMap = {};
+  let rangePlan = 0, rangeDone = 0;
   keysToUse.forEach(k=>{
     allDays[k].rows.forEach(r=>{
       const name = (r.ten_hang||'').trim();
@@ -604,8 +639,18 @@ function renderMonthly(){
         teamMap[r.to].don_hang += r.ke_hoach||0;
         teamMap[r.to].hoan_thanh += r.dong_goi||0;
       }
+      rangePlan += r.ke_hoach||0;
+      rangeDone += r.dong_goi||0;
     });
   });
+
+  const rangeRate = rangePlan>0 ? Math.round((rangeDone/rangePlan)*1000)/10 : 0;
+  document.getElementById('monthlyKpis').innerHTML = `
+    <div class="kpi k-accent"><div class="label">Tổng kế hoạch</div><div class="value">${rangePlan.toLocaleString()}</div></div>
+    <div class="kpi k-success"><div class="label">Tổng đóng gói</div><div class="value">${rangeDone.toLocaleString()}</div></div>
+    <div class="kpi ${rangeRate>=95?'k-success':'k-warning'}"><div class="label">Tỷ lệ hoàn thành</div><div class="value" style="color:${rangeRate>=95?'var(--success)':rangeRate>=80?'var(--warning)':'var(--danger)'}">${rangeRate}%</div></div>
+    <div class="kpi k-accent"><div class="label">Số ngày trong khoảng</div><div class="value">${keysToUse.length}</div></div>
+  `;
 
   const products = Object.entries(productMap).map(([name,total])=>({name,total})).sort((a,b)=>b.total-a.total);
   if(productChart) productChart.destroy();
@@ -697,75 +742,6 @@ function renderMonthly(){
 monthFromSelect.addEventListener('change', renderMonthly);
 monthToSelect.addEventListener('change', renderMonthly);
 
-// ---- Theo tổ tab ----
-const teamFilterSelect = document.getElementById('teamFilterSelect');
-const teamDaySelect = document.getElementById('teamDaySelect');
-const teamSearchBox = document.getElementById('teamSearchBox');
-
-function populateTeamSelects(){
-  const prevTeam = teamFilterSelect.value, prevDay = teamDaySelect.value;
-  const teamNumbers = Array.from(new Set(
-    dayKeys.flatMap(k => allDays[k].rows.map(r => r.to)).filter(t => t !== null && t !== undefined)
-  )).sort((a,b)=>String(a).localeCompare(String(b),'vi',{numeric:true}));
-
-  teamFilterSelect.innerHTML = '<option value="all">Tất cả tổ</option>' +
-    teamNumbers.map(t => `<option value="${t}">${teamLabel(t)}</option>`).join('');
-  teamFilterSelect.value = teamNumbers.some(t=>String(t)===prevTeam) ? prevTeam : 'all';
-
-  teamDaySelect.innerHTML = '<option value="all">Tất cả ngày</option>' +
-    dayKeys.map(k => `<option value="${k}">Ngày ${allDays[k].date}</option>`).join('');
-  teamDaySelect.value = dayKeys.includes(prevDay) ? prevDay : 'all';
-}
-
-function renderByTeam(){
-  const teamVal = teamFilterSelect.value;
-  const dayVal = teamDaySelect.value;
-  const q = teamSearchBox.value.trim().toLowerCase();
-  const keysToUse = dayVal === 'all' ? dayKeys : [dayVal];
-
-  const results = [];
-  keysToUse.forEach(k=>{
-    allDays[k].rows.forEach(r=>{
-      if(teamVal === 'all' || String(r.to) === String(teamVal)){
-        if(q && !String(r.ten_hang||'').toLowerCase().includes(q) && !String(r.kich_thuoc||'').toLowerCase().includes(q)) return;
-        results.push({date: allDays[k].date, to: r.to, ten_hang: r.ten_hang, kich_thuoc: r.kich_thuoc, ke_hoach: r.ke_hoach, dong_goi: r.dong_goi, ghi_chu: r.ghi_chu});
-      }
-    });
-  });
-
-  let totalPlan=0, totalDG=0;
-  results.forEach(r=>{ totalPlan += r.ke_hoach||0; totalDG += r.dong_goi||0; });
-  const rate = totalPlan>0 ? Math.round((totalDG/totalPlan)*1000)/10 : 0;
-
-  document.getElementById('teamFilterKpis').innerHTML = `
-    <div class="kpi"><div class="label">Số đơn</div><div class="value">${results.length}</div></div>
-    <div class="kpi"><div class="label">Tổng kế hoạch</div><div class="value">${totalPlan.toLocaleString()}</div></div>
-    <div class="kpi"><div class="label">Tổng đóng gói</div><div class="value">${totalDG.toLocaleString()}</div></div>
-    <div class="kpi"><div class="label">Tỷ lệ hoàn thành</div><div class="value" style="color:${rate>=95?'#0f8a4c':rate>=80?'#b7791f':'#c0332f'}">${rate}%</div></div>
-  `;
-
-  const tbody = document.querySelector('#byTeamTable tbody');
-  tbody.innerHTML = results.map(r=>{
-    const done = r.dong_goi||0, plan = r.ke_hoach||0;
-    let rowBg = '';
-    if(r.ghi_chu) rowBg = 'background:#fbeaea60;';
-    else if(plan>0 && done < plan) rowBg = 'background:#fdf4e360;';
-    return `<tr style="${rowBg}">
-      <td>${r.date}</td>
-      <td>${r.to??'-'}</td>
-      <td>${r.ten_hang??'-'}</td>
-      <td>${r.kich_thuoc??'-'}</td>
-      <td>${r.ke_hoach??'-'}</td>
-      <td>${r.dong_goi??'-'}</td>
-      <td class="${r.ghi_chu?'note':''}">${r.ghi_chu??''}</td>
-    </tr>`;
-  }).join('');
-}
-
-teamFilterSelect.addEventListener('change', renderByTeam);
-teamDaySelect.addEventListener('change', renderByTeam);
-teamSearchBox.addEventListener('input', renderByTeam);
-
 // ============ Kế hoạch tuần (tự động) — fetch from company Google Sheet ============
 const SHEET_ID = '1qNC55iN4KKF9hJRrfc4egnHIqnC_-GKEKC2jwXDFxMQ';
 const SHEET_GID = '1960770014';
@@ -776,7 +752,14 @@ const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/t
 // can see what the tab looks like once it's actually connected live.
 const SIMULATED_AUTOPLAN_DATA = [{"date":"27/07/2026","ma":"LUN15-6","dong":"LUNA","ngang":160,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"27/07/2026","ma":"LUN20-8","dong":"LUNA","ngang":180,"dai":200,"day":20,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"27/07/2026","ma":"LUN15-4","dong":"LUNA","ngang":140,"dai":200,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"27/07/2026","ma":"SORA15-2020","dong":"SORA","ngang":200,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"27/07/2026","ma":"EZ20-3","dong":"LATEX ENZO","ngang":160,"dai":200,"day":20,"so_luong":41,"trang_thai":"","ghi_chu":"Vải premium cũ, có khoá kéo, đóng bao keo trong"},{"date":"27/07/2026","ma":"EZ20-5","dong":"LATEX ENZO","ngang":200,"dai":200,"day":20,"so_luong":2,"trang_thai":"","ghi_chu":"Làm nệm tròn đường kính 2m, Vải premium cũ, có khoá kéo"},{"date":"27/07/2026","ma":"CLS15-2020","dong":"CLASSIC","ngang":200,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"SORA10-63","dong":"SORA","ngang":63,"dai":183,"day":10,"so_luong":60,"trang_thai":"","ghi_chu":"Tái 1 con std 90x190x10, (áo standard không đít thêu + thêm tem cty khách)"},{"date":"28/07/2026","ma":"SORA10-6","dong":"SORA","ngang":160,"dai":200,"day":10,"so_luong":30,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA15-6","dong":"SORA","ngang":160,"dai":200,"day":15,"so_luong":27,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"SORA15-8","dong":"SORA","ngang":180,"dai":200,"day":15,"so_luong":27,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA15-2022","dong":"SORA","ngang":220,"dai":200,"day":15,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"SORA10-8","dong":"SORA","ngang":180,"dai":200,"day":10,"so_luong":30,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA10-2","dong":"SORA","ngang":120,"dai":200,"day":10,"so_luong":15,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"CLS15-2022","dong":"CLASSIC","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"CLS15-2020","dong":"CLASSIC","ngang":200,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"CLS10-6","dong":"CLASSIC","ngang":160,"dai":200,"day":10,"so_luong":15,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"CLS15-8","dong":"CLASSIC","ngang":180,"dai":200,"day":15,"so_luong":9,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"ZONE17-8","dong":"3'ZONE","ngang":180,"dai":200,"day":17,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA10-2022","dong":"SORA","ngang":220,"dai":200,"day":10,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"LAGO10-6","dong":"LATEX GOLD","ngang":160,"dai":200,"day":10,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"LAGO15-6","dong":"LATEX GOLD","ngang":160,"dai":200,"day":15,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"SORA10-2020","dong":"SORA","ngang":200,"dai":200,"day":10,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"ZONE12-6","dong":"3'ZONE","ngang":160,"dai":200,"day":12,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"ZONE17-6","dong":"3'ZONE","ngang":160,"dai":200,"day":17,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"LAGO10-4","dong":"LATEX GOLD","ngang":140,"dai":200,"day":10,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"STD20-2020","dong":"STANDARD","ngang":200,"dai":200,"day":20,"so_luong":3,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"ZONE17-6","dong":"3'ZONE","ngang":160,"dai":200,"day":17,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"CLS10-2022","dong":"CLASSIC","ngang":220,"dai":200,"day":10,"so_luong":3,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"STD15-2022","dong":"STANDARD","ngang":220,"dai":200,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"SORA10-2","dong":"SORA","ngang":120,"dai":180,"day":10,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"SORA10-63","dong":"SORA","ngang":63,"dai":183,"day":10,"so_luong":30,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"STD15-2022","dong":"STANDARD","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"STD20-2","dong":"STANDARD","ngang":120,"dai":200,"day":20,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"STD10-2022","dong":"STANDARD","ngang":220,"dai":240,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"SORA15-2022","dong":"SORA","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"LAEZ10-2022","dong":"LATEX ENZO","ngang":220,"dai":200,"day":10,"so_luong":3,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"LAEZ15-2022","dong":"LATEX ENZO","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"ZONE17-8","dong":"3'ZONE","ngang":180,"dai":200,"day":17,"so_luong":2,"trang_thai":"","ghi_chu":"Ưu tiên sáng sản xuất"},{"date":"29/07/2026","ma":"PRE15-4","dong":"PREMIUM","ngang":140,"dai":200,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":"Ưu tiên sáng sản xuất"},{"date":"29/07/2026","ma":"STD10-2","dong":"STANDARD","ngang":110,"dai":170,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":"tái chế con std 140x175x10"},{"date":"29/07/2026","ma":"STD10-1","dong":"STANDARD","ngang":90,"dai":180,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":"tái chế con classic 150x190x10"},{"date":"29/07/2026","ma":"STD15-6","dong":"STANDARD","ngang":150,"dai":190,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"EZ20-3","dong":"LATEX ENZO","ngang":160,"dai":200,"day":20,"so_luong":2,"trang_thai":"","ghi_chu":"Vải premium cũ, có khoá kéo, đóng bao keo trong"},{"date":"29/07/2026","ma":"PRE15-2022","dong":"PREMIUM","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"CLS20-2020","dong":"CLASSIC","ngang":200,"dai":200,"day":20,"so_luong":3,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"LUN10-2","dong":"LUNA","ngang":120,"dai":200,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"PRE10-6","dong":"PREMIUM","ngang":150,"dai":197,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA10-2","dong":"SORA","ngang":120,"dai":180,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"LAGO15-4","dong":"LATEX GOLD","ngang":140,"dai":190,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"ZONE17-2022","dong":"3'ZONE","ngang":220,"dai":200,"day":17,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"ZONE12-2020","dong":"3'ZONE","ngang":200,"dai":200,"day":12,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA10-4","dong":"SORA","ngang":140,"dai":192,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA15-2022","dong":"SORA","ngang":220,"dai":200,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"KH12-4","dong":"KING HOME","ngang":140,"dai":200,"day":12,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"KH12-6","dong":"KING HOME","ngang":160,"dai":200,"day":12,"so_luong":6,"trang_thai":"","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO10-6","dong":"LATEX GOLD","ngang":160,"dai":200,"day":10,"so_luong":15,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"STD15-2020","dong":"STANDARD","ngang":200,"dai":200,"day":15,"so_luong":2,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"SORA10-1","dong":"SORA","ngang":100,"dai":200,"day":10,"so_luong":15,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"STD15-4","dong":"STANDARD","ngang":140,"dai":200,"day":15,"so_luong":2,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"SORA10-4","dong":"SORA","ngang":140,"dai":200,"day":10,"so_luong":15,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO15-8","dong":"LATEX GOLD","ngang":180,"dai":200,"day":15,"so_luong":9,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO20-6","dong":"LATEX GOLD","ngang":160,"dai":200,"day":20,"so_luong":5,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO15-2022","dong":"LATEX GOLD","ngang":220,"dai":200,"day":15,"so_luong":3,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"STD15-6","dong":"STANDARD","ngang":160,"dai":200,"day":15,"so_luong":9,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO20-8","dong":"LATEX GOLD","ngang":180,"dai":200,"day":20,"so_luong":5,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO10-2022","dong":"LATEX GOLD","ngang":220,"dai":200,"day":10,"so_luong":2,"trang_thai":"Chốt","ghi_chu":""}];
 
-const TEAM_OPTIONS = ['Tổ 1','Tổ 2','Tổ 3','Tổ 4'];
+const TEAM_OPTIONS = ['Tổ 1','Tổ 2','Tổ 3','Tổ 4','Tổ 5'];
+
+// Đơn "trong kế hoạch" = đơn gốc từ sheet công ty, được giao thẳng cho 1 tổ.
+// Đơn "ngoài kế hoạch" = đơn hàng phát sinh (tự thêm tay) hoặc đơn rớt (phần thiếu do tổ khác hỗ trợ) —
+// số lượng của các đơn này KHÔNG tính vào "Kế hoạch" của tổ nào, chỉ tính vào "Hoàn thành" (vượt kế hoạch).
+function isPlannedOrder(o){
+  return !o.is_drop && !o.is_manual;
+}
 const ASSIGNMENT_STORAGE_KEY = 'khsx_autoplan_assignments';
 const DYNAMIC_ORDERS_KEY = 'khsx_dynamic_orders';
 
@@ -995,6 +978,30 @@ function formatKichThuoc(r){
   return r.ngang || '-';
 }
 
+// Vẽ 5 ô "Tổ 1..5" dạng vòng tròn: Kế hoạch chỉ tính đơn trong kế hoạch (isPlannedOrder),
+// Hoàn thành tính TẤT CẢ (kể cả phần làm hộ/vượt kế hoạch) — đúng quy tắc đã thống nhất.
+function renderTeamRings(containerId, orders){
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  container.innerHTML = TEAM_OPTIONS.map(team=>{
+    const teamOrders = orders.filter(o => assignments[o.id]?.to === team);
+    const keHoach = teamOrders.filter(isPlannedOrder).reduce((a,o)=>a+o.so_luong,0);
+    const hoanThanh = teamOrders.reduce((a,o)=>a+(assignments[o.id]?.so_luong_hoan_thanh||0),0);
+    const extra = Math.max(0, hoanThanh - keHoach);
+    const pct = keHoach>0 ? Math.min(100, Math.round((hoanThanh/keHoach)*100)) : (hoanThanh>0 ? 100 : 0);
+    const color = pct>=100 ? 'var(--success)' : pct>=50 ? 'var(--warning)' : 'var(--text2)';
+    return `
+    <div class="team-ring-card">
+      <div class="team-ring" style="background:conic-gradient(${color} 0% ${pct}%, #e4e7ed ${pct}% 100%);">
+        <div class="team-ring-inner">${pct}%</div>
+      </div>
+      <div class="team-ring-label">${team}</div>
+      <div class="team-ring-detail">${hoanThanh.toLocaleString()} / ${keHoach.toLocaleString()}</div>
+      ${extra>0 ? `<div class="team-ring-extra">+${extra.toLocaleString()} vượt KH</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
 function renderAutoPlanDaySelect(){
   const sel = document.getElementById('autoPlanDaySelect');
   const prev = sel.value || 'all';
@@ -1018,19 +1025,17 @@ function renderAutoPlan(){
     if(assignFilter === 'assigned' && !hasTeam) return false;
     return true;
   });
-  const totalQty = filtered.reduce((a,r)=>a+r.so_luong,0);
+  const kesHoachSanXuat = filtered.filter(isPlannedOrder).reduce((a,r)=>a+r.so_luong,0);
+  const hoanThanh = filtered.reduce((a,r)=>a+(assignments[r.id]?.so_luong_hoan_thanh||0),0);
   const rotCount = filtered.filter(r=>getOrderStatus(r)==='rot').length;
   const dangSXCount = filtered.filter(r=>getOrderStatus(r)==='dang_san_xuat').length;
-  const splitCount = filtered.filter(r=>getOrderStatus(r)==='partial').length;
-  const doneCount = filtered.filter(r=>getOrderStatus(r)==='hoan_thanh').length;
   document.getElementById('autoPlanKpis').innerHTML = `
-    <div class="kpi"><div class="label">Số dòng</div><div class="value">${filtered.length}</div></div>
-    <div class="kpi k-accent"><div class="label">Tổng số lượng</div><div class="value">${totalQty.toLocaleString()}</div></div>
+    <div class="kpi k-accent"><div class="label">Kế hoạch sản xuất</div><div class="value">${kesHoachSanXuat.toLocaleString()}</div></div>
+    <div class="kpi k-success"><div class="label">Hoàn thành</div><div class="value">${hoanThanh.toLocaleString()}</div></div>
     <div class="kpi k-warning"><div class="label">Đang sản xuất</div><div class="value">${dangSXCount}</div></div>
-    <div class="kpi" style="border-top-color:var(--accent);"><div class="label">Đã chia tổ</div><div class="value" style="color:var(--accent);">${splitCount}</div></div>
-    <div class="kpi" style="border-top-color:var(--danger);"><div class="label">Đơn hàng rớt</div><div class="value" style="color:var(--danger);">${rotCount}</div></div>
-    <div class="kpi k-success"><div class="label">Hoàn thành</div><div class="value">${doneCount}</div></div>
+    <div class="kpi" style="border-top-color:var(--danger);"><div class="label">Đơn rớt chưa sản xuất</div><div class="value" style="color:var(--danger);">${rotCount}</div></div>
   `;
+  renderTeamRings('autoPlanTeamRings', filtered);
   const tbody = document.querySelector('#autoPlanTable tbody');
   tbody.innerHTML = filtered.map(r=>{
     const status = getOrderStatus(r);
@@ -1230,17 +1235,16 @@ function extractTeamNumber(t){
 function syncCompletedOrdersToMonthlyData(){
   Object.keys(allDays).forEach(k=>{ allDays[k].rows = allDays[k].rows.filter(r=>!r._from_foam); });
 
-  // Both fully-completed orders AND locked "split" orders (Tổ đã chốt phần mình làm, phần
-  // còn thiếu đã chuyển cho tổ khác) count toward monthly totals — each contributes only its
-  // own closed quantity, so the sum across split pieces always equals the original order.
+  // Đơn "trong kế hoạch" (kể cả khi bị chia dở) đóng góp Kế hoạch = số lượng GỐC của đơn, Hoàn thành =
+  // số thực tế đã làm. Đơn "ngoài kế hoạch" (đơn rớt tổ khác hỗ trợ, đơn phát sinh) đóng góp Kế hoạch = 0,
+  // chỉ tính vào Hoàn thành (hiểu là vượt kế hoạch) — đúng quy tắc đã thống nhất với người dùng.
   const closedByDate = {};
   getOrders().forEach(o=>{
     const status = getOrderStatus(o);
     const a = assignments[o.id];
-    if(status === 'hoan_thanh'){
-      (closedByDate[o.date] = closedByDate[o.date]||[]).push({o, a, ke_hoach:o.so_luong, dong_goi:a.so_luong_hoan_thanh});
-    } else if(status === 'partial'){
-      (closedByDate[o.date] = closedByDate[o.date]||[]).push({o, a, ke_hoach:a.so_luong_hoan_thanh, dong_goi:a.so_luong_hoan_thanh});
+    if(status === 'hoan_thanh' || status === 'partial'){
+      const ke_hoach = isPlannedOrder(o) ? o.so_luong : 0;
+      (closedByDate[o.date] = closedByDate[o.date]||[]).push({o, a, ke_hoach, dong_goi:a.so_luong_hoan_thanh});
     }
   });
 
@@ -1297,8 +1301,6 @@ function refreshForMonthYear(){
   renderDay(dayToShow);
   populateMonthRangeSelects();
   renderMonthly();
-  populateTeamSelects();
-  renderByTeam();
 }
 
 monthFilterSelect.addEventListener('change', refreshForMonthYear);
@@ -1350,7 +1352,7 @@ function renderProgress(){
     return true;
   });
 
-  const totalPlan = filtered.reduce((a,r)=>a+(r.so_luong||0),0);
+  const totalPlan = filtered.filter(isPlannedOrder).reduce((a,r)=>a+(r.so_luong||0),0);
   const totalDone = filtered.reduce((a,r)=>a+(assignments[r.id].so_luong_hoan_thanh||0),0);
   const doneCount = filtered.filter(r=>getOrderStatus(r)==='hoan_thanh').length;
   const partialCount = filtered.filter(r=>getOrderStatus(r)==='partial').length;
@@ -1358,9 +1360,10 @@ function renderProgress(){
   const rate = totalPlan>0 ? Math.round((totalDone/totalPlan)*1000)/10 : 0;
 
   document.getElementById('progressKpis').innerHTML = `
+    <div class="kpi k-accent"><div class="label">Kế hoạch</div><div class="value">${totalPlan.toLocaleString()}</div></div>
+    <div class="kpi k-success"><div class="label">Hoàn thành</div><div class="value">${totalDone.toLocaleString()}</div></div>
     <div class="kpi k-warning"><div class="label">Đang sản xuất</div><div class="value">${inProgressCount}</div></div>
     <div class="kpi" style="border-top-color:var(--accent);"><div class="label">Đã chia tổ (dở dang)</div><div class="value" style="color:var(--accent);">${partialCount}</div></div>
-    <div class="kpi k-success"><div class="label">Hoàn thành</div><div class="value">${doneCount}</div></div>
     <div class="kpi ${rate>=95?'k-success':'k-warning'}"><div class="label">Tỷ lệ hoàn thành</div><div class="value" style="color:${rate>=95?'var(--success)':rate>=80?'var(--warning)':'var(--danger)'}">${rate}%</div></div>
   `;
 
@@ -1458,6 +1461,22 @@ async function bootstrap(){
   startPolling();
 }
 bootstrap();
+
+// ---- Xử lý xoay màn hình (điện thoại/tablet) ----
+// Một số trình duyệt di động báo kích thước cũ trong khoảnh khắc vừa xoay xong;
+// đợi 1 nhịp ngắn cho layout ổn định rồi mới ép Chart.js (và trình duyệt) tính lại kích thước.
+function handleOrientationChange(){
+  setTimeout(()=>{
+    window.dispatchEvent(new Event('resize'));
+    [dayStageChart, productChart, teamMonthChart, dailyTrendChart].forEach(c=>{
+      if(c && typeof c.resize === 'function') c.resize();
+    });
+  }, 300);
+}
+window.addEventListener('orientationchange', handleOrientationChange);
+if(window.screen && window.screen.orientation){
+  window.screen.orientation.addEventListener('change', handleOrientationChange);
+}
 
 </script>
 </body>
