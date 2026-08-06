@@ -215,7 +215,11 @@
         <option value="unassigned">Chưa có tổ phụ trách</option>
         <option value="assigned">Đã có tổ phụ trách</option>
       </select>
+      <button id="unlockEditBtn" class="primary-btn" style="background:var(--danger);">⚠ Sửa đổi số liệu</button>
       <span class="save-status" id="autoPlanStatus"></span>
+    </div>
+    <div id="unlockEditNotice" style="display:none;background:#fdecea;border:1px solid var(--danger);color:var(--danger);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;">
+      <strong>Đang mở khoá sửa đổi.</strong> Bạn có thể đổi tổ phụ trách, sửa/xoá số lượng hoàn thành và bỏ tổ hỗ trợ của các đơn đã chốt. Nhớ bấm lại nút đỏ để khoá khi xong.
     </div>
     <div id="manualOrderForm" style="display:none;background:#f8f9fb;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
       <div class="day-select-row" style="margin-bottom:10px;">
@@ -294,6 +298,7 @@
     </p>
     <div class="day-select-row">
       <button id="addManualOrderBtnProgress" class="primary-btn" style="background:var(--accent);">+ Thêm đơn hàng phát sinh</button>
+      <button id="bulkCompleteBtn" class="primary-btn" style="background:var(--success);">✓ Hoàn thành</button>
       <label>Ngày:</label>
       <select id="progressDaySelect"></select>
       <label>Tổ:</label>
@@ -331,7 +336,7 @@
     <div class="table-scroll">
       <table id="progressTable">
         <thead>
-          <tr><th>Ngày</th><th>Mã</th><th>Dòng</th><th>Kích thước</th><th>Kế hoạch</th><th>Tổ phụ trách</th><th>Số lượng hoàn thành</th><th>Tổ hỗ trợ</th><th>Trạng thái</th><th>Ghi chú</th></tr>
+          <tr><th>Ngày</th><th>Mã</th><th>Dòng</th><th>Kích thước</th><th>Kế hoạch</th><th>Tổ phụ trách</th><th>Số lượng hoàn thành</th><th>Sửa</th><th>Tổ hỗ trợ</th><th>Trạng thái</th><th>Ghi chú</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -437,7 +442,10 @@ function populateMonthYearFilters(){
     const {m,y} = parseDMY(allDays[k].date);
     return `${m}-${y}`;
   }))).map(s=>{ const [m,y]=s.split('-').map(Number); return {m,y}; });
-  defaultMY = availableMonthYears[0] || defaultMY;
+  // Luôn ưu tiên tháng hiện tại nếu đã có dữ liệu; nếu chưa thì lấy tháng mới nhất đang có.
+  const nowMY = {m:(new Date()).getMonth()+1, y:(new Date()).getFullYear()};
+  const hasNow = availableMonthYears.some(o=>o.m===nowMY.m && o.y===nowMY.y);
+  defaultMY = hasNow ? nowMY : (availableMonthYears[availableMonthYears.length-1] || defaultMY);
 
   monthFilterSelect.innerHTML = '';
   for(let m=1;m<=12;m++){
@@ -857,9 +865,27 @@ function spinoffCellHtml(o){
     </select>`;
   }
   const spinA = assignments[spin.id];
+  if(editUnlocked){
+    return `<select class="spinoff-to-select" data-spinoff-id="${spin.id}">
+      <option value="">— Bỏ tổ hỗ trợ —</option>
+      ${TEAM_OPTIONS.map(t=>`<option value="${t}" ${spinA.to===t?'selected':''}>${t}</option>`).join('')}
+    </select>`;
+  }
   return `<span style="font-weight:600;">${spinA.to}</span>`;
 }
+
+// Nút "Sửa" từng dòng ở tab Tiến độ: đưa đơn về trạng thái như chưa từng nhập số lượng hoàn thành.
+function resetQtyCellHtml(o){
+  const a = assignments[o.id];
+  if(!a || a.so_luong_hoan_thanh == null) return '<span style="color:var(--text2);">—</span>';
+  return `<button class="reset-qty-btn" data-order-id="${o.id}" style="font-size:11.5px;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;">Sửa</button>`;
+}
+// Khi quản lý bấm nút đỏ "Sửa đổi số liệu" ở tab Kế hoạch tuần, mọi ô đang bị khoá
+// (đơn đã hoàn thành / đã chia tổ hỗ trợ) sẽ mở ra để sửa lại cho đúng thực tế.
+let editUnlocked = false;
+
 function isOrderLocked(o){
+  if(editUnlocked) return false;
   const status = getOrderStatus(o);
   return status === 'hoan_thanh' || status === 'partial';
 }
@@ -1053,7 +1079,15 @@ function renderAutoPlanDaySelect(){
     return da.localeCompare(db);
   });
   sel.innerHTML = '<option value="all">Tất cả ngày</option>' + dates.map(d=>`<option value="${d}">Ngày ${d}</option>`).join('');
-  sel.value = dates.includes(prev) ? prev : 'all';
+  // Lần đầu vào: mặc định chọn NGÀY HÔM NAY nếu có dữ liệu; sau đó tôn trọng lựa chọn của người dùng.
+  const today = formatDMY(new Date());
+  if(!sel.dataset.dayInitialized && dates.includes(today)){
+    sel.value = today;
+    sel.dataset.dayInitialized = '1';
+  } else {
+    sel.value = dates.includes(prev) ? prev : 'all';
+    if(dates.length) sel.dataset.dayInitialized = '1';
+  }
 }
 
 function renderAutoPlan(){
@@ -1212,8 +1246,9 @@ async function handleAssignChange(orderId, val){
   assignments[orderId].to = val || null;
   // Đơn rớt / đơn tách (is_drop) khi được 1 tổ nhận -> hiểu là tổ đó đã xử lý xong phần thiếu ngay,
   // không tạo thêm một tác vụ sản xuất chờ nhập số lượng riêng (khác đơn kế hoạch gốc, vẫn cần theo dõi tiến độ).
-  if(o && o.is_drop && val){
-    assignments[orderId].so_luong_hoan_thanh = o.so_luong;
+  if(o && o.is_drop){
+    // Bỏ tổ hỗ trợ -> phần thiếu quay lại trạng thái "đơn rớt chưa ai nhận".
+    assignments[orderId].so_luong_hoan_thanh = val ? o.so_luong : null;
   }
   await saveAssignments();
   renderAutoPlan();
@@ -1388,7 +1423,15 @@ function populateProgressSelects(){
     return da.localeCompare(db);
   });
   progressDaySelect.innerHTML = '<option value="all">Tất cả ngày</option>' + assignedDates.map(d=>`<option value="${d}">Ngày ${d}</option>`).join('');
-  progressDaySelect.value = assignedDates.includes(prevDay) ? prevDay : 'all';
+  // Lần đầu vào: mặc định chọn NGÀY HÔM NAY nếu có đơn; sau đó tôn trọng lựa chọn của người dùng.
+  const todayStr = formatDMY(new Date());
+  if(!progressDaySelect.dataset.dayInitialized && assignedDates.includes(todayStr)){
+    progressDaySelect.value = todayStr;
+    progressDaySelect.dataset.dayInitialized = '1';
+  } else {
+    progressDaySelect.value = assignedDates.includes(prevDay) ? prevDay : 'all';
+    if(assignedDates.length) progressDaySelect.dataset.dayInitialized = '1';
+  }
 
   if(!progressTeamSelect.dataset.initialized){
     progressTeamSelect.innerHTML = '<option value="all">Tất cả tổ</option>' + TEAM_OPTIONS.map(t=>`<option value="${t}">${t}</option>`).join('');
@@ -1396,19 +1439,23 @@ function populateProgressSelects(){
   }
 }
 
-function renderProgress(){
-  populateProgressSelects();
+// Danh sách đơn đang hiển thị theo đúng bộ lọc hiện tại của tab Tiến độ —
+// dùng chung cho việc vẽ bảng và cho nút "Hoàn thành" (nút chỉ tác động lên đúng phần đang lọc).
+function getFilteredProgressRows(){
   const dayVal = progressDaySelect.value;
   const teamVal = progressTeamSelect.value;
   const q = progressSearchBox.value.trim().toLowerCase();
-
-  const assignedRows = getOrders().filter(r=>assignments[r.id]?.to);
-  const filtered = assignedRows.filter(r=>{
+  return getOrders().filter(r=>assignments[r.id]?.to).filter(r=>{
     if(dayVal !== 'all' && r.date !== dayVal) return false;
     if(teamVal !== 'all' && assignments[r.id].to !== teamVal) return false;
     if(q && !r.dong.toLowerCase().includes(q) && !r.ma.toLowerCase().includes(q) && !formatKichThuoc(r).toLowerCase().includes(q)) return false;
     return true;
   });
+}
+
+function renderProgress(){
+  populateProgressSelects();
+  const filtered = getFilteredProgressRows();
 
   const totalPlan = filtered.filter(isPlannedOrder).reduce((a,r)=>a+(r.so_luong||0),0);
   const totalDone = filtered.reduce((a,r)=>a+(assignments[r.id].so_luong_hoan_thanh||0),0);
@@ -1427,7 +1474,7 @@ function renderProgress(){
 
   const tbody = document.querySelector('#progressTable tbody');
   if(filtered.length===0){
-    tbody.innerHTML = `<tr><td colspan="10" style="color:var(--text2);text-align:center;padding:20px;">Chưa có đơn nào được chọn tổ phụ trách. Vào tab "Kế hoạch tuần (tự động)" để phân công.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" style="color:var(--text2);text-align:center;padding:20px;">Chưa có đơn nào được chọn tổ phụ trách. Vào tab "Kế hoạch tuần (tự động)" để phân công.</td></tr>`;
     return;
   }
   tbody.innerHTML = filtered.map(r=>{
@@ -1445,6 +1492,7 @@ function renderProgress(){
       <td>${r.so_luong||'-'}</td>
       <td>${toCell}</td>
       <td><input type="number" class="qty-input" data-order-id="${r.id}" min="0" max="${r.so_luong}" value="${a.so_luong_hoan_thanh??''}" placeholder="Nhập số..." ${locked?'disabled':''}></td>
+      <td>${resetQtyCellHtml(r)}</td>
       <td>${spinoffCellHtml(r)}</td>
       <td>${statusBadgeHtml(r)}</td>
       <td class="${r.ghi_chu?'note':''}">${r.ghi_chu||''}</td>
@@ -1464,10 +1512,60 @@ document.querySelector('#progressTable tbody').addEventListener('change', async 
   if(e.target.classList.contains('qty-input')){
     await handleQtyChange(e.target.dataset.orderId, e.target.value);
   } else if(e.target.classList.contains('spinoff-to-select')){
-    const val = e.target.value;
-    if(!val) return;
-    await handleAssignChange(e.target.dataset.spinoffId, val);
+    // Khi đang mở khoá sửa đổi, chọn giá trị rỗng nghĩa là bỏ tổ hỗ trợ — vẫn phải xử lý.
+    await handleAssignChange(e.target.dataset.spinoffId, e.target.value);
   }
+});
+
+// ---- Nút "Hoàn thành": điền nhanh số hoàn thành = kế hoạch cho các đơn CHƯA nhập, trong phạm vi đang lọc ----
+document.getElementById('bulkCompleteBtn').addEventListener('click', async ()=>{
+  const targets = getFilteredProgressRows().filter(r=>assignments[r.id].so_luong_hoan_thanh == null);
+  if(targets.length === 0){
+    alert('Không có đơn nào cần điền — tất cả đơn đang hiển thị đều đã có số lượng hoàn thành.');
+    return;
+  }
+  const tong = targets.reduce((a,r)=>a+(r.so_luong||0),0);
+  if(!confirm(`Điền số hoàn thành = kế hoạch cho ${targets.length} đơn chưa nhập (tổng ${tong.toLocaleString()} sản phẩm)?\n\nCác đơn đã nhập số lượng sẽ được giữ nguyên.`)) return;
+  targets.forEach(r=>{ assignments[r.id].so_luong_hoan_thanh = r.so_luong; });
+  await saveAssignments();
+  renderAutoPlan();
+  renderProgress();
+  syncCompletedOrdersToMonthlyData();
+});
+
+// ---- Nút "Sửa" từng dòng: xoá số đã nhập, đưa đơn về đúng trạng thái như chưa từng cập nhật ----
+async function handleResetQty(orderId){
+  const o = getOrderById(orderId);
+  const a = assignments[orderId];
+  if(!o || !a) return;
+  if(!confirm(`Xoá số lượng hoàn thành đã nhập của đơn này (${o.dong || o.ma}) để nhập lại?`)) return;
+  // Bỏ luôn phần đã tách cho tổ hỗ trợ (nếu có) để đơn trở về nguyên trạng ban đầu.
+  if(a.spinoff_id){
+    dynamicOrders = dynamicOrders.filter(d=>d.id !== a.spinoff_id);
+    delete assignments[a.spinoff_id];
+    a.spinoff_id = null;
+  }
+  a.so_luong_hoan_thanh = null;
+  await saveAssignments();
+  await saveDynamicOrders();
+  renderAutoPlan();
+  renderProgress();
+  syncCompletedOrdersToMonthlyData();
+}
+document.querySelector('#progressTable tbody').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('.reset-qty-btn');
+  if(btn) await handleResetQty(btn.dataset.orderId);
+});
+
+// ---- Nút đỏ "Sửa đổi số liệu": mở/khoá quyền sửa các đơn đã chốt ----
+document.getElementById('unlockEditBtn').addEventListener('click', ()=>{
+  editUnlocked = !editUnlocked;
+  const btn = document.getElementById('unlockEditBtn');
+  btn.textContent = editUnlocked ? '🔒 Khoá lại' : '⚠ Sửa đổi số liệu';
+  btn.style.background = editUnlocked ? 'var(--text2)' : 'var(--danger)';
+  document.getElementById('unlockEditNotice').style.display = editUnlocked ? 'block' : 'none';
+  renderAutoPlan();
+  renderProgress();
 });
 
 // ---- startup ----
