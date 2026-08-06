@@ -858,7 +858,10 @@ const SNAPSHOT_KEY_PREFIX = 'khsx_snap_'; // + dd-mm-yyyy — ảnh chụp danh 
 // lockedProgressDates: ngày đã CHỐT TIẾN ĐỘ  -> nhân viên không sửa được số hoàn thành nữa
 let lockedPlanDates = [];
 let lockedProgressDates = [];
-let planSnapshots = {}; // { 'dd/mm/yyyy': [rows đã chụp] }
+let planSnapshots = {}; // { 'dd/mm/yyyy': [rows đã chụp khi CHỐT ĐẦU VÀO] }
+// Lớp dự phòng tự động: mọi ngày từng tải được đều ghi nhớ ở đây (lưu trong bản lưu trên máy).
+// Sheet công ty có bị lọc / viết lại / mất quyền thì ngày cũ vẫn hiện ra, đánh dấu "dự phòng".
+let backupRowsByDate = {};
 
 function snapshotKey(date){ return SNAPSHOT_KEY_PREFIX + date.replace(/\//g,'-'); }
 function isPlanLocked(date){ return lockedPlanDates.includes(date); }
@@ -881,7 +884,14 @@ function getOrders(){
   // Ngày đã chốt đầu vào -> lấy từ ảnh chụp đã lưu, bỏ qua dữ liệu sheet của ngày đó.
   const live = sheetRows.filter(o=>!isPlanLocked(o.date));
   const frozen = lockedPlanDates.reduce((acc,d)=>acc.concat(planSnapshots[d] || []), []);
-  return live.concat(frozen, dynamicOrders).filter(o=>!deletedOrderIds.includes(o.id));
+  // Ngày sheet không còn trả về -> lấy từ bản dự phòng, đánh dấu để biết nguồn.
+  const liveDates = new Set(live.map(o=>o.date));
+  const backup = [];
+  Object.keys(backupRowsByDate).forEach(d=>{
+    if(isPlanLocked(d) || liveDates.has(d)) return;
+    (backupRowsByDate[d] || []).forEach(r=>backup.push({...r, from_backup:true}));
+  });
+  return live.concat(frozen, backup, dynamicOrders).filter(o=>!deletedOrderIds.includes(o.id));
 }
 function getOrderById(id){ return getOrders().find(o=>o.id===id); }
 
@@ -1026,7 +1036,7 @@ function saveLocalCache(){
   try{
     localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify({
       t: Date.now(), sheetRows, assignments, dynamicOrders, deletedOrderIds,
-      lockedPlanDates, lockedProgressDates, planSnapshots
+      lockedPlanDates, lockedProgressDates, planSnapshots, backupRowsByDate
     }));
   }catch(e){ /* trình duyệt chặn lưu cục bộ -> bỏ qua, dashboard vẫn chạy bình thường */ }
 }
@@ -1123,37 +1133,72 @@ function lotBadgeHtml(r){
   return r.is_lot ? ` <span class="badge badge-blue">${r.lot_label}</span>` : '';
 }
 
+// Nhãn cho dòng lấy từ bản dự phòng (sheet công ty không còn ngày này)
+function backupBadgeHtml(r){
+  return r.from_backup ? ` <span class="badge" title="Sheet công ty không còn ngày này — đang hiện từ bản dự phòng" style="background:var(--warning-l);color:var(--warning);">dự phòng</span>` : '';
+}
+
+// Đường đọc sheet công ty qua Apps Script của chính bạn — miễn nhiễm với bộ lọc, ẩn dòng
+// và cả việc chủ sheet đổi quyền chia sẻ. Dán URL Web App vào đây sau khi deploy.
+// Để trống thì dashboard tự dùng đường xuất CSV công khai như trước.
+const SHEET_READER_URL = 'https://script.google.com/macros/s/AKfycbz2duSQjFEE8VqoL-RQ0Sh8_bGkQcaZ0PS8xVGRGHCG10i1w1U8M6-yiAeEM-Yvt2o/exec';
+
+function parseSheetTable(table){
+  const rows = [];
+  table.forEach(cols=>{
+    const ngay = String(cols[1]||'').trim();
+    if(!/^\d{2}\/\d{2}\/\d{4}$/.test(ngay)) return; // bỏ dòng tiêu đề/trống
+    const to = String(cols[3]||'').trim();
+    if(to.toLowerCase() !== 'foam') return;
+    rows.push({
+      date: ngay,
+      ma: String(cols[4]||'').trim(),
+      dong: String(cols[6]||'').trim(),
+      ngang: String(cols[7]||'').trim(),
+      dai: String(cols[8]||'').trim(),
+      day: String(cols[9]||'').trim(),
+      so_luong: parseFloat(cols[11]) || 0,
+      ghi_chu: String(cols[13]||'').trim()
+    });
+  });
+  return rows;
+}
+
 async function fetchAutoPlan(){
   const statusEl = document.getElementById('autoPlanStatus');
   statusEl.textContent = 'Đang tải dữ liệu từ Google Sheet...';
   statusEl.style.color = 'var(--text2)';
+  const useReader = SHEET_READER_URL && !SHEET_READER_URL.startsWith('PASTE_');
   try{
-    // Thêm tham số ngẫu nhiên để buộc Google trả về dữ liệu mới nhất, tránh bị dính bản CSV cũ đã lưu tạm (cache).
-    const res = await fetch(`${SHEET_CSV_URL}&_cb=${Date.now()}`, {cache:'no-store'});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const text = await res.text();
-    const table = parseCSV(text);
-    const rows = [];
-    table.forEach(cols=>{
-      const ngay = (cols[1]||'').trim();
-      if(!/^\d{2}\/\d{2}\/\d{4}$/.test(ngay)) return; // skip title/header/blank rows
-      const to = (cols[3]||'').trim();
-      if(to.toLowerCase() !== 'foam') return;
-      rows.push({
-        date: ngay,
-        ma: (cols[4]||'').trim(),
-        dong: (cols[6]||'').trim(),
-        ngang: (cols[7]||'').trim(),
-        dai: (cols[8]||'').trim(),
-        day: (cols[9]||'').trim(),
-        so_luong: parseFloat(cols[11]) || 0,
-        ghi_chu: (cols[13]||'').trim()
-      });
-    });
-    sheetRows = rows;
+    let table, source;
+    if(useReader){
+      // Ưu tiên đọc qua Apps Script: lấy đủ mọi dòng bất kể ai đang lọc sheet.
+      const data = await jsonpRequest(`${SHEET_READER_URL}?_cb=${Date.now()}`);
+      if(!data || !data.ok || !Array.isArray(data.rows)) throw new Error(data && data.error ? data.error : 'Apps Script không trả về dữ liệu');
+      table = data.rows;
+      source = 'Apps Script';
+    }else{
+      // Thêm tham số ngẫu nhiên để buộc Google trả dữ liệu mới nhất, tránh dính bản CSV lưu tạm.
+      const res = await fetch(`${SHEET_CSV_URL}&_cb=${Date.now()}`, {cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      table = parseCSV(await res.text());
+      source = 'CSV công khai';
+    }
+    const rows = parseSheetTable(table);
+    if(!rows.length) throw new Error('Không có dòng Foam nào đọc được');
+    sheetRows = applyLotSplitRule(assignStableIds(rows));
     autoPlanLoaded = true;
-    statusEl.textContent = `Đã tải lúc ${new Date().toLocaleTimeString('vi-VN')} — ${rows.length} dòng Foam`;
+
+    // Lớp dự phòng: ghi nhớ mọi ngày đã tải được, để sau này sheet có bị lọc/viết lại
+    // thì ngày cũ vẫn hiện ra (đánh dấu "dự phòng") chứ không biến mất.
+    const datesInFetch = new Set(sheetRows.map(r=>r.date));
+    datesInFetch.forEach(d=>{ backupRowsByDate[d] = sheetRows.filter(r=>r.date===d); });
+
+    const nBackupOnly = Object.keys(backupRowsByDate).filter(d=>!datesInFetch.has(d) && !isPlanLocked(d)).length;
+    statusEl.innerHTML = `Đã tải lúc ${new Date().toLocaleTimeString('vi-VN')} — ${rows.length} dòng Foam (${source})`
+      + (nBackupOnly ? ` <span style="color:var(--warning);">+ ${nBackupOnly} ngày từ bản dự phòng</span>` : '');
     statusEl.style.color = 'var(--success)';
+    saveLocalCache();
   }catch(e){
     console.warn('Không tải được dữ liệu từ Google Sheet lần này.', e);
     // KHÔNG nạp dữ liệu mẫu và KHÔNG xử lý lại sheetRows — giữ nguyên đúng những gì đang có
@@ -1164,13 +1209,7 @@ async function fetchAutoPlan(){
       ? `⚠ Chưa tải được bản mới — đang dùng bản lưu${when ? ' lúc ' + when : ''}. Bấm "Làm mới dữ liệu" để thử lại.`
       : `⚠ Chưa tải được dữ liệu từ Google Sheet. Kiểm tra kết nối rồi bấm "Làm mới dữ liệu".`;
     statusEl.style.color = 'var(--warning)';
-    renderAutoPlanDaySelect();
-    renderAutoPlan();
-    renderProgress();
-    scheduleMonthlySync();
-    return;
   }
-  sheetRows = applyLotSplitRule(assignStableIds(sheetRows));
   renderAutoPlanDaySelect();
   renderAutoPlan();
   renderProgress();
@@ -1283,7 +1322,7 @@ function renderAutoPlan(){
       : 0;
     return `
     <tr class="${rowClass}">
-      <td>${r.date}${lockBadgeHtml(r.date)}</td>
+      <td>${r.date}${lockBadgeHtml(r.date)}${backupBadgeHtml(r)}</td>
       <td>${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}${lotBadgeHtml(r)}</td>
       <td>${r.dong||'-'}</td>
       <td>${formatKichThuoc(r)}</td>
@@ -1672,7 +1711,7 @@ function renderProgress(){
     const toCell = `<span style="font-weight:600;">${a.to}</span>`;
 
     return `<tr>
-      <td>${r.date}${lockBadgeHtml(r.date)}</td>
+      <td>${r.date}${lockBadgeHtml(r.date)}${backupBadgeHtml(r)}</td>
       <td>${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}${lotBadgeHtml(r)}</td>
       <td>${r.dong||'-'}</td>
       <td>${formatKichThuoc(r)}</td>
@@ -1920,6 +1959,7 @@ async function bootstrap(){
     lockedPlanDates = cached.lockedPlanDates || [];
     lockedProgressDates = cached.lockedProgressDates || [];
     planSnapshots = cached.planSnapshots || {};
+    backupRowsByDate = cached.backupRowsByDate || {};
     autoPlanLoaded = true;
     renderAutoPlanDaySelect();
     renderAutoPlan();
