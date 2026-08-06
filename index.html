@@ -1206,11 +1206,18 @@ wireManualOrderForm({
 
 
 async function handleAssignChange(orderId, val){
+  const o = getOrderById(orderId);
   if(!assignments[orderId]) assignments[orderId] = {to:null, so_luong_hoan_thanh:null, spinoff_id:null};
   assignments[orderId].to = val || null;
+  // Đơn rớt / đơn tách (is_drop) khi được 1 tổ nhận -> hiểu là tổ đó đã xử lý xong phần thiếu ngay,
+  // không tạo thêm một tác vụ sản xuất chờ nhập số lượng riêng (khác đơn kế hoạch gốc, vẫn cần theo dõi tiến độ).
+  if(o && o.is_drop && val){
+    assignments[orderId].so_luong_hoan_thanh = o.so_luong;
+  }
   await saveAssignments();
   renderAutoPlan();
   renderProgress();
+  syncCompletedOrdersToMonthlyData();
 }
 
 document.querySelector('#autoPlanTable tbody').addEventListener('change', async (e)=>{
