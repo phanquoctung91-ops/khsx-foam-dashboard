@@ -963,7 +963,8 @@ async function fetchAutoPlan(){
   statusEl.textContent = 'Đang tải dữ liệu từ Google Sheet...';
   statusEl.style.color = 'var(--text2)';
   try{
-    const res = await fetch(SHEET_CSV_URL);
+    // Thêm tham số ngẫu nhiên để buộc Google trả về dữ liệu mới nhất, tránh bị dính bản CSV cũ đã lưu tạm (cache).
+    const res = await fetch(`${SHEET_CSV_URL}&_cb=${Date.now()}`, {cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
     const text = await res.text();
     const table = parseCSV(text);
