@@ -572,10 +572,13 @@ function renderDay(key){
     teamCardsEl.innerHTML = d.team_progress.map(t=>{
       const rate = t.ty_le!=null ? Math.round(t.ty_le*1000)/10 : null;
       const color = rate==null ? '#6b7280' : rate>=100 ? '#0f8a4c' : rate>=80 ? '#b7791f' : '#c0332f';
+      // Không có kế hoạch riêng (chỉ hỗ trợ) -> không có mẫu số để tính %, hiển thị số lượng thay vì %.
+      const mainValue = rate!=null ? rate+'%' : (t.hoan_thanh!=null ? t.hoan_thanh.toLocaleString() : '-');
+      const subLabel = rate!=null ? `${t.hoan_thanh??'-'} / ${t.don_hang??'-'}` : 'Số lượng hỗ trợ';
       return `<div class="team-card">
         <div class="to-label">${t.to==='Tổng Tháng'||t.to==='Grand Total' ? 'Tổng' : teamLabel(t.to)}</div>
-        <div class="rate" style="color:${color};">${rate!=null?rate+'%':'-'}</div>
-        <div style="font-size:11px;color:var(--text2);">${t.hoan_thanh??'-'} / ${t.don_hang??'-'}</div>
+        <div class="rate" style="color:${color};">${mainValue}</div>
+        <div style="font-size:11px;color:var(--text2);">${subLabel}</div>
       </div>`;
     }).join('');
   }
@@ -1014,8 +1017,20 @@ function renderTeamRings(containerId, orders){
     const teamOrders = orders.filter(o => assignments[o.id]?.to === team);
     const keHoach = teamOrders.filter(isPlannedOrder).reduce((a,o)=>a+o.so_luong,0);
     const hoanThanh = teamOrders.reduce((a,o)=>a+(assignments[o.id]?.so_luong_hoan_thanh||0),0);
+    if(keHoach === 0){
+      // Tổ không có đơn kế hoạch riêng (chỉ đang hỗ trợ tổ khác) — không có mẫu số nên
+      // không tính %/xếp hạng màu, chỉ hiển thị số lượng đã hỗ trợ.
+      return `
+      <div class="team-ring-card">
+        <div class="team-ring" style="background:#e4e7ed;">
+          <div class="team-ring-inner" style="font-size:13px;color:var(--text2);">${hoanThanh>0 ? hoanThanh.toLocaleString() : '—'}</div>
+        </div>
+        <div class="team-ring-label">${team}</div>
+        <div class="team-ring-detail">${hoanThanh>0 ? 'Số lượng hỗ trợ' : 'Không có đơn'}</div>
+      </div>`;
+    }
     const extra = Math.max(0, hoanThanh - keHoach);
-    const pct = keHoach>0 ? Math.min(100, Math.round((hoanThanh/keHoach)*100)) : (hoanThanh>0 ? 100 : 0);
+    const pct = Math.min(100, Math.round((hoanThanh/keHoach)*100));
     const color = pct>=100 ? 'var(--success)' : pct>=50 ? 'var(--warning)' : 'var(--text2)';
     return `
     <div class="team-ring-card">
