@@ -4441,4 +4441,21 @@ async function bootstrap(){
 bootstrap();
 
 // ---- Xử lý xoay màn hình (điện thoại/tablet) ----
-// Một số trình duyệt
+// Một số trình duyệt di động báo kích thước cũ trong khoảnh khắc vừa xoay xong;
+// đợi 1 nhịp ngắn cho layout ổn định rồi mới ép Chart.js (và trình duyệt) tính lại kích thước.
+function handleOrientationChange(){
+  setTimeout(()=>{
+    window.dispatchEvent(new Event('resize'));
+    [dayStageChart, productChart, teamMonthChart, dailyTrendChart].forEach(c=>{
+      if(c && typeof c.resize === 'function') c.resize();
+    });
+  }, 300);
+}
+window.addEventListener('orientationchange', handleOrientationChange);
+if(window.screen && window.screen.orientation){
+  window.screen.orientation.addEventListener('change', handleOrientationChange);
+}
+
+</script>
+</body>
+</html>
