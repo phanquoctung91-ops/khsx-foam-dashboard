@@ -477,6 +477,39 @@
   </div>
 </div>
 
+<div id="quarterTargetModal" class="only-manager" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(18,20,26,.45);padding:20px;overflow:auto;">
+  <div style="background:var(--card);border-radius:14px;box-shadow:0 18px 50px rgba(16,24,40,.24);max-width:480px;margin:40px auto;padding:22px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
+      <h3 style="margin:0;font-size:17px;">🎯 Mục tiêu quý</h3>
+      <button id="closeQuarterTargetModalBtn" style="font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;border:1px solid #cfd6e4;background:#f4f6fa;color:var(--text2);cursor:pointer;">Đóng</button>
+    </div>
+    <div style="font-size:12.5px;color:var(--text2);margin-bottom:14px;">
+      Nhập sản lượng mục tiêu công ty giao cho quý. Mọi vai đều thấy tiến độ này ở tab Tổng hợp tháng, chỉ Quản lý sửa được.
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:12px;">
+      <div style="flex:1;">
+        <label style="font-size:12.5px;color:var(--text2);display:block;margin-bottom:4px;">Quý</label>
+        <select id="quarterTargetQuy" style="width:100%;">
+          <option value="1">Quý 1</option>
+          <option value="2">Quý 2</option>
+          <option value="3">Quý 3</option>
+          <option value="4">Quý 4</option>
+        </select>
+      </div>
+      <div style="flex:1;">
+        <label style="font-size:12.5px;color:var(--text2);display:block;margin-bottom:4px;">Năm</label>
+        <input type="number" id="quarterTargetNam" style="width:100%;">
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:12.5px;color:var(--text2);display:block;margin-bottom:4px;">Sản lượng mục tiêu (tấm)</label>
+      <input type="number" id="quarterTargetSoLuong" min="0" placeholder="VD: 8000" style="width:100%;">
+    </div>
+    <button id="doSaveQuarterTargetBtn" class="primary-btn">💾 Lưu mục tiêu</button>
+    <span class="save-status" id="quarterTargetStatus"></span>
+  </div>
+</div>
+
 <div id="staffUsersModal" class="only-manager" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(18,20,26,.45);padding:20px;overflow:auto;">
   <div style="background:var(--card);border-radius:14px;box-shadow:0 18px 50px rgba(16,24,40,.24);max-width:820px;margin:40px auto;padding:22px 24px;">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;">
@@ -542,6 +575,7 @@
       <button id="logoutBtn" title="Đăng xuất và nhập mã khác">Đổi người dùng</button>
       <button id="staffUsersBtn" class="only-manager" title="Tạo và thu hồi mã đăng nhập cho nhân viên">👥 Tạo Mã đăng nhập</button>
       <button id="backupBtn" class="only-manager" title="Tải gói sao lưu / nạp lại dữ liệu">💾 Sao lưu &amp; bàn giao</button>
+      <button id="quarterTargetBtn" class="only-manager" title="Nhập mục tiêu sản lượng của quý">🎯 Mục tiêu quý</button>
     </div>
   </div>
 </header>
@@ -989,14 +1023,17 @@ function computeAndRenderKpis(){
   const rate = totalPlan>0 ? Math.round((totalDG/totalPlan)*1000)/10 : 0;
   const kpiRow = document.getElementById('kpiRow');
   const mauTyLe = rate>=95 ? 'var(--success)' : rate>=85 ? 'var(--warning)' : rate>=60 ? 'var(--danger)' : '#8a90a0';
-  const conLai = Math.max(0, totalPlan - totalDG);
   const tienDoNgay = dayKeys.length ? Math.round(activeDays/dayKeys.length*100) : 0;
+  const quy = tinhTienDoQuyHienTai();
+  const mucTieuHtml = quy.mucTieu>0
+    ? `Mục tiêu Quý ${quy.quy}/${quy.nam}: <b>${quy.mucTieu.toLocaleString()}</b> · đã đạt <b>${quy.phanTram}%</b>`
+    : `Chưa nhập mục tiêu Quý ${quy.quy}/${quy.nam}`;
 
   kpiRow.innerHTML = `
     <div class="kpi">
       <div class="label">Tổng kế hoạch</div>
       <div class="value" data-dem="${totalPlan}">${totalPlan.toLocaleString()}</div>
-      <div class="kpi-phu">${conLai>0 ? 'Còn lại <b>'+conLai.toLocaleString()+'</b> tấm' : 'Đã làm xong toàn bộ'}</div>
+      <div class="kpi-phu">${mucTieuHtml}</div>
     </div>
     <div class="kpi k-accent">
       <div class="label">Đã đóng gói</div>
@@ -1320,6 +1357,35 @@ const PRIORITY_ORDERS_KEY = 'khsx_priority_orders';
 // Tài khoản gắn tổ: {ma_dang_nhap: 'Tổ 1'} — tài khoản có tổ chỉ thấy việc của tổ mình
 const USER_TEAMS_KEY = 'khsx_user_teams';
 let userTeams = {};
+// Mục tiêu sản lượng theo quý, do Quản lý nhập — {'2026_Q3': 8000}. Mọi vai đều thấy,
+// chỉ Quản lý nhập/sửa.
+const QUARTER_TARGET_KEY = 'khsx_muc_tieu_quy';
+let quarterTargets = {};
+function quyCuaNgay(dateObj){
+  const y = dateObj.getFullYear();
+  const q = Math.floor(dateObj.getMonth()/3) + 1;
+  return {nam:y, quy:q, key:`${y}_Q${q}`};
+}
+// Tổng đã đóng gói (không tính bảo hành) trong quý hiện tại, cộng từ dữ liệu Tổng hợp
+// tháng đã có trong bộ nhớ (allDays) — không phụ thuộc tháng đang được lọc ở header.
+function tinhTienDoQuyHienTai(){
+  const {nam, quy, key} = quyCuaNgay(new Date());
+  let daLam = 0;
+  Object.values(allDays).forEach(d=>{
+    const p = parseDMY(d.date);
+    if(!p || p.y !== nam || Math.floor((p.m-1)/3)+1 !== quy) return;
+    d.rows.forEach(r=>{ if(!laBaoHanh(r)) daLam += r.dong_goi||0; });
+  });
+  const mucTieu = quarterTargets[key] || 0;
+  const phanTram = mucTieu>0 ? Math.round((daLam/mucTieu)*1000)/10 : null;
+  return {nam, quy, mucTieu, daLam, phanTram};
+}
+async function saveQuarterTarget(nam, quy, soLuong){
+  quarterTargets = {...quarterTargets, [`${nam}_Q${quy}`]: soLuong};
+  await storageSet(QUARTER_TARGET_KEY, quarterTargets);
+  saveLocalCache();
+  computeAndRenderKpis();
+}
 // Tổ của người đang đăng nhập, hoặc null nếu không gắn tổ (Quản lý, Quản lý 2, khách xem)
 function toCuaToi(){
   if(!currentUser || !currentUser.code) return null;
@@ -1809,7 +1875,8 @@ function saveLocalCache(){
   try{
     localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify({
       t: Date.now(), sheetRows, assignments, dynamicOrders, deletedOrderIds,
-      lockedPlanDates, lockedProgressDates, planSnapshots, backupRowsByDate, priorityOrderIds, baoHanhTheoNgay
+      lockedPlanDates, lockedProgressDates, planSnapshots, backupRowsByDate, priorityOrderIds, baoHanhTheoNgay,
+      quarterTargets
     }));
   }catch(e){ /* trình duyệt chặn lưu cục bộ -> bỏ qua, dashboard vẫn chạy bình thường */ }
 }
@@ -2418,6 +2485,14 @@ async function fetchAutoPlan(){
 
 // ---- Cảnh báo kích thước ngoại cỡ (cả 2 tab) ----
 const RONG_CHUAN = [100,120,140,160,180,200,220];
+
+// Rộng lẻ (không nằm trong RONG_CHUAN) -> làm tròn LÊN tới chuẩn gần nhất.
+// Vượt 220 -> để riêng thành cỡ mới, KHÔNG làm tròn (đặt nhà cung cấp làm riêng).
+function rongChuanHoa(ngang){
+  if(ngang > RONG_CHUAN[RONG_CHUAN.length-1]) return ngang;
+  const c = RONG_CHUAN.find(c => c >= ngang);
+  return c !== undefined ? c : ngang;
+}
 const DAY_CHUAN  = [10,12,15,17,20,22];
 
 function kiemTraNgoaiCo(r){
@@ -2858,8 +2933,10 @@ async function handleQtyChange(orderId, rawVal){
   queueSave('assignments','dynamic');
 }
 
-// Feed fully-completed Foam orders into the "Tổng hợp tháng" data model (allDays), so they
-// show up in Tổng hợp tháng / Theo ngày / Theo tổ alongside the original Excel data.
+// Feed every Foam order (mọi trạng thái — không chỉ đơn đã xong) vào data model "Tổng hợp
+// tháng" (allDays), để ngày nào cũng hiện ra dù chưa có đơn nào hoàn thành (hôm nay, ngày
+// tương lai...). Kế hoạch và Hoàn thành là hai số độc lập: Kế hoạch = số công ty giao,
+// Hoàn thành = số thật đã nhập ở tab Tiến độ (có thể thấp hơn hoặc cao hơn kế hoạch).
 // The Foam weekly-plan sheet writes product lines in caps ("SORA", "KING HOME"...); normalize
 // them to match the naming used in the Excel plan ("Sora", "KingHome") so charts/colors merge.
 const PRODUCT_NAME_MAP = {
@@ -2885,10 +2962,10 @@ function extractTeamNumber(t){
 let monthlySyncTimer = null;
 function scheduleMonthlySync(){
   clearTimeout(monthlySyncTimer);
-  monthlySyncTimer = setTimeout(syncCompletedOrdersToMonthlyData, 350);
+  monthlySyncTimer = setTimeout(syncOrdersToMonthlyData, 350);
 }
 
-function syncCompletedOrdersToMonthlyData(){
+function syncOrdersToMonthlyData(){
   Object.keys(allDays).forEach(k=>{ allDays[k].rows = allDays[k].rows.filter(r=>!r._from_foam); });
 
   // Đơn "trong kế hoạch" (kể cả khi bị chia dở) đóng góp Kế hoạch = số lượng GỐC của đơn, Hoàn thành =
@@ -2909,19 +2986,20 @@ function syncCompletedOrdersToMonthlyData(){
       });
       return;
     }
-    const status = getOrderStatus(o);
-    const a = assignments[o.id];
-    if(status === 'hoan_thanh' || status === 'partial'){
-      const ke_hoach = isPlannedOrder(o) ? o.so_luong : 0;
-      const ngayLam = a.ngay_hoan_thanh || o.date;
-      if(ngayLam === o.date){
-        (closedByDate[o.date] = closedByDate[o.date]||[]).push({o, a, ke_hoach, dong_goi:a.so_luong_hoan_thanh});
-      }else{
-        // Làm bù sang ngày khác: KẾ HOẠCH vẫn thuộc ngày gốc (để thấy ngày đó hụt),
-        // SẢN LƯỢNG ghi cho ngày làm thật (để thành tích ngày đó đúng thực tế).
-        (closedByDate[o.date] = closedByDate[o.date]||[]).push({o, a, ke_hoach, dong_goi:0});
-        (closedByDate[ngayLam] = closedByDate[ngayLam]||[]).push({o, a, ke_hoach:0, dong_goi:a.so_luong_hoan_thanh});
-      }
+    // Đồng bộ MỌI đơn — không chỉ đơn đã xong — để ngày nào cũng hiện trong Tổng hợp
+    // tháng (kể cả hôm nay, ngày tương lai), và Hoàn thành phản ánh đúng số thật đã
+    // nhập ở tab Tiến độ (0 nếu chưa làm), không ép cho bằng kế hoạch.
+    const a = assignments[o.id] || {};
+    const ke_hoach = isPlannedOrder(o) ? o.so_luong : 0;
+    const daLam = a.so_luong_hoan_thanh || 0;
+    const ngayLam = a.ngay_hoan_thanh || o.date;
+    if(ngayLam === o.date){
+      (closedByDate[o.date] = closedByDate[o.date]||[]).push({o, a, ke_hoach, dong_goi:daLam});
+    }else{
+      // Làm bù sang ngày khác: KẾ HOẠCH vẫn thuộc ngày gốc (để thấy ngày đó hụt),
+      // SẢN LƯỢNG ghi cho ngày làm thật (để thành tích ngày đó đúng thực tế).
+      (closedByDate[o.date] = closedByDate[o.date]||[]).push({o, a, ke_hoach, dong_goi:0});
+      (closedByDate[ngayLam] = closedByDate[ngayLam]||[]).push({o, a, ke_hoach:0, dong_goi:daLam});
     }
   });
 
@@ -3252,10 +3330,11 @@ async function pollForUpdates(){
 
     const bundle = await storageGetAll([
       ASSIGNMENT_STORAGE_KEY, DYNAMIC_ORDERS_KEY, DELETED_ORDERS_KEY,
-      LOCKED_PLAN_KEY, LOCKED_PROGRESS_KEY, SNAP_VERSION_KEY, PRIORITY_ORDERS_KEY, USER_TEAMS_KEY
+      LOCKED_PLAN_KEY, LOCKED_PROGRESS_KEY, SNAP_VERSION_KEY, PRIORITY_ORDERS_KEY, USER_TEAMS_KEY, QUARTER_TARGET_KEY
     ]);
     if(bundle[USER_TEAMS_KEY] && typeof bundle[USER_TEAMS_KEY] === 'object') userTeams = bundle[USER_TEAMS_KEY];
     const nextPriority = bundle[PRIORITY_ORDERS_KEY];
+    const nextQuarterTargets = bundle[QUARTER_TARGET_KEY];
     const snapVerMoi = bundle[SNAP_VERSION_KEY];
     // Ảnh chụp ngày đã chốt vừa được chốt lại ở máy khác -> phải coi là "có thay đổi",
     // dù danh sách ngày chốt trông y như cũ.
@@ -3308,6 +3387,7 @@ async function pollForUpdates(){
       || JSON.stringify(nextLockPlan) !== JSON.stringify(lockedPlanDates)
       || JSON.stringify(nextLockProg) !== JSON.stringify(lockedProgressDates)
       || (Array.isArray(nextPriority) && JSON.stringify(nextPriority) !== JSON.stringify(priorityOrderIds))
+      || (nextQuarterTargets && typeof nextQuarterTargets === 'object' && JSON.stringify(nextQuarterTargets) !== JSON.stringify(quarterTargets))
       || anhChupDoi;
     if(!changed){ markSynced(); return; }
 
@@ -3317,13 +3397,14 @@ async function pollForUpdates(){
     lockedPlanDates = nextLockPlan;
     lockedProgressDates = nextLockProg;
     if(Array.isArray(nextPriority)) priorityOrderIds = nextPriority;
+    if(nextQuarterTargets && typeof nextQuarterTargets === 'object') quarterTargets = nextQuarterTargets;
     if(anhChupDoi) snapVersionSeen = snapVerMoi;
     await refreshSnapshots(anhChupDoi);
     saveLocalCache();
     renderAutoPlanDaySelect();
     renderAutoPlan();
     renderProgress();
-    syncCompletedOrdersToMonthlyData();
+    syncOrdersToMonthlyData();
     markSynced();
 
     // Trả lại ô số lượng đang gõ dở cùng con trỏ, để người dùng không bị mất thao tác
@@ -3694,7 +3775,7 @@ async function taiGoiSaoLuu(){
     // Lấy bản mới nhất từ máy chủ để gói sao lưu không bị cũ
     const b = await storageGetAll([
       ASSIGNMENT_STORAGE_KEY, DYNAMIC_ORDERS_KEY, DELETED_ORDERS_KEY,
-      LOCKED_PLAN_KEY, LOCKED_PROGRESS_KEY
+      LOCKED_PLAN_KEY, LOCKED_PROGRESS_KEY, QUARTER_TARGET_KEY
     ]);
     await loadStaffUsers();
     await refreshSnapshots(true);
@@ -3721,6 +3802,7 @@ async function taiGoiSaoLuu(){
         khsx_deleted_orders:        b[DELETED_ORDERS_KEY] || deletedOrderIds,
         khsx_locked_plan_dates:     b[LOCKED_PLAN_KEY] || lockedPlanDates,
         khsx_locked_progress_dates: b[LOCKED_PROGRESS_KEY] || lockedProgressDates,
+        khsx_muc_tieu_quy:          b[QUARTER_TARGET_KEY] || quarterTargets,
         snapshots:                  planSnapshots,
         backup_rows_by_date:        backupRowsByDate,
         users:                      staffUsers
@@ -3779,6 +3861,7 @@ async function napLaiTuGoi(){
     if(d.khsx_deleted_orders)        await storageSet(DELETED_ORDERS_KEY, d.khsx_deleted_orders);
     if(d.khsx_locked_plan_dates)     await storageSet(LOCKED_PLAN_KEY, d.khsx_locked_plan_dates);
     if(d.khsx_locked_progress_dates) await storageSet(LOCKED_PROGRESS_KEY, d.khsx_locked_progress_dates);
+    if(d.khsx_muc_tieu_quy)          await storageSet(QUARTER_TARGET_KEY, d.khsx_muc_tieu_quy);
 
     const snaps = d.snapshots || {};
     for(const ngay of Object.keys(snaps)){
@@ -3814,6 +3897,40 @@ document.getElementById('backupModal').addEventListener('click', (e)=>{
 });
 document.getElementById('doBackupBtn').addEventListener('click', taiGoiSaoLuu);
 document.getElementById('doRestoreBtn').addEventListener('click', napLaiTuGoi);
+
+document.getElementById('quarterTargetBtn').addEventListener('click', ()=>{
+  if(!canManage()) return;
+  const {nam, quy} = quyCuaNgay(new Date());
+  document.getElementById('quarterTargetQuy').value = quy;
+  document.getElementById('quarterTargetNam').value = nam;
+  const hienTai = quarterTargets[`${nam}_Q${quy}`];
+  document.getElementById('quarterTargetSoLuong').value = hienTai || '';
+  document.getElementById('quarterTargetStatus').textContent = '';
+  document.getElementById('quarterTargetModal').style.display = 'block';
+});
+document.getElementById('closeQuarterTargetModalBtn').addEventListener('click', ()=>{
+  document.getElementById('quarterTargetModal').style.display = 'none';
+});
+document.getElementById('quarterTargetModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'quarterTargetModal') e.target.style.display = 'none';
+});
+document.getElementById('doSaveQuarterTargetBtn').addEventListener('click', async ()=>{
+  if(!canManage()) return;
+  const quy = parseInt(document.getElementById('quarterTargetQuy').value, 10);
+  const nam = parseInt(document.getElementById('quarterTargetNam').value, 10);
+  const soLuong = parseInt(document.getElementById('quarterTargetSoLuong').value, 10);
+  const st = document.getElementById('quarterTargetStatus');
+  if(!nam || !quy || isNaN(soLuong) || soLuong < 0){
+    st.textContent = 'Nhập đủ năm, quý và sản lượng mục tiêu (số ≥ 0).';
+    st.style.color = 'var(--danger)';
+    return;
+  }
+  st.textContent = 'Đang lưu...';
+  st.style.color = 'var(--text2)';
+  await saveQuarterTarget(nam, quy, soLuong);
+  st.textContent = `Đã lưu mục tiêu Quý ${quy}/${nam}: ${soLuong.toLocaleString()} tấm.`;
+  st.style.color = 'var(--success)';
+});
 
 // ============================================================================
 //  XUẤT BÁO CÁO ĐÓNG GÓI
@@ -4117,6 +4234,13 @@ function tinhDonDatPhoi(tuNgay, denNgay){
     }
     if(DAY_QUEN_THUOC.indexOf(day) === -1){
       const k = `Độ dày ${day} → phôi ${phoi} (tính theo công thức trừ 2.5)`;
+      luuY[k] = (luuY[k] || 0) + sl;
+    }
+
+    const rongGoc = ngang;
+    ngang = rongChuanHoa(ngang);
+    if(ngang !== rongGoc){
+      const k = `Chiều rộng ${rongGoc} → làm tròn lên phôi rộng ${ngang} (chuẩn gần nhất)`;
       luuY[k] = (luuY[k] || 0) + sl;
     }
 
@@ -4447,11 +4571,12 @@ async function bootstrap(){
     backupRowsByDate = cached.backupRowsByDate || {};
     if(Array.isArray(cached.priorityOrderIds)) priorityOrderIds = cached.priorityOrderIds;
     if(cached.baoHanhTheoNgay && typeof cached.baoHanhTheoNgay === 'object') baoHanhTheoNgay = cached.baoHanhTheoNgay;
+    if(cached.quarterTargets && typeof cached.quarterTargets === 'object') quarterTargets = cached.quarterTargets;
     autoPlanLoaded = true;
     renderAutoPlanDaySelect();
     renderAutoPlan();
     renderProgress();
-    syncCompletedOrdersToMonthlyData();
+    syncOrdersToMonthlyData();
     const el = document.getElementById('autoPlanStatus');
     el.textContent = `Đang hiện bản lưu lúc ${new Date(cached.t).toLocaleTimeString('vi-VN')} — đang tải bản mới...`;
     el.style.color = 'var(--text2)';
@@ -4462,9 +4587,10 @@ async function bootstrap(){
     (async ()=>{
       const b = await storageGetAll([
         ASSIGNMENT_STORAGE_KEY, DYNAMIC_ORDERS_KEY, DELETED_ORDERS_KEY,
-        LOCKED_PLAN_KEY, LOCKED_PROGRESS_KEY, PRIORITY_ORDERS_KEY, USER_TEAMS_KEY
+        LOCKED_PLAN_KEY, LOCKED_PROGRESS_KEY, PRIORITY_ORDERS_KEY, USER_TEAMS_KEY, QUARTER_TARGET_KEY
       ]);
       if(b[USER_TEAMS_KEY] && typeof b[USER_TEAMS_KEY] === 'object') userTeams = b[USER_TEAMS_KEY];
+      if(b[QUARTER_TARGET_KEY] && typeof b[QUARTER_TARGET_KEY] === 'object') quarterTargets = b[QUARTER_TARGET_KEY];
       if(Array.isArray(b[PRIORITY_ORDERS_KEY])) priorityOrderIds = b[PRIORITY_ORDERS_KEY];
       if(b[ASSIGNMENT_STORAGE_KEY]) assignments = b[ASSIGNMENT_STORAGE_KEY];
       if(b[DYNAMIC_ORDERS_KEY]) dynamicOrders = b[DYNAMIC_ORDERS_KEY];
