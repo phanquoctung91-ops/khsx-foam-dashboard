@@ -806,8 +806,12 @@ const allDays = {...RAW.days}; // mutable: manual entries get merged in
 function rowsForStatistics(dayOrKey){
   const day = typeof dayOrKey === 'string' ? allDays[dayOrKey] : dayOrKey;
   if(!day || !Array.isArray(day.rows)) return [];
+  // A packaged historical day is already a complete, frozen report.  Prefer it so
+  // a late/incomplete live sync cannot hide the old day (the 01/08 regression).
+  const historicalRows = day.rows.filter(r=>r && !r._from_foam);
+  if(historicalRows.length) return historicalRows;
   const liveRows = day.rows.filter(r=>r && r._from_foam);
-  return liveRows.length ? liveRows : day.rows;
+  return liveRows;
 }
 const monthly = RAW.monthly;
 
@@ -1216,7 +1220,8 @@ function renderMonthly(){
         teamMap[r.to].hoan_thanh += r.dong_goi||0;
       }
       rangePlan += r.ke_hoach||0;
-      rangeDone += r.dong_goi||0;
+      // Warranty is tracked in its own KPI and must not inflate production output.
+      if(!laBaoHanh(r)) rangeDone += r.dong_goi||0;
     });
   });
 
