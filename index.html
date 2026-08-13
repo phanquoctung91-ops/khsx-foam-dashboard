@@ -1571,24 +1571,7 @@ let staffUsers = [];          // danh sách mã, chỉ Quản lý tải được
 let staffUsersLoaded = false;
 
 const ROLE_LABELS = {quan_ly:'Quản lý', quan_ly_2:'Quản lý 2', nhan_vien:'Nhân viên', chi_xem:'Chỉ xem'};
-const LOGIN_STORAGE_KEY = 'khsx_login_session';
-
-const SESSION_TIMEOUTS = {
-  quan_ly: 30 * 60 * 1000,
-  quan_ly_2: 120 * 60 * 1000,
-  nhan_vien: 30 * 24 * 60 * 60 * 1000
-};
-
-function saveLoginSession(user){
-  const ttl = SESSION_TIMEOUTS[user.role] || SESSION_TIMEOUTS.nhan_vien;
-  const session = { code:user.code, role:user.role, expiresAt: Date.now()+ttl };
-  try{ localStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify(session)); }catch(e){}
-}
-
-function clearLoginSession(){
-  clearLoginSession()
-}
-
+const LOGIN_STORAGE_KEY = 'khsx_login_code';
 
 // ---- Tự tải lại khi có bản mới ----
 // Máy nào mở bản mới sẽ ghi số bản lên máy chủ. Các máy còn lại thấy số lớn hơn
@@ -1744,13 +1727,12 @@ function enterAsViewer(){
   try{ localStorage.setItem(LOGIN_STORAGE_KEY, '__VIEWER__'); }catch(e){}
   document.getElementById('loginOverlay').style.display = 'none';
   applyRoleUI();
-  resetInactivityTimer();
   if(typeof renderAutoPlan === 'function'){ renderAutoPlan(); renderProgress(); }
 }
 
 // Buộc đăng xuất (dùng khi mã bị thu hồi)
 function forceLogout(msg){
-  clearLoginSession()
+  try{ localStorage.removeItem(LOGIN_STORAGE_KEY); }catch(e){}
   currentUser = null;
   applyRoleUI();
   const ov = document.getElementById('loginOverlay');
@@ -1786,7 +1768,10 @@ async function doLogin(code){
     if(dsTo && typeof dsTo === 'object') userTeams = dsTo;
   }catch(e){}
   // Vai Quản lý: không lưu mã trên máy, mở trang lần sau phải nhập lại (an toàn hơn).
-  saveLoginSession(u);
+  try{
+    if(u.role === 'quan_ly') localStorage.removeItem(LOGIN_STORAGE_KEY);
+    else localStorage.setItem(LOGIN_STORAGE_KEY, u.code);
+  }catch(e){}
   document.getElementById('loginOverlay').style.display = 'none';
   applyRoleUI();
   if(typeof renderAutoPlan === 'function'){
@@ -4518,42 +4503,30 @@ document.getElementById('refreshProgressBtn').addEventListener('click', async ()
 
 document.getElementById('viewerBtn').addEventListener('click', enterAsViewer);
 document.getElementById('logoutBtn').addEventListener('click', ()=>{
-  clearLoginSession()
+  try{
+    localStorage.removeItem(LOGIN_STORAGE_KEY);
+    localStorage.removeItem('khsx_login_session_v2');
+    localStorage.setItem('khsx_manual_logout','1');
+  }catch(e){}
   currentUser = null;
   applyRoleUI();
-  document.getElementById('loginOverlay').style.display = 'flex';
-  document.getElementById('loginCodeInput').focus();
+  const ov=document.getElementById('loginOverlay');
+  if(ov) ov.style.display='flex';
+  const input=document.getElementById('loginCodeInput');
+  if(input) input.focus();
 });
 
 // Đã đăng nhập lần trước trên máy này -> vào luôn, không phải nhập lại mỗi lần mở
 // Máy này đã đăng nhập lần trước -> xác thực lại mã với máy chủ rồi vào.
 // Khách xem thống kê thì vào ngay, không cần gọi máy chủ.
 async function restoreLogin(){
-  let raw = null;
-  try{ raw = localStorage.getItem(LOGIN_STORAGE_KEY); }catch(e){}
-  if(!raw){ applyRoleUI(); return; }
+  let saved = null;
+  try{ saved = localStorage.getItem(LOGIN_STORAGE_KEY); }catch(e){}
+  if(!saved){ applyRoleUI(); return; }
 
-  if(raw === '__VIEWER__'){
+  if(saved === '__VIEWER__'){
     currentUser = VIEWER_USER;
     document.getElementById('loginOverlay').style.display = 'none';
-    applyRoleUI();
-    resetInactivityTimer();
-    return;
-  }
-
-  let session = null;
-  try{ session = JSON.parse(raw); }catch(e){
-    session = { code: raw, expiresAt: 0 };
-  }
-
-  if(!session || !session.code){
-    clearLoginSession();
-    applyRoleUI();
-    return;
-  }
-
-  if(session.expiresAt && Date.now() > session.expiresAt){
-    clearLoginSession();
     applyRoleUI();
     return;
   }
@@ -4563,37 +4536,27 @@ async function restoreLogin(){
   err.style.color = 'var(--text2)';
   err.style.display = 'block';
 
-  const u = await verifyCodeOnServer(session.code);
+  const u = await verifyCodeOnServer(saved);
+  if(u && u.role === 'quan_ly'){
+    // Vai Quản lý luôn phải nhập lại mã mỗi lần mở trang
+    try{ localStorage.removeItem(LOGIN_STORAGE_KEY); }catch(e){}
+    err.textContent = 'Vai Quản lý cần nhập lại mã mỗi lần mở trang.';
+    err.style.color = 'var(--text2)';
+    applyRoleUI();
+    return;
+  }
   if(u){
     currentUser = u;
-    saveLoginSession(u);
     document.getElementById('loginOverlay').style.display = 'none';
     err.style.display = 'none';
-    resetInactivityTimer();
   }else{
-    clearLoginSession();
+    try{ localStorage.removeItem(LOGIN_STORAGE_KEY); }catch(e){}
     err.textContent = 'Phiên đăng nhập không còn hiệu lực. Vui lòng nhập lại mã.';
     err.style.color = 'var(--danger)';
   }
+  err.style.color = err.style.color || 'var(--danger)';
   applyRoleUI();
 }
-
-
-let inactivityTimer = null;
-function resetInactivityTimer(){
-  if(!currentUser) return;
-  if(currentUser.role === 'nhan_vien') return;
-  const ttl = SESSION_TIMEOUTS[currentUser.role];
-  if(!ttl) return;
-  if(inactivityTimer) clearTimeout(inactivityTimer);
-  saveLoginSession(currentUser);
-  inactivityTimer = setTimeout(()=>{
-    forceLogout('Phiên đăng nhập đã hết hạn do không hoạt động.');
-  }, ttl);
-}
-['mousemove','keydown','mousedown','touchstart','scroll'].forEach(evt=>{
-  window.addEventListener(evt, resetInactivityTimer, {passive:true});
-});
 
 async function bootstrap(){
   await restoreLogin();
