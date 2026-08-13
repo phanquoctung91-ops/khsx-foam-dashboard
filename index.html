@@ -1009,16 +1009,90 @@ function laBaoHanh(r){
 }
 
 // ---- KPI row ----
+// v8.6: tính Kế hoạch / Hoàn thành trực tiếp từ cây đơn hàng thay vì cộng các dòng
+// hiển thị theo ngày. Mục tiêu: phần thiếu (is_drop) chỉ là phần còn lại của đơn gốc,
+// không được làm sản lượng bị cộng trùng khi đổi ngày. Đơn phát sinh (is_manual) vẫn
+// không vào Kế hoạch nhưng khi hoàn thành vẫn được cộng vào Hoàn thành.
+function tinhKpiTheoKhoang(keys){
+  const dates = new Set((keys||[]).map(k=>allDays[k] && allDays[k].date).filter(Boolean));
+  if(!dates.size) return {plan:0, done:0};
+
+  const dsNgay = Array.from(dates).map(parseDMY).filter(Boolean)
+    .map(p=>new Date(p.y,p.m-1,p.d).getTime()).sort((a,b)=>a-b);
+  const tuNgay = dsNgay[0], denNgay = dsNgay[dsNgay.length-1];
+  const trongKhoang = d=>{
+    const p=parseDMY(d); if(!p) return false;
+    const t=new Date(p.y,p.m-1,p.d).getTime();
+    return t>=tuNgay && t<=denNgay;
+  };
+  const truocKhoang = d=>{
+    const p=parseDMY(d); if(!p) return false;
+    return new Date(p.y,p.m-1,p.d).getTime() < tuNgay;
+  };
+
+  const orders = getOrders().filter(o=>!o.is_warranty);
+  const byId = {}; orders.forEach(o=>{ byId[o.id]=o; });
+  const children = {};
+  Object.keys(assignments).forEach(pid=>{
+    const sid = assignments[pid] && assignments[pid].spinoff_id;
+    if(sid && byId[sid]) (children[pid]||(children[pid]=[])).push(sid);
+  });
+
+  // Gom toàn bộ hậu duệ của một đơn gốc. Nếu dữ liệu cũ có phần thiếu mồ côi,
+  // phần đó sẽ được xử lý riêng bên dưới thay vì làm mất sản lượng.
+  const descendants = rootId=>{
+    const out=[], seen=new Set();
+    const walk=id=>{
+      (children[id]||[]).forEach(cid=>{
+        if(seen.has(cid)) return; seen.add(cid); out.push(cid); walk(cid);
+      });
+    };
+    walk(rootId); return out;
+  };
+
+  let plan=0, done=0;
+  const consumedDrops = new Set();
+
+  orders.filter(o=>!o.is_drop).forEach(root=>{
+    if(isPlannedOrder(root) && trongKhoang(root.date)) plan += Number(root.so_luong)||0;
+
+    const ids=[root.id].concat(descendants(root.id));
+    ids.slice(1).forEach(id=>consumedDrops.add(id));
+    let truoc=0, trong=0;
+    ids.forEach(id=>{
+      const o=byId[id]; const a=assignments[id]||{};
+      const sl=Number(a.so_luong_hoan_thanh)||0;
+      if(!sl) return;
+      const ngay=a.ngay_hoan_thanh || (o && o.date) || root.date;
+      if(truocKhoang(ngay)) truoc += sl;
+      else if(trongKhoang(ngay)) trong += sl;
+    });
+
+    // Một đơn (kể cả đơn phát sinh) chỉ có thể tạo tối đa số lượng của chính nó.
+    // Nhờ vậy 70 ngày 3 + 4 rớt ngày 4 = 74, không thể biến thành 78 do dòng rớt trùng.
+    const sucChua=Math.max(0, Number(root.so_luong)||0);
+    done += Math.min(trong, Math.max(0, sucChua - Math.min(sucChua,truoc)));
+  });
+
+  // Dữ liệu rất cũ có thể còn phần thiếu không tìm được đơn gốc. Không bỏ sản lượng thật:
+  // chỉ cộng đúng số hoàn thành của chính dòng đó trong khoảng, tối đa số lượng dòng.
+  orders.filter(o=>o.is_drop && !consumedDrops.has(o.id)).forEach(o=>{
+    const a=assignments[o.id]||{};
+    const sl=Math.min(Number(a.so_luong_hoan_thanh)||0, Number(o.so_luong)||0);
+    const ngay=a.ngay_hoan_thanh || o.date;
+    if(sl && trongKhoang(ngay)) done += sl;
+  });
+
+  return {plan, done};
+}
+
 function computeAndRenderKpis(){
-  let totalPlan=0, totalDG=0, totalBaoHanh=0, activeDays=0;
+  const thongKe=tinhKpiTheoKhoang(dayKeys);
+  let totalPlan=thongKe.plan, totalDG=thongKe.done, totalBaoHanh=0, activeDays=0;
   dayKeys.forEach(k=>{
     const rows = allDays[k].rows;
     if(rows.length>0) activeDays++;
-    rows.forEach(r=>{
-      totalPlan += r.ke_hoach||0;
-      if(laBaoHanh(r)) totalBaoHanh += r.dong_goi||0;
-      else totalDG += r.dong_goi||0;
-    });
+    rows.forEach(r=>{ if(laBaoHanh(r)) totalBaoHanh += r.dong_goi||0; });
   });
   const rate = totalPlan>0 ? Math.round((totalDG/totalPlan)*1000)/10 : 0;
   const kpiRow = document.getElementById('kpiRow');
@@ -1036,7 +1110,7 @@ function computeAndRenderKpis(){
       <div class="kpi-phu">${mucTieuHtml}</div>
     </div>
     <div class="kpi k-accent">
-      <div class="label">Đã đóng gói</div>
+      <div class="label">Tổng hoàn thành</div>
       <div class="value" data-dem="${totalDG}">${totalDG.toLocaleString()}</div>
       <div class="kpi-thanh"><i style="width:${Math.min(100,rate)}%;background:var(--accent);"></i></div>
     </div>
@@ -1189,7 +1263,8 @@ function renderMonthly(){
 
   const productMap = {};
   const teamMap = {};
-  let rangePlan = 0, rangeDone = 0;
+  const thongKeKhoang = tinhKpiTheoKhoang(keysToUse);
+  let rangePlan = thongKeKhoang.plan, rangeDone = thongKeKhoang.done;
   keysToUse.forEach(k=>{
     allDays[k].rows.forEach(r=>{
       const name = (r.ten_hang||'').trim();
@@ -1201,15 +1276,13 @@ function renderMonthly(){
         teamMap[r.to].don_hang += r.ke_hoach||0;
         teamMap[r.to].hoan_thanh += r.dong_goi||0;
       }
-      rangePlan += r.ke_hoach||0;
-      rangeDone += r.dong_goi||0;
     });
   });
 
   const rangeRate = rangePlan>0 ? Math.round((rangeDone/rangePlan)*1000)/10 : 0;
   document.getElementById('monthlyKpis').innerHTML = `
     <div class="kpi k-accent"><div class="label">Tổng kế hoạch</div><div class="value">${rangePlan.toLocaleString()}</div></div>
-    <div class="kpi k-success"><div class="label">Tổng đóng gói</div><div class="value">${rangeDone.toLocaleString()}</div></div>
+    <div class="kpi k-success"><div class="label">Tổng hoàn thành</div><div class="value">${rangeDone.toLocaleString()}</div></div>
     <div class="kpi ${rangeRate>=95?'k-success':'k-warning'}"><div class="label">Tỷ lệ hoàn thành</div><div class="value" style="color:${rangeRate>=95?'var(--success)':rangeRate>=80?'var(--warning)':'var(--danger)'}">${rangeRate}%</div></div>
     <div class="kpi k-accent"><div class="label">Số ngày trong khoảng</div><div class="value">${keysToUse.length}</div></div>
   `;
@@ -3988,7 +4061,10 @@ function chuanBiDongBaoCao(ngay){
     //   - đơn phát sinh (is_manual): không thuộc kế hoạch công ty giao
     // Cả hai vẫn được cộng vào THỰC TẾ ở dòng dưới. Giống cách tính của Thống kê tháng.
     if(!o.is_drop && !o.is_manual) nhom[key].keHoach += Number(o.so_luong) || 0;
-    nhom[key].thucTe += Number(a.so_luong_hoan_thanh) || 0;
+    // Hoàn thành chỉ tính theo NGÀY HOÀN THÀNH thực tế.
+    if(a.ngay_hoan_thanh === ngay){
+      nhom[key].thucTe += Number(a.so_luong_hoan_thanh) || 0;
+    }
     if(o.ghi_chu && nhom[key].ghiChu.indexOf(o.ghi_chu) === -1) nhom[key].ghiChu.push(o.ghi_chu);
   });
 
