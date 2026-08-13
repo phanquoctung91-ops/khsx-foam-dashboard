@@ -3988,7 +3988,10 @@ function chuanBiDongBaoCao(ngay){
     //   - đơn phát sinh (is_manual): không thuộc kế hoạch công ty giao
     // Cả hai vẫn được cộng vào THỰC TẾ ở dòng dưới. Giống cách tính của Thống kê tháng.
     if(!o.is_drop && !o.is_manual) nhom[key].keHoach += Number(o.so_luong) || 0;
-    nhom[key].thucTe += Number(a.so_luong_hoan_thanh) || 0;
+    // Hoàn thành chỉ tính theo NGÀY HOÀN THÀNH thực tế.
+    if(a.ngay_hoan_thanh === ngay){
+      nhom[key].thucTe += Number(a.so_luong_hoan_thanh) || 0;
+    }
     if(o.ghi_chu && nhom[key].ghiChu.indexOf(o.ghi_chu) === -1) nhom[key].ghiChu.push(o.ghi_chu);
   });
 
