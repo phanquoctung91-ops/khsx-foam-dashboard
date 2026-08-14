@@ -236,6 +236,11 @@
     font-size:11.5px;font-weight:700;color:var(--success);}
   .team-ring-list .k{color:var(--text2);text-align:right;white-space:nowrap;}
   .team-ring-list b{color:var(--text);text-align:right;}
+  /* Chỉ đánh dấu đúng ô số lượng của nhóm đơn có ít nhất một đơn Ưu tiên.
+     Dùng box-shadow để nền vàng lan nhẹ mà không làm đổi kích thước lưới / gây tràn chữ. */
+  .team-ring-list b.team-ring-qty-uutien{
+    background:#fff7d9;border-radius:3px;box-shadow:0 0 0 3px #fff7d9;
+  }
   /* ---- Ẩn/hiện chức năng theo vai người dùng ----
      .only-manager  : chỉ Quản lý          (nút đỏ, 2 nút chốt, cột Xoá)
      .only-manager2 : Quản lý + Quản lý 2  (thêm đơn phát sinh, nút ✓ Hoàn thành)
@@ -1088,8 +1093,10 @@ function tongKpiTuRowsTheoKeys(keys){
 }
 
 function computeAndRenderKpis(){
+  // Ngày thực tế có sản xuất: phải có sản lượng hoàn thành và không tính hàng bảo hành.
+  // Không dùng số dòng kế hoạch vì ngày có kế hoạch nhưng chưa làm không phải ngày sản xuất.
   let activeDays=0;
-  dayKeys.forEach(k=>{ if((allDays[k].rows||[]).length>0) activeDays++; });
+  dayKeys.forEach(k=>{ if(tongKpiTuRowsTheoKeys([k]).done>0) activeDays++; });
   const tongKpi = tongKpiTuRowsTheoKeys(dayKeys);
   let totalPlan = tongKpi.plan;
   let totalDG = tongKpi.done;
@@ -1102,6 +1109,19 @@ function computeAndRenderKpis(){
   const mucTieuHtml = quy.mucTieu>0
     ? `Mục tiêu Quý ${quy.quy}/${quy.nam}: <b>${quy.mucTieu.toLocaleString()}</b> · đã đạt <b>${quy.phanTram}%</b>`
     : `Chưa nhập mục tiêu Quý ${quy.quy}/${quy.nam}`;
+  const coMucTieuNgay = quy.mucTieuNgay>0;
+  const tbKhoangNgay = activeDays>0 ? totalDG/activeDays : 0;
+  const danhGiaTocDo = (thucTe)=>{
+    const chenhlech = thucTe - quy.mucTieuNgay;
+    const nhanh = chenhlech >= 0;
+    return `<span style="color:${nhanh?'var(--success)':'var(--warning)'};font-weight:700;">${nhanh?'nhanh':'chậm'} ${Math.abs(chenhlech).toLocaleString('vi-VN',{maximumFractionDigits:1})} tấm/ngày</span>`;
+  };
+  const trungBinhThangQuyHtml = coMucTieuNgay
+    ? `TB tháng: <b>${quy.tyLeThang}%</b> · quý: <b>${quy.tyLeQuy}%</b> mục tiêu/ngày · ${danhGiaTocDo(quy.tbQuy)}`
+    : 'Chưa có mục tiêu tính toán';
+  const trungBinhNgayHtml = coMucTieuNgay
+    ? `TB đóng gói: <b>${tbKhoangNgay.toLocaleString('vi-VN',{maximumFractionDigits:1})} tấm/ngày</b> · ${danhGiaTocDo(tbKhoangNgay)}`
+    : 'Chưa có mục tiêu tính toán';
 
   kpiRow.innerHTML = `
     <div class="kpi">
@@ -1112,6 +1132,7 @@ function computeAndRenderKpis(){
     <div class="kpi k-accent">
       <div class="label">Tổng hoàn thành</div>
       <div class="value" data-dem="${totalDG}">${totalDG.toLocaleString()}</div>
+      <div class="kpi-phu">${trungBinhThangQuyHtml}</div>
       <div class="kpi-thanh"><i style="width:${Math.min(100,rate)}%;background:var(--accent);"></i></div>
     </div>
     <div class="kpi ${rate>=95?'k-success':'k-warning'}">
@@ -1122,6 +1143,7 @@ function computeAndRenderKpis(){
     <div class="kpi k-accent">
       <div class="label">Số ngày có sản xuất</div>
       <div class="value"><span data-dem="${activeDays}">${activeDays}</span><span style="font-size:15px;color:var(--text2);"> / ${dayKeys.length}</span></div>
+      <div class="kpi-phu">${trungBinhNgayHtml}</div>
       <div class="kpi-thanh"><i style="width:${tienDoNgay}%;background:var(--primary);"></i></div>
     </div>
     <div class="kpi" style="border-top-color:#8a5cd0;">
@@ -1378,7 +1400,7 @@ function renderMonthly(){
               if(rangeKpi.warranty > 0){
                 items.push({
                   text:`Bảo hành — ${rangeKpi.warranty.toLocaleString()} (ngoài KH)`,
-                  fillStyle:'#8a5cd0', strokeStyle:'#8a5cd0', index:-1
+                  fillStyle:'#d97706', strokeStyle:'#d97706', index:-1
                 });
               }
               return items;
@@ -1408,7 +1430,7 @@ function renderMonthly(){
       datasets:[
         {label:'Kế hoạch', data:teamKeys.map(t=>teamMap[t].ke_hoach), backgroundColor:'#6d5bd0', borderRadius:4, maxBarThickness:26},
         {label:'Hoàn thành', data:teamKeys.map(t=>teamMap[t].hoan_thanh), backgroundColor:'#0f8a4c', borderRadius:4, maxBarThickness:26},
-        {label:'Bảo hành', data:teamKeys.map(t=>teamMap[t].bao_hanh), backgroundColor:'#8a5cd0', borderRadius:4, maxBarThickness:26}
+        {label:'Bảo hành', data:teamKeys.map(t=>teamMap[t].bao_hanh), backgroundColor:'#d97706', borderRadius:4, maxBarThickness:26}
       ]
     },
     options:{
@@ -1498,7 +1520,7 @@ const PRIORITY_ORDERS_KEY = 'khsx_priority_orders';
 // Tài khoản gắn tổ: {ma_dang_nhap: 'Tổ 1'} — tài khoản có tổ chỉ thấy việc của tổ mình
 const USER_TEAMS_KEY = 'khsx_user_teams';
 let userTeams = {};
-// Mục tiêu sản lượng theo quý, do Quản lý nhập — {'2026_Q3': 8000}. Mọi vai đều thấy,
+// Mục tiêu sản lượng theo quý, do Quản lý nhập — {'2026_Q3': 8000}.
 // chỉ Quản lý nhập/sửa.
 const QUARTER_TARGET_KEY = 'khsx_muc_tieu_quy';
 let quarterTargets = {};
@@ -1507,22 +1529,49 @@ function quyCuaNgay(dateObj){
   const q = Math.floor(dateObj.getMonth()/3) + 1;
   return {nam:y, quy:q, key:`${y}_Q${q}`};
 }
+// Số ngày lễ có hưởng lương theo Bộ luật Lao động, gom theo quý:
+// Q1: Tết Dương lịch 1 + Tết Âm lịch 5; Q2: Giỗ Tổ 1 + 30/4 + 1/5;
+// Q3: Quốc khánh 2; Q4: 0. Lễ trùng Chủ nhật được nghỉ bù nên số ngày bị trừ không đổi.
+const SO_NGAY_NGHI_LE_TRONG_QUY = {1:6, 2:3, 3:2, 4:0};
+function tinhSoNgayLamViecQuy(nam, quy){
+  const batDau = new Date(nam,(quy-1)*3,1);
+  const ketThuc = new Date(nam,quy*3,0);
+  let tong = 0;
+  for(let d=new Date(batDau); d<=ketThuc; d.setDate(d.getDate()+1)){
+    if(d.getDay() !== 0) tong++; // Xưởng làm thứ Hai đến thứ Bảy, nghỉ Chủ nhật.
+  }
+  return Math.max(0, tong - (SO_NGAY_NGHI_LE_TRONG_QUY[quy] || 0));
+}
 // Tổng đã đóng gói (không tính bảo hành) trong quý hiện tại, cộng từ dữ liệu Tổng hợp
 // tháng đã có trong bộ nhớ (allDays) — không phụ thuộc tháng đang được lọc ở header.
 function tinhTienDoQuyHienTai(){
   const {nam, quy, key} = quyCuaNgay(new Date());
-  let daLam = 0;
-  Object.values(allDays).forEach(d=>{
+  const quyKeys = [];
+  const thangKeys = [];
+  const thangHienTai = new Date().getMonth()+1;
+  Object.entries(allDays).forEach(([k,d])=>{
     const p = parseDMY(d.date);
     if(!p || p.y !== nam || Math.floor((p.m-1)/3)+1 !== quy) return;
-    d.rows.forEach(r=>{ if(!laBaoHanh(r)) daLam += r.dong_goi||0; });
+    quyKeys.push(k);
+    if(p.m === thangHienTai) thangKeys.push(k);
   });
+  const daLam = tongKpiTuRowsTheoKeys(quyKeys).done;
+  const daLamThang = tongKpiTuRowsTheoKeys(thangKeys).done;
+  const ngaySanXuatQuy = quyKeys.filter(k=>tongKpiTuRowsTheoKeys([k]).done>0).length;
+  const ngaySanXuatThang = thangKeys.filter(k=>tongKpiTuRowsTheoKeys([k]).done>0).length;
   const mucTieu = quarterTargets[key] || 0;
+  const soNgayDuKien = tinhSoNgayLamViecQuy(nam,quy);
+  const mucTieuNgay = mucTieu>0 && soNgayDuKien>0 ? mucTieu/soNgayDuKien : 0;
+  const tbQuy = ngaySanXuatQuy>0 ? daLam/ngaySanXuatQuy : 0;
+  const tbThang = ngaySanXuatThang>0 ? daLamThang/ngaySanXuatThang : 0;
+  const tyLeQuy = mucTieuNgay>0 ? Math.round((tbQuy/mucTieuNgay)*1000)/10 : null;
+  const tyLeThang = mucTieuNgay>0 ? Math.round((tbThang/mucTieuNgay)*1000)/10 : null;
   const phanTram = mucTieu>0 ? Math.round((daLam/mucTieu)*1000)/10 : null;
-  return {nam, quy, mucTieu, daLam, phanTram};
+  return {nam, quy, mucTieu, soNgayDuKien, mucTieuNgay, daLam, phanTram, tbQuy, tbThang, tyLeQuy, tyLeThang};
 }
 async function saveQuarterTarget(nam, quy, soLuong){
-  quarterTargets = {...quarterTargets, [`${nam}_Q${quy}`]: soLuong};
+  const key = `${nam}_Q${quy}`;
+  quarterTargets = {...quarterTargets, [key]: soLuong};
   await storageSet(QUARTER_TARGET_KEY, quarterTargets);
   saveLocalCache();
   computeAndRenderKpis();
@@ -2725,8 +2774,9 @@ function danhSachDonCuaTo(teamOrders, anDongDaXong){
     const kt = formatKichThuoc(o);
     const hoTro = toDuocHoTro(o);
     const k = ten + '|' + kt + '|' + (hoTro || '');
-    if(!gom[k]) gom[k] = {ten, kt, sl:0, hoTro, day: parseFloat(o.day) || 0, ngang: parseFloat(o.ngang) || 0};
+    if(!gom[k]) gom[k] = {ten, kt, sl:0, hoTro, uuTien:false, day: parseFloat(o.day) || 0, ngang: parseFloat(o.ngang) || 0};
     gom[k].sl += Number(o.so_luong) || 0;
+    if(laUuTien(o.id)) gom[k].uuTien = true;
   });
   return Object.keys(gom).map(k=>gom[k])
     .sort((a,b)=> (a.day - b.day) || (a.ngang - b.ngang) || a.ten.localeCompare(b.ten,'vi'));
@@ -2740,7 +2790,7 @@ function htmlDanhSachDon(teamOrders, anDongDaXong){
   // Ba cột thẳng hàng: tên bên trái, kích thước canh phải, số lượng canh phải
   return `<div class="team-ring-list">`
     + ds.map(r=>`<span class="t">${r.ten}${r.hoTro?` <em class="ho-tro">hỗ trợ ${r.hoTro}</em>`:''}</span>`
-              + `<span class="k">${r.kt}:</span><b>${r.sl}</b>`).join('')
+              + `<span class="k">${r.kt}:</span><b class="${r.uuTien?'team-ring-qty-uutien':''}">${r.sl}</b>`).join('')
     + `</div>`;
 }
 
