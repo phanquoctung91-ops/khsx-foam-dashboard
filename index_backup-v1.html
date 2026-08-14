@@ -247,27 +247,23 @@
   body.role-chi-xem .only-editor{display:none !important;}
   body.role-nhan-vien .tab-overview{display:none !important;}
 
-  /* Cụm người dùng / công cụ: một nút gọn, menu xổ xuống canh phải */
-  #userBar{margin-left:auto;min-width:0;}
-  .management-tools{position:relative;display:flex;justify-content:flex-end;margin-top:9px;}
-  #managementToolsBtn{
-    font-family:inherit;font-size:12.5px;font-weight:700;padding:8px 13px;border-radius:9px;cursor:pointer;
-    border:1px solid var(--primary);background:var(--primary);color:#fff;white-space:nowrap;
-    box-shadow:0 1px 3px rgba(29,78,216,.18);
+  /* Nút trên thanh người dùng */
+  #logoutBtn{
+    font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;
+    border:1px solid #cfd6e4;background:#f4f6fa;color:var(--text2);transition:.15s;white-space:nowrap;
   }
-  #managementToolsBtn:hover{background:var(--primary-dark);}
-  .management-tools-menu{
-    display:none;position:absolute;right:0;top:calc(100% + 7px);z-index:1000;
-    width:min(260px,calc(100vw - 24px));padding:7px;background:var(--card);
-    border:1px solid var(--border);border-radius:11px;box-shadow:0 10px 28px rgba(16,24,40,.16);
+  #logoutBtn:hover{background:#e9edf5;color:var(--text);border-color:#b9c2d6;}
+  #staffUsersBtn{
+    font-size:13px;font-weight:700;padding:9px 16px;border-radius:9px;cursor:pointer;
+    border:1px solid var(--primary-dark);background:var(--primary);color:#fff;
+    box-shadow:0 1px 3px rgba(29,78,216,.28);transition:.15s;white-space:nowrap;
   }
-  .management-tools-menu.open{display:flex;flex-direction:column;gap:5px;}
-  .management-tools-menu button{
-    width:100%;font-family:inherit;font-size:12.5px;font-weight:650;text-align:left;
-    padding:9px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent;
-    background:#f7f9fc;color:var(--text);white-space:normal;
+  #staffUsersBtn:hover{background:var(--primary-dark);}
+  #backupBtn{
+    font-size:12px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;
+    border:1px solid #0d7a43;background:var(--success);color:#fff;transition:.15s;white-space:nowrap;
   }
-  .management-tools-menu button:hover{background:var(--primary-l);border-color:#d4e1f4;}
+  #backupBtn:hover{background:#0b6f3c;}
 
   /* Hàng nút: dàn ngang đều nhau, tối đa 6 nút một hàng */
   .btn-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px;}
@@ -291,9 +287,6 @@
     .page-title{font-size:16px;}
     #userBarName{font-size:14px;}
     #userBarRole{font-size:12.5px;}
-    header .htext{width:100%;}
-    #userBar{width:max-content;max-width:100%;margin-left:auto;text-align:right !important;align-self:flex-end;}
-    .management-tools{justify-content:flex-end;}
   }
 
   /* Dòng mở sơ đồ quy trình */
@@ -347,12 +340,8 @@
     .day-select-row{gap:7px;}
     .day-select-row .primary-btn{flex:1 1 100%;}
     .day-select-row select{flex:1 1 45%;min-width:0;}
-    .team-ring-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
-    .team-ring-row.mot-the{grid-template-columns:minmax(0,1fr);}
-    .team-ring-card{padding:11px 8px;min-width:0;overflow:hidden;}
-    .team-ring-list{grid-template-columns:minmax(0,1fr) auto auto;column-gap:5px;font-size:10.5px;max-width:100%;}
-    .team-ring-list .t{white-space:normal;overflow-wrap:anywhere;}
-    .team-ring-list .k{white-space:nowrap;}
+    .team-ring-row{grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:7px;}
+    .team-ring-card{padding:10px 6px;}
     .tabs{padding:4px;}
     .tab-btn{padding:8px 12px;font-size:12px;}
     header .hbadge{font-size:10.5px;padding:5px 10px;}
@@ -596,14 +585,11 @@
     <div class="page-title">Kế hoạch sản xuất - Nệm Foam</div>
     <div><strong id="userBarName"></strong></div>
     <div id="userBarRole"></div>
-    <div class="management-tools" id="managementTools">
-      <button id="managementToolsBtn" type="button" aria-expanded="false">⚙️ Công cụ</button>
-      <div class="management-tools-menu" id="managementToolsMenu">
-        <button id="logoutBtn" title="Đăng xuất và nhập mã khác">↪ Đổi người dùng</button>
-        <button id="staffUsersBtn" class="only-manager" title="Tạo và thu hồi mã đăng nhập cho nhân viên">👥 Tạo mã đăng nhập</button>
-        <button id="backupBtn" class="only-manager" title="Tải gói sao lưu / nạp lại dữ liệu">💾 Sao lưu &amp; bàn giao</button>
-        <button id="quarterTargetBtn" class="only-manager" title="Nhập mục tiêu sản lượng của quý">🎯 Mục tiêu quý</button>
-      </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px;margin-top:9px;">
+      <button id="logoutBtn" title="Đăng xuất và nhập mã khác">Đổi người dùng</button>
+      <button id="staffUsersBtn" class="only-manager" title="Tạo và thu hồi mã đăng nhập cho nhân viên">👥 Tạo Mã đăng nhập</button>
+      <button id="backupBtn" class="only-manager" title="Tải gói sao lưu / nạp lại dữ liệu">💾 Sao lưu &amp; bàn giao</button>
+      <button id="quarterTargetBtn" class="only-manager" title="Nhập mục tiêu sản lượng của quý">🎯 Mục tiêu quý</button>
     </div>
   </div>
 </header>
@@ -636,8 +622,8 @@
       <div class="chart-wrap" style="height:380px;"><canvas id="productChart" role="img" aria-label="Bieu do san luong theo san pham"></canvas></div>
     </div>
     <div class="card">
-      <h3>Kế hoạch / Hoàn thành / Bảo hành theo tổ</h3>
-      <div class="chart-wrap" style="height:340px;"><canvas id="teamMonthChart" role="img" aria-label="Biểu đồ kế hoạch, hoàn thành và bảo hành theo tổ"></canvas></div>
+      <h3>Đơn hàng vs Hoàn thành theo tổ</h3>
+      <div class="chart-wrap" style="height:340px;"><canvas id="teamMonthChart" role="img" aria-label="Bieu do don hang va hoan thanh theo to"></canvas></div>
     </div>
   </div>
   <div class="card">
@@ -1241,90 +1227,43 @@ const monthFromSelect = document.getElementById('monthFromSelect');
 const monthToSelect = document.getElementById('monthToSelect');
 const monthRangeNote = document.getElementById('monthRangeNote');
 
-function dmyToIso(s){
-  const p = parseDMY(s || '');
-  if(!p || !p.y) return '';
-  const z = n=>String(n).padStart(2,'0');
-  return `${p.y}-${z(p.m)}-${z(p.d)}`;
-}
-function isoToDMY(s){
-  const m = String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
-}
-function isoDayNumber(s){
-  const m = String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  return m ? Date.UTC(Number(m[1]),Number(m[2])-1,Number(m[3]))/86400000 : NaN;
-}
 function populateMonthRangeSelects(){
   const prevFrom = monthFromSelect.value, prevTo = monthToSelect.value;
-  const dataDates = dayKeys.map(k=>dmyToIso(allDays[k].date)).filter(Boolean).sort();
-  if(!dataDates.length){ monthFromSelect.innerHTML=''; monthToSelect.innerHTML=''; return; }
-
-  const m = parseInt(monthFilterSelect.value,10), y = parseInt(yearFilterSelect.value,10);
-  const now = new Date();
-  const currentMonth = m===now.getMonth()+1 && y===now.getFullYear();
-  const first = dataDates[0];
-  const todayIso = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  const last = currentMonth ? todayIso : dataDates[dataDates.length-1];
-
-  const startN = isoDayNumber(first), endN = isoDayNumber(last);
-  const opts = [];
-  for(let n=startN; n<=endN; n++){
-    const d = new Date(n*86400000);
-    const iso = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
-    opts.push(`<option value="${iso}">Ngày ${isoToDMY(iso)}</option>`);
-  }
-  const optsHtml = opts.join('');
+  const optsHtml = dayKeys.map(k=>`<option value="${k}">Ngày ${allDays[k].date}</option>`).join('');
   monthFromSelect.innerHTML = optsHtml;
   monthToSelect.innerHTML = optsHtml;
-
-  const valid = new Set(Array.from(monthFromSelect.options).map(o=>o.value));
-  monthFromSelect.value = valid.has(prevFrom) ? prevFrom : first;
-  monthToSelect.value = valid.has(prevTo) ? prevTo : last;
+  monthFromSelect.value = dayKeys.includes(prevFrom) ? prevFrom : dayKeys[0];
+  monthToSelect.value = dayKeys.includes(prevTo) ? prevTo : dayKeys[dayKeys.length-1];
 }
 
-function keysInRange(fromIso, toIso){
-  let a=isoDayNumber(fromIso), b=isoDayNumber(toIso);
-  if(!Number.isFinite(a) || !Number.isFinite(b)) return [];
-  if(a>b) [a,b]=[b,a];
-  return dayKeys.filter(k=>{
-    const n=isoDayNumber(dmyToIso(allDays[k].date));
-    return Number.isFinite(n) && n>=a && n<=b;
-  });
+function keysInRange(fromKey, toKey){
+  const fromIdx = dayKeys.indexOf(fromKey);
+  const toIdx = dayKeys.indexOf(toKey);
+  const lo = Math.min(fromIdx, toIdx), hi = Math.max(fromIdx, toIdx);
+  return dayKeys.slice(lo, hi+1);
 }
 
 function renderMonthly(){
   const keysToUse = keysInRange(monthFromSelect.value, monthToSelect.value);
-  monthRangeNote.textContent = `(${keysToUse.length} ngày có dữ liệu trong khoảng)`;
+  monthRangeNote.textContent = `(${keysToUse.length} ngày được chọn)`;
 
   const productMap = {};
   const teamMap = {};
   let rangePlan = 0, rangeDone = 0;
-  let rangeActiveDays = 0;
   keysToUse.forEach(k=>{
-    let coSanXuat = false;
     allDays[k].rows.forEach(r=>{
-      const warranty = laBaoHanh(r);
       const name = (r.ten_hang||'').trim();
-      if(!warranty && name && name !== 'Ngưng SX'){
+      if(name && name !== 'Ngưng SX'){
         productMap[name] = (productMap[name]||0) + (r.ke_hoach||0);
       }
       if(r.to !== null && r.to !== undefined){
-        if(!teamMap[r.to]) teamMap[r.to] = {ke_hoach:0, hoan_thanh:0, bao_hanh:0};
-        if(warranty){
-          teamMap[r.to].bao_hanh += Number(r.dong_goi)||0;
-        }else{
-          teamMap[r.to].ke_hoach += Number(r.ke_hoach)||0;
-          teamMap[r.to].hoan_thanh += Number(r.dong_goi)||0;
-          if((Number(r.ke_hoach)||0)>0 || (Number(r.dong_goi)||0)>0) coSanXuat = true;
-        }
-      }else if(!warranty && ((Number(r.ke_hoach)||0)>0 || (Number(r.dong_goi)||0)>0)){
-        coSanXuat = true;
+        if(!teamMap[r.to]) teamMap[r.to] = {don_hang:0, hoan_thanh:0};
+        teamMap[r.to].don_hang += r.ke_hoach||0;
+        teamMap[r.to].hoan_thanh += r.dong_goi||0;
       }
       rangePlan += r.ke_hoach||0;
       rangeDone += r.dong_goi||0;
     });
-    if(coSanXuat) rangeActiveDays++;
   });
 
   // v8.6: KPI khoảng ngày dùng cùng một quy tắc với KPI đầu trang.
@@ -1339,7 +1278,7 @@ function renderMonthly(){
     <div class="kpi k-accent"><div class="label">Tổng kế hoạch</div><div class="value">${rangePlan.toLocaleString()}</div></div>
     <div class="kpi k-success"><div class="label">Tổng hoàn thành</div><div class="value">${rangeDone.toLocaleString()}</div></div>
     <div class="kpi ${rangeRate>=95?'k-success':'k-warning'}"><div class="label">Tỷ lệ hoàn thành</div><div class="value" style="color:${rangeRate>=95?'var(--success)':rangeRate>=80?'var(--warning)':'var(--danger)'}">${rangeRate}%</div></div>
-    <div class="kpi k-accent"><div class="label">Số ngày có sản xuất</div><div class="value">${rangeActiveDays}</div></div>
+    <div class="kpi k-accent"><div class="label">Số ngày trong khoảng</div><div class="value">${keysToUse.length}</div></div>
   `;
 
   const products = Object.entries(productMap).map(([name,total])=>({name,total})).sort((a,b)=>b.total-a.total);
@@ -1365,7 +1304,7 @@ function renderMonthly(){
             generateLabels(chart){
               const ds = chart.data.datasets[0];
               const total = ds.data.reduce((a,b)=>a+b,0);
-              const items = chart.data.labels.map((label,i)=>{
+              return chart.data.labels.map((label,i)=>{
                 const val = ds.data[i];
                 const pct = total>0 ? Math.round((val/total)*1000)/10 : 0;
                 return {
@@ -1375,13 +1314,6 @@ function renderMonthly(){
                   index:i
                 };
               });
-              if(rangeKpi.warranty > 0){
-                items.push({
-                  text:`Bảo hành — ${rangeKpi.warranty.toLocaleString()} (ngoài KH)`,
-                  fillStyle:'#8a5cd0', strokeStyle:'#8a5cd0', index:-1
-                });
-              }
-              return items;
             }
           }
         },
@@ -1406,9 +1338,8 @@ function renderMonthly(){
     data:{
       labels:teamKeys.map(t=>teamLabel(t)),
       datasets:[
-        {label:'Kế hoạch', data:teamKeys.map(t=>teamMap[t].ke_hoach), backgroundColor:'#6d5bd0', borderRadius:4, maxBarThickness:26},
-        {label:'Hoàn thành', data:teamKeys.map(t=>teamMap[t].hoan_thanh), backgroundColor:'#0f8a4c', borderRadius:4, maxBarThickness:26},
-        {label:'Bảo hành', data:teamKeys.map(t=>teamMap[t].bao_hanh), backgroundColor:'#8a5cd0', borderRadius:4, maxBarThickness:26}
+        {label:'Đơn hàng', data:teamKeys.map(t=>teamMap[t].don_hang), backgroundColor:'#6d5bd0', borderRadius:4, maxBarThickness:30},
+        {label:'Hoàn thành', data:teamKeys.map(t=>teamMap[t].hoan_thanh), backgroundColor:'#0f8a4c', borderRadius:4, maxBarThickness:30}
       ]
     },
     options:{
@@ -1459,7 +1390,7 @@ const TEAM_OPTIONS = ['Tổ 1','Tổ 2','Tổ 3','Tổ 4','Tổ 5'];
 //   1) Theo tổ phụ trách 1 -> 5, đơn chưa xếp tổ nằm cuối bảng
 //   2) Trong cùng tổ: theo độ dày tăng dần (10, 12, 15, 17, 20, 22, 27, rồi lớn hơn)
 //   3) Cuối cùng theo kích thước/mã cho ổn định thứ tự
-function sortOrdersForDisplay(rows, prioritizeDate=false){
+function sortOrdersForDisplay(rows){
   const teamKey = o => {
     const t = assignments[o.id]?.to;
     if(!t) return 999;                       // chưa có tổ -> xuống cuối
@@ -1470,13 +1401,8 @@ function sortOrdersForDisplay(rows, prioritizeDate=false){
     const d = parseFloat(o.day);
     return isNaN(d) ? 9999 : d;              // không rõ độ dày -> cuối nhóm
   };
-  const dateKey = o => {
-    const p = parseDMY(o.date || '');
-    return p && p.y ? (p.y*10000 + p.m*100 + p.d) : 99999999;
-  };
   return rows.slice().sort((a,b)=>
-    (prioritizeDate ? dateKey(a) - dateKey(b) : 0)    // nhiều ngày: ngày cũ -> ngày mới
-    || (b.is_ghost ? 1 : 0) - (a.is_ghost ? 1 : 0)   // trong từng ngày vẫn giữ rule cũ
+    (b.is_ghost ? 1 : 0) - (a.is_ghost ? 1 : 0)      // đơn công ty đã bỏ -> ghim đầu bảng
     || teamKey(a) - teamKey(b)
     || thickKey(a) - thickKey(b)
     || String(a.ngang).localeCompare(String(b.ngang), 'vi', {numeric:true})
@@ -2852,7 +2778,7 @@ function renderAutoPlan(){
   renderTeamRings('autoPlanTeamRings', filtered, dayVal !== 'all');   // 'Tất cả ngày' -> chỉ hiện vòng tròn %
   canhBaoAnhChupRong();
   const tbody = document.querySelector('#autoPlanTable tbody');
-  tbody.innerHTML = sortOrdersForDisplay(filtered, dayVal === 'all').map(r=>{
+  tbody.innerHTML = sortOrdersForDisplay(filtered).map(r=>{
     const status = getOrderStatus(r);
     const a = assignments[r.id];
     const assignedTo = a?.to || '';
@@ -3259,11 +3185,9 @@ function refreshForMonthYear(){
   const nhan = document.getElementById('monthRangeLabel');
   if(nhan){
     const p = n=>String(n).padStart(2,'0');
-    const firstDate = allDays[dayKeys[0]].date;
-    const lastDate = allDays[dayKeys[dayKeys.length-1]].date;
     nhan.textContent = laThangNay
-      ? `Dữ liệu từ ${firstDate} · đến ${p(homNay.getDate())}/${p(m)}/${y}`
-      : `Dữ liệu từ ${firstDate} đến ${lastDate}`;
+      ? `Đang tính từ 01/${p(m)}/${y} đến ${p(homNay.getDate())}/${p(m)}/${y} (hôm nay)`
+      : `Đang tính trọn tháng ${p(m)}/${y}`;
   }
 
   buildProductColorMap();
@@ -3416,7 +3340,7 @@ function renderProgress(){
     tbody.innerHTML = `<tr><td colspan="11" style="color:var(--text2);text-align:center;padding:20px;">Chưa có đơn nào được chọn tổ phụ trách. Vào tab "Kế hoạch tuần (tự động)" để phân công.</td></tr>`;
     return;
   }
-  tbody.innerHTML = sortOrdersForDisplay(filtered, progressDaySelect.value === 'all').map(r=>{
+  tbody.innerHTML = sortOrdersForDisplay(filtered).map(r=>{
     const a = assignments[r.id];
     const locked = isOrderLocked(r);
 
@@ -4734,26 +4658,6 @@ document.getElementById('refreshProgressBtn').addEventListener('click', async ()
 });
 
 document.getElementById('viewerBtn').addEventListener('click', enterAsViewer);
-// Menu công cụ quản lý: gọn trên mobile, luôn canh phải
-(function(){
-  const btn=document.getElementById('managementToolsBtn');
-  const menu=document.getElementById('managementToolsMenu');
-  if(!btn || !menu) return;
-  const close=()=>{ menu.classList.remove('open'); btn.setAttribute('aria-expanded','false'); };
-  btn.addEventListener('click',(e)=>{
-    e.stopPropagation();
-    const open=!menu.classList.contains('open');
-    menu.classList.toggle('open',open);
-    btn.setAttribute('aria-expanded',open?'true':'false');
-  });
-  menu.addEventListener('click',(e)=>{
-    if(e.target.closest('button')) setTimeout(close,0);
-    e.stopPropagation();
-  });
-  document.addEventListener('click',close);
-  window.addEventListener('resize',close);
-})();
-
 document.getElementById('logoutBtn').addEventListener('click', ()=>{
   clearLoginSession();
   try{ localStorage.setItem('khsx_manual_logout','1'); }catch(e){}
