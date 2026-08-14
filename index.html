@@ -226,21 +226,21 @@
      Thẻ tự cao theo số dòng, không cuộn.
      Giới hạn bề rộng và canh giữa để tên với kích thước không dạt ra hai đầu màn hình. */
   .team-ring-list{margin:8px auto 0;padding-top:8px;border-top:1px dashed var(--border);
-    display:grid;grid-template-columns:1fr auto auto;column-gap:8px;row-gap:0;
+    display:grid;grid-template-columns:1fr auto auto;column-gap:0;row-gap:0;
     font-size:11.5px;line-height:1.5;text-align:left;width:100%;max-width:360px;}
   /* Đường kẻ chấm mờ chạy suốt mỗi dòng để mắt dò không bị lệch hàng */
-  .team-ring-list > *{border-bottom:1px dotted #d8dee8;padding:3px 0;}
-  .team-ring-list .t{color:var(--text);white-space:nowrap;}
+  .team-ring-list > *{border-bottom:1px dotted #d8dee8;padding-top:3px;padding-bottom:3px;}
+  .team-ring-list .t{color:var(--text);white-space:nowrap;padding-left:4px;padding-right:8px;}
   .team-ring-list .ho-tro{font-style:normal;font-size:10px;font-weight:700;color:var(--accent);}
   .team-ring-list-xong{margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);
     font-size:11.5px;font-weight:700;color:var(--success);}
-  .team-ring-list .k{color:var(--text2);text-align:right;white-space:nowrap;}
-  .team-ring-list b{color:var(--text);text-align:right;}
-  /* Chỉ đánh dấu đúng ô số lượng của nhóm đơn có ít nhất một đơn Ưu tiên.
-     Dùng box-shadow để nền vàng lan nhẹ mà không làm đổi kích thước lưới / gây tràn chữ. */
-  .team-ring-list b.team-ring-qty-uutien{
-    background:#fff7d9;border-radius:3px;box-shadow:0 0 0 3px #fff7d9;
-  }
+  .team-ring-list .k{color:var(--text2);text-align:right;white-space:nowrap;padding-left:4px;padding-right:4px;}
+  .team-ring-list b{color:var(--text);text-align:right;padding-left:4px;padding-right:4px;}
+  /* Ưu tiên: tô liền cả ba ô Tên + Kích thước + Số lượng của đúng một dòng.
+     Không thêm biểu tượng và không đổi cấu trúc lưới nên thẻ không bị rộng/tràn chữ. */
+  .team-ring-list .team-ring-row-uutien{background:#fff7d9;}
+  .team-ring-list .t.team-ring-row-uutien{border-radius:4px 0 0 4px;}
+  .team-ring-list b.team-ring-row-uutien{border-radius:0 4px 4px 0;}
   /* ---- Ẩn/hiện chức năng theo vai người dùng ----
      .only-manager  : chỉ Quản lý          (nút đỏ, 2 nút chốt, cột Xoá)
      .only-manager2 : Quản lý + Quản lý 2  (thêm đơn phát sinh, nút ✓ Hoàn thành)
@@ -2789,8 +2789,11 @@ function htmlDanhSachDon(teamOrders, anDongDaXong){
   }
   // Ba cột thẳng hàng: tên bên trái, kích thước canh phải, số lượng canh phải
   return `<div class="team-ring-list">`
-    + ds.map(r=>`<span class="t">${r.ten}${r.hoTro?` <em class="ho-tro">hỗ trợ ${r.hoTro}</em>`:''}</span>`
-              + `<span class="k">${r.kt}:</span><b class="${r.uuTien?'team-ring-qty-uutien':''}">${r.sl}</b>`).join('')
+    + ds.map(r=>{
+        const uuTienClass = r.uuTien ? ' team-ring-row-uutien' : '';
+        return `<span class="t${uuTienClass}">${r.ten}${r.hoTro?` <em class="ho-tro">hỗ trợ ${r.hoTro}</em>`:''}</span>`
+             + `<span class="k${uuTienClass}">${r.kt}:</span><b class="${uuTienClass.trim()}">${r.sl}</b>`;
+      }).join('')
     + `</div>`;
 }
 
@@ -4240,8 +4243,13 @@ function chuanHoaTenSP(t){
     .replace(/[^A-Z0-9]/g,'');
 }
 
+// Chuẩn hoá mã hàng chỉ để gom nhóm. Giá trị hiển thị vẫn giữ theo dữ liệu gốc.
+function chuanHoaMaBaoCao(t){
+  return String(t || '').trim().replace(/\s+/g,' ').toUpperCase();
+}
+
 // Gom dữ liệu của một ngày thành các dòng báo cáo.
-// Chỉ gộp khi CẢ tên (sau chuẩn hoá) VÀ ngang, dài, dày đều giống nhau.
+// Chỉ gộp khi CẢ mã hàng, tên (sau chuẩn hoá), ngang, dài, dày đều giống nhau.
 // Tên hiển thị của nhóm = cách viết xuất hiện nhiều lần nhất.
 function chuanBiDongBaoCao(ngay){
   const nhom = {};
@@ -4257,10 +4265,12 @@ function chuanBiDongBaoCao(ngay){
       const m = String(o.ngang || '').match(/(\d+)\s*[xX*]\s*(\d+)\s*[xX*]\s*(\d+)/);
       if(m){ ngang = m[1]; dai = m[2]; day = m[3]; }
     }
+    const maGoc = String(o.ma || '').trim();
     const tenGoc = String(o.dong || '').trim();   // đã chuẩn hoá lúc đọc sheet
-    const key = [chuanHoaTenSP(tenGoc), ngang, dai, day].join('|');
+    const key = [chuanHoaMaBaoCao(maGoc), chuanHoaTenSP(tenGoc), ngang, dai, day].join('|');
 
-    if(!nhom[key]) nhom[key] = {tenDem:{}, ngang, dai, day, keHoach:0, thucTe:0, ghiChu:[]};
+    if(!nhom[key]) nhom[key] = {maDem:{}, tenDem:{}, ngang, dai, day, keHoach:0, thucTe:0, ghiChu:[]};
+    nhom[key].maDem[maGoc] = (nhom[key].maDem[maGoc] || 0) + 1;
     nhom[key].tenDem[tenGoc] = (nhom[key].tenDem[tenGoc] || 0) + 1;
     // Không cộng vào KẾ HOẠCH:
     //   - phần thiếu tách ra (is_drop): đã nằm trong kế hoạch của đơn gốc
@@ -4276,15 +4286,18 @@ function chuanBiDongBaoCao(ngay){
 
   return Object.keys(nhom).map(k=>{
       const g = nhom[k];
+      // mã/tên hiển thị = cách viết dùng nhiều nhất trong nhóm
+      g.ma = Object.keys(g.maDem).sort((a,b)=> g.maDem[b] - g.maDem[a] || a.localeCompare(b,'vi'))[0] || '';
       // tên hiển thị = cách viết dùng nhiều nhất trong nhóm
       g.ten = Object.keys(g.tenDem).sort((a,b)=> g.tenDem[b] - g.tenDem[a] || a.localeCompare(b,'vi'))[0] || '';
       return g;
     })
     .sort((x,y)=> String(x.ten).localeCompare(String(y.ten),'vi')
+                || String(x.ma).localeCompare(String(y.ma),'vi')
                 || (Number(x.ngang)||0) - (Number(y.ngang)||0)
                 || (Number(x.dai)||0) - (Number(y.dai)||0)
                 || (Number(x.day)||0) - (Number(y.day)||0))
-    .map(r=>[r.ten, r.ngang, r.dai, r.day, r.keHoach, r.thucTe, r.ghiChu.join('; ')]);
+    .map(r=>[r.ma, r.ten, r.ngang, r.dai, r.day, r.keHoach, r.thucTe, r.ghiChu.join('; ')]);
 }
 
 async function taiDanhSachBaoCao(){
@@ -4334,8 +4347,9 @@ function capNhatThongTinXuat(){
   if(!ngay){ box.innerHTML = ''; return; }
 
   const rows = chuanBiDongBaoCao(ngay);
-  const tongKH = rows.reduce((a,r)=>a+r[4],0);
-  const tongTT = rows.reduce((a,r)=>a+r[5],0);
+  const tongKH = rows.reduce((a,r)=>a+r[5],0);
+  const tongTT = rows.reduce((a,r)=>a+r[6],0);
+  const thieuMa = rows.filter(r=>!String(r[0] || '').trim()).length;
   const daCo = danhSachBaoCao.find(r=>r.ngay === ngay && !r.bs);
 
   let html = `<div>Sẽ ghi <strong>${rows.length}</strong> dòng — kế hoạch <strong>${tongKH}</strong>, thực tế <strong>${tongTT}</strong>`
@@ -4347,6 +4361,7 @@ function capNhatThongTinXuat(){
   }
   if(laChuNhat(ngay)) html += `<div style="color:var(--warning);margin-top:6px;">⚠ Ngày này là Chủ nhật — chỉ xuất nếu có tăng ca.</div>`;
   if(laNgayLe(ngay))  html += `<div style="color:var(--warning);margin-top:6px;">⚠ Ngày này là ngày lễ.</div>`;
+  if(thieuMa)         html += `<div style="color:var(--warning);margin-top:6px;">⚠ Có ${thieuMa} dòng không có mã hàng trong dữ liệu nguồn; cột Mã hàng của các dòng đó sẽ để trống.</div>`;
   if(!rows.length)    html += `<div style="color:var(--danger);margin-top:6px;">Không có dòng dữ liệu nào để xuất.</div>`;
   box.innerHTML = html;
 }
