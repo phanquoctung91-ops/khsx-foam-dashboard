@@ -585,6 +585,8 @@
             <option value="Tổ 3">Tổ 3</option>
             <option value="Tổ 4">Tổ 4</option>
             <option value="Tổ 5">Tổ 5</option>
+            <option value="Tổ may">Tổ may</option>
+            <option value="Tổ đóng gói">Tổ đóng gói</option>
           </select></div>
         <button id="genStaffCodeBtn" class="primary-btn" style="background:var(--text2);">Tạo mã tự động</button>
         <button id="addStaffBtn" class="primary-btn">+ Thêm người dùng</button>
@@ -1489,6 +1491,10 @@ const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/t
 const SIMULATED_AUTOPLAN_DATA = [{"date":"27/07/2026","ma":"LUN15-6","dong":"LUNA","ngang":160,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"27/07/2026","ma":"LUN20-8","dong":"LUNA","ngang":180,"dai":200,"day":20,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"27/07/2026","ma":"LUN15-4","dong":"LUNA","ngang":140,"dai":200,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"27/07/2026","ma":"SORA15-2020","dong":"SORA","ngang":200,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"27/07/2026","ma":"EZ20-3","dong":"LATEX ENZO","ngang":160,"dai":200,"day":20,"so_luong":41,"trang_thai":"","ghi_chu":"Vải premium cũ, có khoá kéo, đóng bao keo trong"},{"date":"27/07/2026","ma":"EZ20-5","dong":"LATEX ENZO","ngang":200,"dai":200,"day":20,"so_luong":2,"trang_thai":"","ghi_chu":"Làm nệm tròn đường kính 2m, Vải premium cũ, có khoá kéo"},{"date":"27/07/2026","ma":"CLS15-2020","dong":"CLASSIC","ngang":200,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"SORA10-63","dong":"SORA","ngang":63,"dai":183,"day":10,"so_luong":60,"trang_thai":"","ghi_chu":"Tái 1 con std 90x190x10, (áo standard không đít thêu + thêm tem cty khách)"},{"date":"28/07/2026","ma":"SORA10-6","dong":"SORA","ngang":160,"dai":200,"day":10,"so_luong":30,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA15-6","dong":"SORA","ngang":160,"dai":200,"day":15,"so_luong":27,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"SORA15-8","dong":"SORA","ngang":180,"dai":200,"day":15,"so_luong":27,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA15-2022","dong":"SORA","ngang":220,"dai":200,"day":15,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"SORA10-8","dong":"SORA","ngang":180,"dai":200,"day":10,"so_luong":30,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA10-2","dong":"SORA","ngang":120,"dai":200,"day":10,"so_luong":15,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"CLS15-2022","dong":"CLASSIC","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"CLS15-2020","dong":"CLASSIC","ngang":200,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"CLS10-6","dong":"CLASSIC","ngang":160,"dai":200,"day":10,"so_luong":15,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"CLS15-8","dong":"CLASSIC","ngang":180,"dai":200,"day":15,"so_luong":9,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"ZONE17-8","dong":"3'ZONE","ngang":180,"dai":200,"day":17,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA10-2022","dong":"SORA","ngang":220,"dai":200,"day":10,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"LAGO10-6","dong":"LATEX GOLD","ngang":160,"dai":200,"day":10,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"LAGO15-6","dong":"LATEX GOLD","ngang":160,"dai":200,"day":15,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"SORA10-2020","dong":"SORA","ngang":200,"dai":200,"day":10,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"ZONE12-6","dong":"3'ZONE","ngang":160,"dai":200,"day":12,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"ZONE17-6","dong":"3'ZONE","ngang":160,"dai":200,"day":17,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"LAGO10-4","dong":"LATEX GOLD","ngang":140,"dai":200,"day":10,"so_luong":5,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"STD20-2020","dong":"STANDARD","ngang":200,"dai":200,"day":20,"so_luong":3,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"ZONE17-6","dong":"3'ZONE","ngang":160,"dai":200,"day":17,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"CLS10-2022","dong":"CLASSIC","ngang":220,"dai":200,"day":10,"so_luong":3,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"STD15-2022","dong":"STANDARD","ngang":220,"dai":200,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"30/07/2026","ma":"SORA10-2","dong":"SORA","ngang":120,"dai":180,"day":10,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"SORA10-63","dong":"SORA","ngang":63,"dai":183,"day":10,"so_luong":30,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"STD15-2022","dong":"STANDARD","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"STD20-2","dong":"STANDARD","ngang":120,"dai":200,"day":20,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"STD10-2022","dong":"STANDARD","ngang":220,"dai":240,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"SORA15-2022","dong":"SORA","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"LAEZ10-2022","dong":"LATEX ENZO","ngang":220,"dai":200,"day":10,"so_luong":3,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"LAEZ15-2022","dong":"LATEX ENZO","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"ZONE17-8","dong":"3'ZONE","ngang":180,"dai":200,"day":17,"so_luong":2,"trang_thai":"","ghi_chu":"Ưu tiên sáng sản xuất"},{"date":"29/07/2026","ma":"PRE15-4","dong":"PREMIUM","ngang":140,"dai":200,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":"Ưu tiên sáng sản xuất"},{"date":"29/07/2026","ma":"STD10-2","dong":"STANDARD","ngang":110,"dai":170,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":"tái chế con std 140x175x10"},{"date":"29/07/2026","ma":"STD10-1","dong":"STANDARD","ngang":90,"dai":180,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":"tái chế con classic 150x190x10"},{"date":"29/07/2026","ma":"STD15-6","dong":"STANDARD","ngang":150,"dai":190,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"EZ20-3","dong":"LATEX ENZO","ngang":160,"dai":200,"day":20,"so_luong":2,"trang_thai":"","ghi_chu":"Vải premium cũ, có khoá kéo, đóng bao keo trong"},{"date":"29/07/2026","ma":"PRE15-2022","dong":"PREMIUM","ngang":220,"dai":200,"day":15,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"CLS20-2020","dong":"CLASSIC","ngang":200,"dai":200,"day":20,"so_luong":3,"trang_thai":"","ghi_chu":""},{"date":"29/07/2026","ma":"LUN10-2","dong":"LUNA","ngang":120,"dai":200,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"PRE10-6","dong":"PREMIUM","ngang":150,"dai":197,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA10-2","dong":"SORA","ngang":120,"dai":180,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"LAGO15-4","dong":"LATEX GOLD","ngang":140,"dai":190,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"ZONE17-2022","dong":"3'ZONE","ngang":220,"dai":200,"day":17,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"ZONE12-2020","dong":"3'ZONE","ngang":200,"dai":200,"day":12,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA10-4","dong":"SORA","ngang":140,"dai":192,"day":10,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"SORA15-2022","dong":"SORA","ngang":220,"dai":200,"day":15,"so_luong":1,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"KH12-4","dong":"KING HOME","ngang":140,"dai":200,"day":12,"so_luong":2,"trang_thai":"","ghi_chu":""},{"date":"28/07/2026","ma":"KH12-6","dong":"KING HOME","ngang":160,"dai":200,"day":12,"so_luong":6,"trang_thai":"","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO10-6","dong":"LATEX GOLD","ngang":160,"dai":200,"day":10,"so_luong":15,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"STD15-2020","dong":"STANDARD","ngang":200,"dai":200,"day":15,"so_luong":2,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"SORA10-1","dong":"SORA","ngang":100,"dai":200,"day":10,"so_luong":15,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"STD15-4","dong":"STANDARD","ngang":140,"dai":200,"day":15,"so_luong":2,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"SORA10-4","dong":"SORA","ngang":140,"dai":200,"day":10,"so_luong":15,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO15-8","dong":"LATEX GOLD","ngang":180,"dai":200,"day":15,"so_luong":9,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO20-6","dong":"LATEX GOLD","ngang":160,"dai":200,"day":20,"so_luong":5,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO15-2022","dong":"LATEX GOLD","ngang":220,"dai":200,"day":15,"so_luong":3,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"STD15-6","dong":"STANDARD","ngang":160,"dai":200,"day":15,"so_luong":9,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO20-8","dong":"LATEX GOLD","ngang":180,"dai":200,"day":20,"so_luong":5,"trang_thai":"Chốt","ghi_chu":""},{"date":"31/07/2026","ma":"LAGO10-2022","dong":"LATEX GOLD","ngang":220,"dai":200,"day":10,"so_luong":2,"trang_thai":"Chốt","ghi_chu":""}];
 
 const TEAM_OPTIONS = ['Tổ 1','Tổ 2','Tổ 3','Tổ 4','Tổ 5'];
+const PROCESS_TEAM_STAGE = Object.freeze({
+  'Tổ may': 'may',
+  'Tổ đóng gói': 'dong_goi'
+});
 
 // Đơn "trong kế hoạch" = đơn gốc từ sheet công ty, được giao thẳng cho 1 tổ.
 // Đơn "ngoài kế hoạch" = đơn hàng phát sinh (tự thêm tay) hoặc đơn rớt (phần thiếu do tổ khác hỗ trợ) —
@@ -1592,10 +1598,34 @@ async function saveQuarterTarget(nam, quy, soLuong){
   saveLocalCache();
   computeAndRenderKpis();
 }
-// Tổ của người đang đăng nhập, hoặc null nếu không gắn tổ (Quản lý, Quản lý 2, khách xem)
+// Đơn vị của người đang đăng nhập: Tổ 1–5, Tổ may, Tổ đóng gói; hoặc null nếu không gắn.
 function toCuaToi(){
   if(!currentUser || !currentUser.code) return null;
   return userTeams[currentUser.code] || null;
+}
+function congDoanBoPhanCuaToi(){
+  return PROCESS_TEAM_STAGE[toCuaToi()] || null;
+}
+function laToSanXuatCuaToi(){
+  return TEAM_OPTIONS.includes(toCuaToi());
+}
+// Nhân viên Tổ 1–5 chỉ nhập Dán; hai bộ phận sau chỉ nhập đúng công đoạn của mình.
+// Quản lý và Quản lý 2 vẫn giữ quyền nhập đủ ba công đoạn như trước.
+function congDoanNhanVienDuocNhap(){
+  if(!currentUser || currentUser.role !== 'nhan_vien') return null;
+  if(laToSanXuatCuaToi()) return 'dan';
+  return congDoanBoPhanCuaToi();
+}
+function coQuyenNhapCongDoan(congDoan){
+  if(!canEdit() || !CONG_DOAN.includes(congDoan)) return false;
+  if(canManage2()) return true;
+  return congDoanNhanVienDuocNhap() === congDoan;
+}
+// KPI theo tổ luôn thuộc Tổ 1–5 phụ trách trong ngày. Tổ may/đóng gói là công đoạn,
+// không phải một tổ sản xuất mới nên tuyệt đối không được tạo thêm cột KPI riêng.
+function toKpiKhiNhapCongDoan(o, ngay){
+  const donVi = toCuaToi();
+  return PROCESS_TEAM_STAGE[donVi] ? toPhuTrachTheoNgay(o,ngay) : (donVi || toPhuTrachTheoNgay(o,ngay));
 }
 // Tìm đơn gốc của một phần thiếu, để biết đang hỗ trợ tổ nào
 function timDonGoc(spinId){
@@ -2076,6 +2106,8 @@ function applyRoleUI(){
   if(oLocTo){
     const nhanTo = oLocTo.previousElementSibling;
     if(toMinh){
+      // Tránh giữ lại bộ lọc của tài khoản trước làm tài khoản mới bị trống dữ liệu.
+      oLocTo.value = 'all';
       oLocTo.style.display = 'none';
       if(nhanTo && nhanTo.tagName === 'LABEL') nhanTo.style.display = 'none';
     }else{
@@ -3063,7 +3095,8 @@ function renderTeamRings(containerId, orders, hienDanhSach, anDongDaXong, ngayDa
   const motNgay = !!ngayDangXem && ngayDangXem !== 'all';
   const cacNgayDangXem = motNgay ? [ngayDangXem] : Array.from(new Set(orders.map(o=>o.date)));
   const toMinh = toCuaToi();
-  const cacTo = toMinh ? TEAM_OPTIONS.filter(t=>t === toMinh) : TEAM_OPTIONS;
+  const toSanXuat = TEAM_OPTIONS.includes(toMinh) ? toMinh : null;
+  const cacTo = toSanXuat ? TEAM_OPTIONS.filter(t=>t === toSanXuat) : TEAM_OPTIONS;
   container.classList.toggle('mot-the', cacTo.length === 1);
   container.innerHTML = cacTo.map(team=>{
     const teamOrders = orders.filter(o=>{
@@ -3765,19 +3798,25 @@ function getFilteredProgressRows(){
   const teamVal = progressTeamSelect.value;
   const q = progressSearchBox.value.trim().toLowerCase();
   const toMinh = toCuaToi();
+  const toSanXuat = TEAM_OPTIONS.includes(toMinh) ? toMinh : null;
+  const congDoanBoPhan = PROCESS_TEAM_STAGE[toMinh] || null;
   return getOrders().filter(r=>assignments[r.id]?.to).filter(r=>{
-    // Tài khoản gắn tổ: chỉ thấy đơn của tổ mình (kể cả phần thiếu được giao hỗ trợ).
+    // Tổ 1–5: chỉ thấy đơn của tổ mình (kể cả phần thiếu được giao hỗ trợ).
     // Đơn chưa phân công tổ không hiện, để tránh hai tổ cùng nhận một đơn.
-    if(toMinh){
+    if(toSanXuat){
       if(dayVal !== 'all'){
-        if(toPhuTrachTheoNgay(r,dayVal) !== toMinh) return false;
+        if(toPhuTrachTheoNgay(r,dayVal) !== toSanXuat) return false;
       }else{
         const coNgayCuaTo = getCarryForwardDates(r)
           .filter(d=>nhanVienDuocXemNgay(d))
-          .some(d=>toPhuTrachTheoNgay(r,d) === toMinh);
+          .some(d=>toPhuTrachTheoNgay(r,d) === toSanXuat);
         if(!coNgayCuaTo) return false;
       }
     }
+    // Tổ may và Tổ đóng gói xem xuyên Tổ 1–5, nhưng chỉ thấy đúng việc đang chờ
+    // công đoạn của mình. Nhập đủ xong thì dòng tự biến mất khỏi tài khoản đó.
+    if(congDoanBoPhan === 'may' && tongCongDoan(r,'dan') <= tongCongDoan(r,'may')) return false;
+    if(congDoanBoPhan === 'dong_goi' && tongCongDoan(r,'may') <= tongCongDoan(r,'dong_goi')) return false;
     // Tài khoản gắn tổ: bỏ hẳn đơn của ngày mai trở đi, kể cả khi đang xem "Tất cả ngày"
     if(toMinh && laNgayTuongLai(r.date)) return false;
     // Nhân viên: trước 07:00 không thấy đơn hôm nay; Quản lý 2 và Quản lý không đi qua rule này.
@@ -3855,7 +3894,7 @@ function oNhapCongDoanHtml(o, ngay, congDoan){
   if(!ngay || ngay === 'all') return `<div class="stage-total">${tongCongDoan(o,congDoan).toLocaleString('vi-VN')}</div>`;
   const info = thongTinCongDoanNgay(o,ngay);
   const target = soCongDoan(o.so_luong);
-  const baseLocked = khoaNhapCongDoan(o,ngay);
+  const baseLocked = khoaNhapCongDoan(o,ngay) || !coQuyenNhapCongDoan(congDoan);
   const danDaKhoa = info.total.dan >= target;
   const mayDaKhoa = danDaKhoa && info.total.may >= info.total.dan;
   const dongGoiDaKhoa = mayDaKhoa && info.total.dong_goi >= info.total.may;
@@ -3891,16 +3930,18 @@ function congDoanChiDocHtml(o, ngay, congDoan){
 function suaCongDoanCellHtml(o, ngay){
   if(!canEdit() || !ngay || ngay === 'all') return '<span style="color:var(--text2);">—</span>';
   const e = lichSuCongDoanDeDoc(o)[ngay];
-  const coSo = e && CONG_DOAN.some(k=>e[k] != null && e[k] !== '');
+  const congDoanNhanVien = congDoanNhanVienDuocNhap();
+  const cacCongDoanDuocSua = congDoanNhanVien ? [congDoanNhanVien] : CONG_DOAN;
+  const coSo = e && cacCongDoanDuocSua.some(k=>e[k] != null && e[k] !== '');
   if(!coSo) return '<span style="color:var(--text2);">—</span>';
   if((lockedProgressDates.includes(ngay) || assignments[o.id]?.spinoff_id) && !editUnlocked){
     return '<span title="Ngày đã chốt tiến độ" style="color:var(--text2);">🔒</span>';
   }
-  return `<button class="reset-stage-btn" data-order-id="${o.id}" data-day="${ngay}" style="font-size:11.5px;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;">Sửa</button>`;
+  return `<button class="reset-stage-btn" data-order-id="${o.id}" data-day="${ngay}" data-stage="${congDoanNhanVien || ''}" style="font-size:11.5px;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;">Sửa</button>`;
 }
 
 async function handleStageQtyChange(orderId, ngay, congDoan, rawVal){
-  if(!canEdit() || !CONG_DOAN.includes(congDoan)) return;
+  if(!coQuyenNhapCongDoan(congDoan)) return;
   const o = getOrderById(orderId);
   if(!o || khoaNhapCongDoan(o,ngay)) return;
   const parsed = rawVal === '' ? null : Number(rawVal);
@@ -3933,9 +3974,8 @@ async function handleStageQtyChange(orderId, ngay, congDoan, rawVal){
     delete entry[`_${congDoan}_to`];
   }else{
     entry[congDoan] = parsed;
-    // Nhân viên gắn tổ được ưu tiên; quản lý nhập thay thì dùng tổ phụ trách/hỗ trợ
-    // của đúng ngày đang xem. Dấu vết này giữ KPI theo tổ không bị đổi theo phân công sau đó.
-    const toLam = toCuaToi() || toPhuTrachTheoNgay(o,ngay);
+    // Tổ may/đóng gói là bộ phận công đoạn; KPI vẫn phải thuộc Tổ 1–5 phụ trách ngày đó.
+    const toLam = toKpiKhiNhapCongDoan(o,ngay);
     if(toLam) entry[`_${congDoan}_to`] = toLam;
   }
   delete entry._legacy;
@@ -3950,10 +3990,19 @@ async function handleStageQtyChange(orderId, ngay, congDoan, rawVal){
 function renderProgress(){
   populateProgressSelects();
   const filtered = getFilteredProgressRows();
-  // Thẻ tổ ở tab Tiến độ: Nhân viên thì dòng đã xong biến mất, quản lý vẫn thấy đủ
+  const congDoanBoPhan = congDoanBoPhanCuaToi();
+  // Tổ may/đóng gói chỉ xem hàng chờ của công đoạn mình, nên không hiện vòng KPI
+  // theo tổ từ tập dữ liệu đã lọc (tránh tạo ra phần trăm sai và gây hiểu nhầm).
   const dayValRing = progressDaySelect.value;
-  renderTeamRings('progressTeamRings', filtered, dayValRing !== 'all',
-                  currentUser && currentUser.role === 'nhan_vien', dayValRing);
+  const ringBox = document.getElementById('progressTeamRings');
+  if(congDoanBoPhan){
+    ringBox.style.display = 'none';
+    ringBox.innerHTML = '';
+  }else{
+    ringBox.style.display = '';
+    renderTeamRings('progressTeamRings', filtered, dayValRing !== 'all',
+                    currentUser && currentUser.role === 'nhan_vien', dayValRing);
+  }
 
   const dayVal = progressDaySelect.value;
   const totalPlan = filtered.filter(isPlannedOrder).reduce((a,r)=>a+keHoachTrongNgay(r,dayVal),0);
@@ -3971,23 +4020,39 @@ function renderProgress(){
   // không lọc theo ngày, để quản lý không bỏ sót đơn nào.
   const thieuChuaGiao = getOrders().filter(o => o.is_drop && !assignments[o.id]?.to).length;
 
-  document.getElementById('progressKpis').innerHTML = `
-    <div class="kpi k-accent"><div class="label">Kế hoạch</div><div class="value">${totalPlan.toLocaleString()}</div></div>
-    <div class="kpi k-success"><div class="label">Hoàn thành</div><div class="value">${totalDone.toLocaleString()}</div></div>
-    <div class="kpi k-warning"><div class="label">Đang sản xuất</div><div class="value">${inProgressCount}</div></div>
-    <div class="kpi" style="border-top-color:var(--accent);"><div class="label">Đã chia tổ (dở dang)</div><div class="value" style="color:var(--accent);">${partialCount}</div></div>
-    <div class="kpi ${rate>=95?'k-success':'k-warning'}"><div class="label">Tỷ lệ hoàn thành</div><div class="value" style="color:${rate>=95?'var(--success)':rate>=80?'var(--warning)':'var(--danger)'}">${rate}%</div></div>
-    ${canManage2() ? `<div class="kpi" style="border-top-color:${thieuChuaGiao>0?'var(--danger)':'var(--border)'};">
-      <div class="label">Phần thiếu chưa giao tổ</div>
-      <div class="value" style="color:${thieuChuaGiao>0?'var(--danger)':'var(--text2)'}">${thieuChuaGiao}</div>
-      ${thieuChuaGiao>0 ? `<div class="kpi-phu" style="color:var(--danger);font-weight:700;">Cần ghi nhận tổ đã hỗ trợ</div>` : ''}
-    </div>` : ''}
-    ${dayVal==='all' ? '<div class="kpi" style="border-top-color:#4aa3df;"><div class="label">Nhập công đoạn</div><div class="kpi-phu" style="color:#2475a9;font-weight:700;">Chọn một ngày để nhập số</div></div>' : ''}
-  `;
+  if(congDoanBoPhan){
+    const laMay = congDoanBoPhan === 'may';
+    const soCho = filtered.reduce((tong,o)=>tong + Math.max(0,
+      laMay ? tongCongDoan(o,'dan') - tongCongDoan(o,'may')
+            : tongCongDoan(o,'may') - tongCongDoan(o,'dong_goi')),0);
+    document.getElementById('progressKpis').innerHTML = `
+      <div class="kpi k-warning"><div class="label">Đơn chờ ${laMay?'may':'đóng gói'}</div><div class="value">${filtered.length}</div></div>
+      <div class="kpi k-accent"><div class="label">Số lượng chờ ${laMay?'may':'đóng gói'}</div><div class="value">${soCho.toLocaleString('vi-VN')}</div></div>
+      <div class="kpi k-success"><div class="label">Công đoạn được nhập</div><div class="value" style="font-size:18px;">${laMay?'Đã may':'Đã đóng gói'}</div></div>
+      ${dayVal==='all' ? '<div class="kpi" style="border-top-color:#4aa3df;"><div class="label">Nhập công đoạn</div><div class="kpi-phu" style="color:#2475a9;font-weight:700;">Chọn một ngày để nhập số</div></div>' : ''}
+    `;
+  }else{
+    document.getElementById('progressKpis').innerHTML = `
+      <div class="kpi k-accent"><div class="label">Kế hoạch</div><div class="value">${totalPlan.toLocaleString()}</div></div>
+      <div class="kpi k-success"><div class="label">Hoàn thành</div><div class="value">${totalDone.toLocaleString()}</div></div>
+      <div class="kpi k-warning"><div class="label">Đang sản xuất</div><div class="value">${inProgressCount}</div></div>
+      <div class="kpi" style="border-top-color:var(--accent);"><div class="label">Đã chia tổ (dở dang)</div><div class="value" style="color:var(--accent);">${partialCount}</div></div>
+      <div class="kpi ${rate>=95?'k-success':'k-warning'}"><div class="label">Tỷ lệ hoàn thành</div><div class="value" style="color:${rate>=95?'var(--success)':rate>=80?'var(--warning)':'var(--danger)'}">${rate}%</div></div>
+      ${canManage2() ? `<div class="kpi" style="border-top-color:${thieuChuaGiao>0?'var(--danger)':'var(--border)'};">
+        <div class="label">Phần thiếu chưa giao tổ</div>
+        <div class="value" style="color:${thieuChuaGiao>0?'var(--danger)':'var(--text2)'}">${thieuChuaGiao}</div>
+        ${thieuChuaGiao>0 ? `<div class="kpi-phu" style="color:var(--danger);font-weight:700;">Cần ghi nhận tổ đã hỗ trợ</div>` : ''}
+      </div>` : ''}
+      ${dayVal==='all' ? '<div class="kpi" style="border-top-color:#4aa3df;"><div class="label">Nhập công đoạn</div><div class="kpi-phu" style="color:#2475a9;font-weight:700;">Chọn một ngày để nhập số</div></div>' : ''}
+    `;
+  }
 
   const tbody = document.querySelector('#progressTable tbody');
   if(filtered.length===0){
-    tbody.innerHTML = `<tr><td colspan="13" style="color:var(--text2);text-align:center;padding:20px;">Chưa có đơn nào được chọn tổ phụ trách. Vào tab "Kế hoạch tuần (tự động)" để phân công.</td></tr>`;
+    const emptyText = congDoanBoPhan
+      ? `Hiện không có đơn nào đang chờ ${congDoanBoPhan==='may'?'may':'đóng gói'}.`
+      : 'Chưa có đơn nào được chọn tổ phụ trách. Vào tab "Kế hoạch tuần (tự động)" để phân công.';
+    tbody.innerHTML = `<tr><td colspan="13" style="color:var(--text2);text-align:center;padding:20px;">${emptyText}</td></tr>`;
     return;
   }
   tbody.innerHTML = sortOrdersForDisplay(filtered, progressDaySelect.value === 'all').map(r=>{
@@ -4054,7 +4119,7 @@ document.getElementById('bulkCompleteBtn').addEventListener('click', async ()=>{
   targets.forEach(r=>{
     const history = damBaoLichSuCongDoan(r);
     const entry = history[ngay] || (history[ngay] = {});
-    const toLam = toCuaToi() || toPhuTrachTheoNgay(r,ngay);
+    const toLam = toKpiKhiNhapCongDoan(r,ngay);
     const danKhacNgay = tongCongDoan(r,'dan') - soCongDoan(entry.dan);
     const mucTieuDan = Math.max(soCongDoan(r.so_luong),tongCongDoan(r,'dan'));
     entry.dan = Math.max(0,mucTieuDan-danKhacNgay);
@@ -4074,16 +4139,38 @@ document.getElementById('bulkCompleteBtn').addEventListener('click', async ()=>{
   queueSave('assignments');
 });
 
-// ---- Nút "Sửa" từng dòng: xoá ba số của đúng ngày đang xem, không đụng ngày cũ ----
-async function handleResetStages(orderId, ngay){
+// ---- Nút "Sửa" từng dòng: nhân viên chỉ xoá đúng công đoạn của mình; quản lý xoá cả ngày ----
+async function handleResetStages(orderId, ngay, requestedStage=''){
   if(!canEdit()) return;
   const o = getOrderById(orderId);
   const a = assignments[orderId];
   if(!o || !a) return;
   if((lockedProgressDates.includes(ngay) || a.spinoff_id) && !editUnlocked) return;
-  if(!confirm(`Xoá số Đã dán, Đã may và Đã đóng gói của ${o.dong || o.ma} trong ngày ${ngay} để nhập lại?\n\nDữ liệu các ngày khác được giữ nguyên.`)) return;
   const history = damBaoLichSuCongDoan(o);
-  delete history[ngay];
+  const congDoanNhanVien = congDoanNhanVienDuocNhap();
+  if(congDoanNhanVien){
+    if(requestedStage !== congDoanNhanVien || !coQuyenNhapCongDoan(congDoanNhanVien)) return;
+    const entry = history[ngay];
+    if(!entry) return;
+    const soHienTai = soCongDoan(entry[congDoanNhanVien]);
+    if(congDoanNhanVien === 'dan' && tongCongDoan(o,'may') > tongCongDoan(o,'dan') - soHienTai){
+      alert('Không thể xoá số Đã dán vì công đoạn May đã sử dụng số này.');
+      return;
+    }
+    if(congDoanNhanVien === 'may' && tongCongDoan(o,'dong_goi') > tongCongDoan(o,'may') - soHienTai){
+      alert('Không thể xoá số Đã may vì công đoạn Đóng gói đã sử dụng số này.');
+      return;
+    }
+    const nhan = congDoanNhanVien === 'dan' ? 'Đã dán' : (congDoanNhanVien === 'may' ? 'Đã may' : 'Đã đóng gói');
+    if(!confirm(`Xoá số ${nhan} của ${o.dong || o.ma} trong ngày ${ngay} để nhập lại?\n\nCác công đoạn khác và dữ liệu ngày khác được giữ nguyên.`)) return;
+    delete entry[congDoanNhanVien];
+    delete entry[`_${congDoanNhanVien}_to`];
+    if(!CONG_DOAN.some(k=>entry[k] != null && entry[k] !== '')) delete history[ngay];
+  }else{
+    if(!canManage2()) return;
+    if(!confirm(`Xoá số Đã dán, Đã may và Đã đóng gói của ${o.dong || o.ma} trong ngày ${ngay} để nhập lại?\n\nDữ liệu các ngày khác được giữ nguyên.`)) return;
+    delete history[ngay];
+  }
   dongBoSoHoanThanhCu(o);
   renderAutoPlan();
   renderProgress();
@@ -4092,7 +4179,7 @@ async function handleResetStages(orderId, ngay){
 }
 document.querySelector('#progressTable tbody').addEventListener('click', async (e)=>{
   const btn = e.target.closest('.reset-stage-btn');
-  if(btn) await handleResetStages(btn.dataset.orderId, btn.dataset.day);
+  if(btn) await handleResetStages(btn.dataset.orderId, btn.dataset.day, btn.dataset.stage || '');
 });
 
 // ---- Nút đỏ "Sửa đổi số liệu": mở/khoá quyền sửa các đơn đã chốt ----
