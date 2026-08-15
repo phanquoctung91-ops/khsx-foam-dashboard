@@ -68,29 +68,19 @@
   /* ---- Bố cục bảng đơn hàng ----
      Mỗi cột có bề rộng tối thiểu cố định nên không "nhảy" mỗi lần vẽ lại.
      Cột dài (trạng thái, ghi chú) được xuống dòng trong giới hạn, không kéo bảng rộng ra. */
-  #autoPlanTable{min-width:780px;}
-  #progressTable{min-width:960px;}
-  #autoPlanTable th:nth-child(1), #autoPlanTable td:nth-child(1),
-  #progressTable th:nth-child(1), #progressTable td:nth-child(1){min-width:92px;}
-  #autoPlanTable th:nth-child(2), #autoPlanTable td:nth-child(2),
-  #progressTable th:nth-child(2), #progressTable td:nth-child(2){min-width:104px;}
-  #autoPlanTable th:nth-child(3), #autoPlanTable td:nth-child(3),
-  #progressTable th:nth-child(3), #progressTable td:nth-child(3){min-width:86px;}
-  #autoPlanTable th:nth-child(4), #autoPlanTable td:nth-child(4),
-  #progressTable th:nth-child(4), #progressTable td:nth-child(4){min-width:104px;}
-  #autoPlanTable th:nth-child(5), #autoPlanTable td:nth-child(5),
-  #progressTable th:nth-child(5), #progressTable td:nth-child(5){min-width:62px;text-align:center;}
-  /* Kích thước -> canh phải */
-  #autoPlanTable th:nth-child(4), #autoPlanTable td:nth-child(4),
-  #progressTable th:nth-child(4), #progressTable td:nth-child(4){text-align:right;}
-  /* Tổ phụ trách (KHSX cột 6 · TDSX cột 6) và Tổ hỗ trợ (TDSX cột 9) -> canh giữa */
-  #autoPlanTable th:nth-child(6), #autoPlanTable td:nth-child(6),
-  #progressTable th:nth-child(6), #progressTable td:nth-child(6),
-  #progressTable th:nth-child(9), #progressTable td:nth-child(9){text-align:center;}
-  /* Cột trạng thái + ghi chú: xuống dòng gọn trong khung, không giãn vô hạn */
-  #autoPlanTable th:nth-child(7), #autoPlanTable td:nth-child(7){white-space:normal;min-width:200px;max-width:280px;}
-  #progressTable th:nth-child(10), #progressTable td:nth-child(10){white-space:normal;min-width:190px;max-width:260px;}
-  #progressTable th:nth-child(11), #progressTable td:nth-child(11){white-space:normal;min-width:150px;max-width:220px;}
+  #autoPlanTable{min-width:1430px;}
+  #progressTable{min-width:1370px;}
+  #autoPlanTable .col-date, #progressTable .col-date{min-width:92px;}
+  #autoPlanTable .col-code, #progressTable .col-code{min-width:104px;}
+  #autoPlanTable .col-product, #progressTable .col-product{min-width:86px;}
+  #autoPlanTable .col-size, #progressTable .col-size{min-width:104px;text-align:right;}
+  #autoPlanTable .col-number, #progressTable .col-number{width:88px;min-width:88px;max-width:88px;text-align:center;}
+  #autoPlanTable .col-group{width:124px;min-width:124px;max-width:150px;text-align:center;white-space:normal;}
+  #autoPlanTable .col-team, #progressTable .col-team,
+  #autoPlanTable .col-support, #progressTable .col-support{width:100px;min-width:100px;max-width:100px;text-align:center;}
+  #autoPlanTable .col-status, #progressTable .col-status{white-space:normal;min-width:190px;max-width:260px;}
+  #progressTable .col-note{white-space:normal;min-width:150px;max-width:220px;}
+  #autoPlanTable .col-action, #progressTable .col-action{width:58px;min-width:58px;text-align:center;}
   tbody tr:hover td{background:#f8f9fb;}
   .table-scroll{overflow-x:auto;max-height:520px;overflow-y:auto;border-radius:10px;border:1px solid var(--border);}
   .table-scroll table{border:none;}
@@ -117,11 +107,10 @@
     #autoPlanTable, #progressTable{font-size:11px;}
     #autoPlanTable th, #autoPlanTable td,
     #progressTable th, #progressTable td{padding:6px 5px;}
-    #autoPlanTable{min-width:660px;}
-    #progressTable{min-width:820px;}
-    #autoPlanTable th:nth-child(7), #autoPlanTable td:nth-child(7){min-width:150px;max-width:190px;}
-    #progressTable th:nth-child(10), #progressTable td:nth-child(10){min-width:140px;max-width:180px;}
-    #progressTable th:nth-child(11), #progressTable td:nth-child(11){min-width:110px;max-width:150px;}
+    #autoPlanTable{min-width:1280px;}
+    #progressTable{min-width:1200px;}
+    #autoPlanTable .col-status, #progressTable .col-status{min-width:145px;max-width:190px;}
+    #progressTable .col-note{min-width:110px;max-width:150px;}
   }
   /* Điện thoại nằm dọc (chiều hẹp nhất) */
   @media(max-width:480px){
@@ -205,10 +194,29 @@
 
   tr.row-rot td{background:#fdf2f1;}
   tr.row-rot:hover td{background:#fbe8e7;}
-  select.to-select{min-width:170px;}
+  select.to-select{width:96px;min-width:96px;max-width:96px;padding-left:7px;padding-right:7px;}
   select.to-select-empty{color:var(--text2);font-style:italic;}
-  select.spinoff-to-select{font-size:11.5px;padding:3px 6px;border-radius:6px;}
-  input.qty-input{width:110px;padding:6px 8px;}
+  select.spinoff-to-select, select.support-day-select{width:96px;min-width:96px;max-width:96px;font-size:11.5px;padding:3px 6px;border-radius:6px;}
+  input.qty-input{width:78px;padding:6px 7px;text-align:center;}
+  .stage-cell{display:flex;flex-direction:column;align-items:center;gap:4px;width:78px;min-width:78px;margin:0 auto;}
+  .stage-cell input.qty-input{transition:border-color .15s,box-shadow .15s,background .15s;}
+  .stage-cell input.stage-ready{background:#fff;border-color:#4aa3df;box-shadow:0 0 0 2px rgba(74,163,223,.12);}
+  .stage-cell input:disabled{background:#f1f3f6;color:#8b94a3;border-color:#dfe3e9;box-shadow:none;}
+  .stage-hint{font-size:10.5px;line-height:1.2;font-weight:700;color:var(--text2);white-space:normal;text-align:center;}
+  .stage-hint.drop{color:var(--danger);}
+  .stage-hint.wait{color:#2475a9;}
+  .stage-total{font-size:14px;font-weight:800;color:var(--text);padding:6px 0;}
+  .stage-readonly{font-size:13px;font-weight:800;color:var(--text);text-align:center;}
+  .status-over{display:block;margin-top:4px;color:#2475d0;font-size:11px;font-weight:800;}
+  .group-chip{display:inline-block;margin:1px 2px;padding:3px 7px;border-radius:999px;font-size:10.5px;font-weight:800;line-height:1.2;white-space:nowrap;border:1px solid transparent;}
+  .group-thanh-cong{background:#dff3e4;color:#17733b;border-color:#a8d8b5;}
+  .group-digital{background:#e2efff;color:#155fa0;border-color:#afd0f3;}
+  .group-global{background:#eee5ff;color:#6b3ab1;border-color:#cfb9f1;}
+  .group-chau-au{background:#fff0d8;color:#9a5a08;border-color:#efcb91;}
+  .group-khsx{background:#e8eef7;color:#365477;border-color:#c4d2e3;}
+  .group-bao-hanh{background:#eee5ff;color:#6d3cad;border-color:#cfb9f1;}
+  .group-phat-sinh{background:#e1f4f8;color:#167087;border-color:#abdbe5;}
+  .group-khac{background:#f0f1f3;color:#59616d;border-color:#d4d7dc;}
 
   .team-ring-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:stretch;}
   /* Chỉ có một thẻ (tài khoản gắn tổ) -> thu lại, không để chiếm hết chiều ngang */
@@ -332,23 +340,28 @@
     .team-ring-inner{width:42px;height:42px;font-size:11px;}
     .primary-btn{padding:8px 14px;font-size:12.5px;}
     select, input{font-size:12.5px;padding:7px 10px;}
-    select.to-select{min-width:130px;}
-    input.qty-input{width:80px;}
+    select.to-select{width:92px;min-width:92px;max-width:92px;}
+    select.spinoff-to-select, select.support-day-select{width:92px;min-width:92px;max-width:92px;}
+    input.qty-input{width:74px;}
+    .stage-cell{width:74px;min-width:74px;}
     .chart-wrap{height:200px !important;}
   }
   @media(max-width:480px){
     .table-scroll{max-height:62vh;}
     #autoPlanTable th, #autoPlanTable td,
     #progressTable th, #progressTable td{padding:6px 4px;font-size:10.5px;}
-    #autoPlanTable{min-width:600px;}
-    #progressTable{min-width:760px;}
-    #autoPlanTable th:nth-child(7), #autoPlanTable td:nth-child(7){min-width:130px;max-width:160px;}
-    #progressTable th:nth-child(10), #progressTable td:nth-child(10){min-width:120px;max-width:150px;}
-    #progressTable th:nth-child(11), #progressTable td:nth-child(11){min-width:96px;max-width:130px;}
-    select.to-select{min-width:92px;}
-    input.qty-input{width:60px;}
+    #autoPlanTable{min-width:1160px;}
+    #progressTable{min-width:1090px;}
+    #autoPlanTable .col-status, #progressTable .col-status{min-width:120px;max-width:150px;}
+    #progressTable .col-note{min-width:96px;max-width:130px;}
+    #autoPlanTable .col-number, #progressTable .col-number{width:76px;min-width:76px;max-width:76px;}
+    #autoPlanTable .col-team, #progressTable .col-team,
+    #autoPlanTable .col-support, #progressTable .col-support{width:92px;min-width:92px;max-width:92px;}
+    input.qty-input{width:66px;}
+    .stage-cell{width:66px;min-width:66px;}
+    .stage-hint{font-size:9.5px;}
     /* Ô nhập trên điện thoại: cao hơn cho dễ bấm */
-    input.qty-input, select.to-select, select.spinoff-to-select{min-height:34px;}
+    input.qty-input, select.to-select, select.spinoff-to-select, select.support-day-select{min-height:34px;}
     .day-select-row{gap:7px;}
     .day-select-row .primary-btn{flex:1 1 100%;}
     .day-select-row select{flex:1 1 45%;min-width:0;}
@@ -381,6 +394,9 @@
 <style>html.khsx-fast-session #loginOverlay{display:none !important;}</style>
 </head>
 <body>
+<div id="localPreviewBanner" style="display:none;position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9998;background:#173f73;color:#fff;border:2px solid #fff;border-radius:999px;box-shadow:0 5px 18px rgba(0,0,0,.24);padding:9px 16px;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;max-width:calc(100vw - 28px);overflow:hidden;text-overflow:ellipsis;">
+  BẢN XEM THỬ LOCAL — không ghi dữ liệu thật, không xuất báo cáo
+</div>
 <div id="loginOverlay" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#eef1f6,#e3e8f0);display:flex;align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:360px;">
   <div style="text-align:center;margin-bottom:18px;">
@@ -709,7 +725,7 @@
     <div class="table-scroll">
       <table id="autoPlanTable">
         <thead>
-          <tr><th>Ngày</th><th>Mã</th><th>Dòng</th><th>Kích thước</th><th>Số lượng</th><th>Tổ phụ trách</th><th>Trạng thái</th><th class="only-manager" style="text-align:center;" title="Ưu tiên kế hoạch tuần">Ưu tiên</th><th class="only-manager" style="text-align:right;">Xoá</th></tr>
+          <tr><th class="col-date">Ngày</th><th class="col-code">Mã</th><th class="col-product">Dòng</th><th class="col-size">Kích thước</th><th class="col-number">Kế hoạch</th><th class="col-group">Nhóm đơn hàng</th><th class="col-team">Tổ phụ trách</th><th class="col-support">Tổ hỗ trợ</th><th class="col-number">Đã dán</th><th class="col-number">Đã may</th><th class="col-number">Đã đóng gói</th><th class="col-status">Trạng thái</th><th class="col-action only-manager" title="Ưu tiên kế hoạch tuần">Ưu tiên</th><th class="col-action only-manager">Xoá</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -813,7 +829,7 @@
     <div class="table-scroll">
       <table id="progressTable">
         <thead>
-          <tr><th>Ngày</th><th>Mã</th><th>Dòng</th><th>Kích thước</th><th>Kế hoạch</th><th>Tổ phụ trách</th><th>Số lượng hoàn thành</th><th class="only-editor">Sửa</th><th>Tổ hỗ trợ</th><th>Trạng thái</th><th>Ghi chú</th></tr>
+          <tr><th class="col-date">Ngày</th><th class="col-code">Mã</th><th class="col-product">Dòng</th><th class="col-size">Kích thước</th><th class="col-number">Kế hoạch</th><th class="col-team">Tổ phụ trách</th><th class="col-support">Tổ hỗ trợ</th><th class="col-number">Đã dán</th><th class="col-number">Đã may</th><th class="col-number">Đã đóng gói</th><th class="col-action only-editor">Sửa</th><th class="col-status">Trạng thái</th><th class="col-note">Ghi chú</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -1628,6 +1644,7 @@ function lockBadgeHtml(date){
 }
 
 let sheetRows = [];      // rows pulled fresh from the company sheet each fetch: {id, date, ma, dong, ngang, dai, day, so_luong, ghi_chu}
+let orderGroupRows = []; // rows từ sheet đơn đặt: {date, dong, kich_thuoc, so_luong, nhom}
 let dynamicOrders = [];  // rows Claude/dashboard spins off when an order falls short (persisted)
 let assignments = {};    // { [orderId]: { to: string|null, so_luong_hoan_thanh: number|null, spinoff_id: string|null } }
 let autoPlanLoaded = false;
@@ -1662,6 +1679,108 @@ function isPastDate(dateStr){
   return !isNaN(d.getTime()) && d < today;
 }
 
+// ---- Tiến độ ba công đoạn theo từng ngày ----
+// Dữ liệu mới nằm trong assignment.stage_by_date:
+// {'14/08/2026': {dan:6, may:4, dong_goi:2}, '15/08/2026': {dan:2, may:4, dong_goi:6}}
+// Các assignment cũ chỉ có so_luong_hoan_thanh vẫn được hiểu là đã hoàn tất đủ cả ba công đoạn.
+const CONG_DOAN = ['dan','may','dong_goi'];
+function soCongDoan(v){
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+function khoaNgayDMY(dateStr){
+  const p = parseDMY(String(dateStr || ''));
+  return p && p.y ? p.y*10000 + p.m*100 + p.d : 0;
+}
+function lichSuCongDoanDeDoc(o){
+  const a = assignments[o.id] || {};
+  if(a.stage_by_date && typeof a.stage_by_date === 'object') return a.stage_by_date;
+  const legacy = soCongDoan(a.so_luong_hoan_thanh);
+  if(!legacy) return {};
+  const ngay = a.ngay_hoan_thanh || o.date;
+  return {[ngay]: {dan:legacy, may:legacy, dong_goi:legacy, _legacy:true}};
+}
+function damBaoLichSuCongDoan(o){
+  if(!assignments[o.id]) assignments[o.id] = {to:null, so_luong_hoan_thanh:null, spinoff_id:null};
+  const a = assignments[o.id];
+  if(!a.stage_by_date || typeof a.stage_by_date !== 'object'){
+    const legacy = soCongDoan(a.so_luong_hoan_thanh);
+    a.stage_by_date = {};
+    if(legacy){
+      const ngay = a.ngay_hoan_thanh || o.date;
+      a.stage_by_date[ngay] = {dan:legacy, may:legacy, dong_goi:legacy, _legacy:true};
+    }
+  }
+  return a.stage_by_date;
+}
+function giaTriCongDoanNgay(o, ngay, congDoan){
+  const e = lichSuCongDoanDeDoc(o)[ngay];
+  if(!e || e[congDoan] == null || e[congDoan] === '') return null;
+  return soCongDoan(e[congDoan]);
+}
+function tongCongDoan(o, congDoan){
+  return Object.values(lichSuCongDoanDeDoc(o)).reduce((s,e)=>s+soCongDoan(e && e[congDoan]),0);
+}
+function tongCongDoanTruocNgay(o, congDoan, ngay){
+  const moc = khoaNgayDMY(ngay);
+  return Object.entries(lichSuCongDoanDeDoc(o)).reduce((s,[d,e])=>{
+    return s + (khoaNgayDMY(d) < moc ? soCongDoan(e && e[congDoan]) : 0);
+  },0);
+}
+function dongGoiTheoNgayCuaDon(o){
+  const out = {};
+  Object.entries(lichSuCongDoanDeDoc(o)).forEach(([ngay,e])=>{
+    const sl = soCongDoan(e && e.dong_goi);
+    if(sl) out[ngay] = (out[ngay] || 0) + sl;
+  });
+  return out;
+}
+// Tổ kế hoạch được giữ cố định từ lần phân công đầu tiên. Đổi người xử lý phần
+// rớt ngày sau không được kéo ngược KH hoặc sản lượng ngày cũ sang tổ mới.
+function toKeHoachCuaDon(o){
+  const a = assignments[o.id] || {};
+  return a.to_goc || a.to || null;
+}
+function toHoTroTheoNgay(o, ngay){
+  const a = assignments[o.id] || {};
+  return ngay && a.support_by_date ? (a.support_by_date[ngay] || null) : null;
+}
+function toPhuTrachTheoNgay(o, ngay){
+  return toHoTroTheoNgay(o,ngay) || (assignments[o.id]?.to || null);
+}
+// Tổ thực tế của từng công đoạn được chụp cùng số nhập trong ngày. Nhờ vậy nếu
+// ngày sau đổi tổ hỗ trợ, sản lượng ngày cũ vẫn thuộc đúng tổ đã làm.
+function toThucHienCongDoanNgay(o, ngay, congDoan){
+  const e = lichSuCongDoanDeDoc(o)[ngay];
+  if(e){
+    const daChup = e[`_${congDoan}_to`] || e._to;
+    if(daChup) return daChup;
+  }
+  return toPhuTrachTheoNgay(o,ngay);
+}
+function soCongDoanCuaTo(o, congDoan, team, ngay){
+  if(ngay && ngay !== 'all'){
+    return toThucHienCongDoanNgay(o,ngay,congDoan) === team
+      ? soCongDoan(giaTriCongDoanNgay(o,ngay,congDoan)) : 0;
+  }
+  return Object.entries(lichSuCongDoanDeDoc(o)).reduce((tong,[d,e])=>{
+    return tong + (toThucHienCongDoanNgay(o,d,congDoan) === team ? soCongDoan(e && e[congDoan]) : 0);
+  },0);
+}
+function dongBoSoHoanThanhCu(o){
+  const a = assignments[o.id];
+  if(!a) return;
+  a.so_luong_da_dan = tongCongDoan(o,'dan');
+  a.so_luong_da_may = tongCongDoan(o,'may');
+  const daDongGoi = tongCongDoan(o,'dong_goi');
+  a.so_luong_hoan_thanh = daDongGoi > 0 ? daDongGoi : null;
+  const ngayDongGoi = Object.keys(dongGoiTheoNgayCuaDon(o)).sort((x,y)=>khoaNgayDMY(x)-khoaNgayDMY(y));
+  a.ngay_hoan_thanh = ngayDongGoi.length ? ngayDongGoi[ngayDongGoi.length-1] : null;
+}
+function keHoachTrongNgay(o, ngay){
+  return ngay === 'all' || !ngay || ngay === o.date ? soCongDoan(o.so_luong) : 0;
+}
+
 function getOrderStatus(o){
   if(o.is_warranty) return 'hoan_thanh';   // bảo hành: đã làm xong rồi mới ghi nhận
   const a = assignments[o.id];
@@ -1670,8 +1789,10 @@ function getOrderStatus(o){
   const late = isPastDate(o.date);
   if(!a || !a.to) return (o.is_drop || late) ? 'rot' : 'moi';
   if(a.spinoff_id) return 'partial'; // đã tách phần thiếu cho tổ khác -> phần của tổ này khoá lại, coi như đã đóng
-  if(a.so_luong_hoan_thanh == null) return late ? 'rot' : 'dang_san_xuat';
-  if(a.so_luong_hoan_thanh >= o.so_luong) return 'hoan_thanh';
+  const daDongGoi = tongCongDoan(o,'dong_goi');
+  if(daDongGoi >= soCongDoan(o.so_luong)) return 'hoan_thanh';
+  const daBatDau = tongCongDoan(o,'dan') > 0 || tongCongDoan(o,'may') > 0 || daDongGoi > 0;
+  if(!daBatDau) return late ? 'rot' : 'dang_san_xuat';
   return late ? 'rot' : 'dang_san_xuat';
 }
 
@@ -1696,19 +1817,36 @@ function describeSpinoff(o){
 function statusBadgeHtml(o){
   const status = getOrderStatus(o);
   const a = assignments[o.id];
+  const daDan = tongCongDoan(o,'dan');
+  const daMay = tongCongDoan(o,'may');
+  const daDongGoi = tongCongDoan(o,'dong_goi');
+  const keHoach = soCongDoan(o.so_luong);
   if(o.is_ghost){
-    const ht = (a && a.so_luong_hoan_thanh) || 0;
+    const ht = daDongGoi;
     const xong = ht >= o.so_luong;
     const desc = describeSpinoff(o);   // ai đã làm nốt phần thiếu, nếu có
     return `<span class="badge ${xong ? 'badge-done' : 'badge-ghost'}">${xong ? 'Hoàn thành' : 'Đã làm ' + ht + '/' + o.so_luong}</span>`
          + ` <span class="badge badge-ghost">Công ty đã bỏ khỏi KHSX</span>`
          + (desc ? ` <span style="color:var(--text2);font-size:11px;">→ ${desc}</span>` : '');
   }
-  if(status === 'hoan_thanh') return '<span class="badge badge-done">Hoàn thành</span>';
-  if(status === 'rot') return '<span class="badge badge-rot">Đơn hàng rớt</span>';
-  if(status === 'dang_san_xuat') return '<span class="badge badge-progress">Đang sản xuất</span>';
+  if(status === 'hoan_thanh'){
+    const vuot = Math.max(0, daDongGoi - keHoach);
+    return '<span class="badge badge-done">Hoàn thành · Sẵn sàng chuyển kho</span>'
+      + (vuot ? `<span class="status-over">Vượt ${vuot.toLocaleString('vi-VN')}</span>` : '');
+  }
+  if(status === 'rot'){
+    const tienDo = (daDan || daMay || daDongGoi)
+      ? `<span style="display:block;margin-top:4px;color:var(--text2);font-size:11px;">Dán ${daDan} · May ${daMay} · ĐG ${daDongGoi}</span>` : '';
+    return '<span class="badge badge-rot">Đơn hàng rớt</span>' + tienDo;
+  }
+  if(status === 'dang_san_xuat'){
+    if(daDongGoi>0) return `<span class="badge badge-progress">Đã đóng gói ${daDongGoi}</span>`;
+    if(daMay>0) return `<span class="badge badge-progress">Đã dán → May ${daMay}</span>`;
+    if(daDan>0) return `<span class="badge badge-progress">Đã dán ${daDan}</span>`;
+    return '<span class="badge badge-progress">Đang sản xuất</span>';
+  }
   if(status === 'partial'){
-    const pct = o.so_luong>0 ? Math.round(((a.so_luong_hoan_thanh||0)/o.so_luong)*1000)/10 : 0;
+    const pct = o.so_luong>0 ? Math.round((daDongGoi/o.so_luong)*1000)/10 : 0;
     const desc = describeSpinoff(o);
     return `<span class="badge badge-partial">Hoàn thành ${pct}%</span>${desc?` <span style="color:var(--text2);font-size:11px;">→ ${desc}</span>`:''}`;
   }
@@ -1716,10 +1854,26 @@ function statusBadgeHtml(o){
 }
 // Dedicated "Tổ hỗ trợ" cell for the Tiến độ table: lights up (becomes an active picker)
 // only once an order has been split; picking a team there closes out the remainder.
-function spinoffCellHtml(o){
+function spinoffCellHtml(o, ngay){
+  const a = assignments[o.id] || {};
+  // Luồng ba công đoạn mới: đơn rớt vẫn là cùng một đơn, KH ngày sau = 0.
+  // Tổ hỗ trợ được gắn riêng theo ngày, không đổi tổ sở hữu KH ngày gốc.
+  if(ngay && ngay !== 'all' && ngay !== o.date && getCarryForwardDates(o).includes(ngay)){
+    const support = toHoTroTheoNgay(o,ngay) || '';
+    if(!canManage2() || lockedProgressDates.includes(ngay)){
+      return support ? `<span style="font-weight:600;">${thoatHtml(support)}</span>` : '<span style="color:var(--text2);">—</span>';
+    }
+    return `<select class="support-day-select ${!support?'to-select-empty':''}" data-order-id="${o.id}" data-day="${ngay}">
+      <option value="" ${!support?'selected':''}>Chọn tổ</option>
+      ${TEAM_OPTIONS.map(t=>`<option value="${t}" ${support===t?'selected':''}>${t}</option>`).join('')}
+    </select>`;
+  }
+  if(ngay === 'all' && a.support_by_date){
+    const ds = Array.from(new Set(Object.values(a.support_by_date).filter(Boolean)));
+    if(ds.length) return `<span style="font-weight:600;">${ds.map(thoatHtml).join(' / ')}</span>`;
+  }
   const status = getOrderStatus(o);
   if(status !== 'partial') return '<span style="color:var(--text2);">—</span>';
-  const a = assignments[o.id];
   const spin = a.spinoff_id ? getOrderById(a.spinoff_id) : null;
   if(!spin) return '<span style="color:var(--text2);">—</span>';
   const spinStatus = getOrderStatus(spin);
@@ -1895,6 +2049,10 @@ async function loadStaffUsers(){
 // Gửi lệnh quản lý người dùng. Không đọc được phản hồi (chế độ no-cors) nên
 // sau khi gửi ta tải lại danh sách để biết kết quả thật.
 async function sendUserCommand(payload){
+  if(LOCAL_PREVIEW_MODE){
+    alert('Bản xem thử local không gửi thay đổi tài khoản lên dữ liệu thật.');
+    return;
+  }
   try{
     await fetch(STORAGE_API_URL, {
       method:'POST', mode:'no-cors',
@@ -2025,6 +2183,51 @@ function isOrderLocked(o){
 // ============ Lưu trữ ngoài Claude: gọi Apps Script Web App (đóng vai trò cơ sở dữ liệu) ============
 // Sau khi deploy Apps Script (xem HUONG_DAN_DEPLOY.md), dán URL Web App vào đây.
 const STORAGE_API_URL = 'https://script.google.com/macros/s/AKfycbxqrbrDm9eGu6NuwhNYZLznho6SWgbSE6l9EcaI8xM9VyP2FE--bGcQNRhfJI751lyI/exec';
+// Khi chạy bằng localhost để xem thử, vẫn được đọc dữ liệu nhưng tuyệt đối không gửi lệnh ghi ra ngoài.
+const LOCAL_PREVIEW_MODE = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+const LOCAL_DROP_DEMO_MODE = LOCAL_PREVIEW_MODE && new URLSearchParams(location.search).get('dropDemo') === '1';
+const LOCAL_DROP_DEMO_ID = '__LOCAL_DROP_DEMO_14_15__';
+if(LOCAL_PREVIEW_MODE){
+  document.getElementById('localPreviewBanner').style.display = 'block';
+  if(LOCAL_DROP_DEMO_MODE){
+    document.getElementById('localPreviewBanner').textContent = 'MÔ PHỎNG ĐƠN RỚT 14→15/08 · CHỈ LOCAL · KHÔNG LƯU DỮ LIỆU THẬT';
+  }
+}
+
+// Dữ liệu thử chỉ tồn tại trong bộ nhớ của tab localhost. Không ghi cache, không gửi máy chủ,
+// không đụng dữ liệu thật. Tải lại URL thường (không có dropDemo=1) là biến mất hoàn toàn.
+function applyLocalDropDemoFixture(){
+  if(!LOCAL_DROP_DEMO_MODE) return;
+  sheetRows = sheetRows.filter(o=>o.id !== LOCAL_DROP_DEMO_ID);
+  sheetRows.push({
+    id: LOCAL_DROP_DEMO_ID,
+    date: '14/08/2026',
+    ma: 'TEST-RỚT-8',
+    dong: 'Sora Test',
+    ngang: 160,
+    dai: 200,
+    day: 15,
+    so_luong: 8,
+    ghi_chu: 'Mô phỏng local — không lưu dữ liệu thật'
+  });
+  if(!assignments[LOCAL_DROP_DEMO_ID]){
+    assignments[LOCAL_DROP_DEMO_ID] = {
+      to: 'Tổ 1',
+      to_goc: 'Tổ 1',
+      so_luong_hoan_thanh: 2,
+      ngay_hoan_thanh: '14/08/2026',
+      spinoff_id: null,
+      support_by_date: {'15/08/2026':'Tổ 2'},
+      stage_by_date: {
+        '14/08/2026': {
+          dan:6, may:4, dong_goi:2,
+          _dan_to:'Tổ 1', _may_to:'Tổ 1', _dong_goi_to:'Tổ 1'
+        }
+      },
+      _local_drop_demo: true
+    };
+  }
+}
 
 // Apps Script Web App không hỗ trợ header CORS chuẩn cho fetch() thông thường, nên:
 // - Đọc dữ liệu (GET) dùng kỹ thuật JSONP (thẻ <script>, không bị chặn CORS)
@@ -2079,6 +2282,7 @@ async function storageGetAll(keys){
 }
 
 async function storageSet(key, value){
+  if(LOCAL_PREVIEW_MODE) return;
   if(!STORAGE_API_URL || STORAGE_API_URL.startsWith('PASTE_')) return;
   try{
     // Content-Type: text/plain + mode: no-cors để trình duyệt không chặn request lúc gửi đi.
@@ -2101,8 +2305,12 @@ async function storageSet(key, value){
 const LOCAL_CACHE_KEY = 'khsx_local_cache_v1';
 function saveLocalCache(){
   try{
+    const cacheSheetRows = LOCAL_DROP_DEMO_MODE
+      ? sheetRows.filter(o=>o.id !== LOCAL_DROP_DEMO_ID) : sheetRows;
+    const cacheAssignments = LOCAL_DROP_DEMO_MODE
+      ? Object.fromEntries(Object.entries(assignments).filter(([id])=>id !== LOCAL_DROP_DEMO_ID)) : assignments;
     localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify({
-      t: Date.now(), sheetRows, assignments, dynamicOrders, deletedOrderIds,
+      t: Date.now(), sheetRows:cacheSheetRows, orderGroupRows, assignments:cacheAssignments, dynamicOrders, deletedOrderIds,
       lockedPlanDates, lockedProgressDates, planSnapshots, backupRowsByDate, priorityOrderIds, baoHanhTheoNgay,
       quarterTargets
     }));
@@ -2358,6 +2566,56 @@ function chuanTenDong(t){
   if(TEN_DONG_CHUAN[key]) return TEN_DONG_CHUAN[key];
   // Tên lạ: viết hoa chữ cái đầu mỗi từ, giữ nguyên dấu tiếng Việt
   return goc.toLowerCase().replace(/(^|[\s\-'])(\p{L})/gu, (m,a,b)=> a + b.toUpperCase());
+}
+
+// Chuẩn hoá kích thước của sheet đơn đặt về cùng thứ tự dashboard: ngang x dài x dày.
+// Sheet có thể ghi 220x15 (ngầm hiểu dài 200), 220x200x15 hoặc 15x220x200.
+function chuanKichThuocNhomDon(v){
+  const a = String(v || '').trim().toLowerCase().replace(/[×*]/g,'x').replace(/\s+/g,'')
+    .split('x').map(Number).filter(Number.isFinite);
+  if(a.length === 2) return `${a[0]}x200x${a[1]}`;
+  if(a.length !== 3) return '';
+  if(a[0] <= 30 && a[1] > 30 && a[2] > 30) return `${a[1]}x${a[2]}x${a[0]}`;
+  return `${a[0]}x${a[1]}x${a[2]}`;
+}
+function khoaNhomDonTheoDon(o){
+  const ngay = String(o.date || '').trim();
+  const ten = chuanHoaTenSP(o.dong || o.ten_hang || '');
+  const kt = chuanKichThuocNhomDon([o.ngang, o.dai || 200, o.day].join('x'));
+  return [ngay, ten, kt].join('|');
+}
+function khoaNhomDonTheoSheet(o){
+  return [String(o.date || '').trim(), chuanHoaTenSP(o.dong || ''), chuanKichThuocNhomDon(o.kich_thuoc)].join('|');
+}
+function nhomDonHangCuaDon(o){
+  if(o.is_warranty) return 'Bảo hành';
+  const key = khoaNhomDonTheoDon(o);
+  const ds = Array.from(new Set(orderGroupRows
+    .filter(x=>khoaNhomDonTheoSheet(x) === key)
+    .map(x=>String(x.nhom || '').trim()).filter(Boolean)));
+  if(ds.length) return ds.join(' / ');
+  if(o.is_manual) return 'Phát sinh';
+  return String(o.nhom_don_hang || o.nhom_khsx || 'KHSX Tuần Foam');
+}
+function thoatHtml(v){
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[c]);
+}
+function lopMauNhomDon(v){
+  const s = String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+  if(s.includes('THANH CONG')) return 'group-thanh-cong';
+  if(s.includes('DIGITAL')) return 'group-digital';
+  if(s.includes('GLOBAL')) return 'group-global';
+  if(s.includes('CHAU AU')) return 'group-chau-au';
+  if(s.includes('BAO HANH')) return 'group-bao-hanh';
+  if(s.includes('PHAT SINH')) return 'group-phat-sinh';
+  if(s.includes('KHSX') || s.includes('TUAN FOAM')) return 'group-khsx';
+  return 'group-khac';
+}
+function nhomDonHangHtml(o){
+  return nhomDonHangCuaDon(o).split('/').map(x=>x.trim()).filter(Boolean)
+    .map(x=>`<span class="group-chip ${lopMauNhomDon(x)}">${thoatHtml(x)}</span>`).join('');
 }
 
 // Đọc ô ngày một cách linh hoạt rồi đưa về dạng chuẩn dd/mm/yyyy.
@@ -2705,6 +2963,7 @@ async function fetchAutoPlan(){
       : `⚠ Chưa tải được dữ liệu từ Google Sheet. Kiểm tra kết nối rồi bấm "Làm mới dữ liệu".`;
     statusEl.style.color = 'var(--warning)';
   }
+  applyLocalDropDemoFixture();
   renderAutoPlanDaySelect();
   renderAutoPlan();
   renderProgress();
@@ -2797,18 +3056,26 @@ function htmlDanhSachDon(teamOrders, anDongDaXong){
     + `</div>`;
 }
 
-function renderTeamRings(containerId, orders, hienDanhSach, anDongDaXong){
+function renderTeamRings(containerId, orders, hienDanhSach, anDongDaXong, ngayDangXem='all'){
   const container = document.getElementById(containerId);
   if(!container) return;
   const dsHtml = hienDanhSach ? (dh => htmlDanhSachDon(dh, anDongDaXong)) : (()=> '');
-  const cacNgayDangXem = Array.from(new Set(orders.map(o=>o.date)));
+  const motNgay = !!ngayDangXem && ngayDangXem !== 'all';
+  const cacNgayDangXem = motNgay ? [ngayDangXem] : Array.from(new Set(orders.map(o=>o.date)));
   const toMinh = toCuaToi();
   const cacTo = toMinh ? TEAM_OPTIONS.filter(t=>t === toMinh) : TEAM_OPTIONS;
   container.classList.toggle('mot-the', cacTo.length === 1);
   container.innerHTML = cacTo.map(team=>{
-    const teamOrders = orders.filter(o => assignments[o.id]?.to === team);
-    const keHoach = teamOrders.filter(isPlannedOrder).reduce((a,o)=>a+o.so_luong,0);
-    const hoanThanh = teamOrders.reduce((a,o)=>a+(assignments[o.id]?.so_luong_hoan_thanh||0),0);
+    const teamOrders = orders.filter(o=>{
+      if(motNgay) return toPhuTrachTheoNgay(o,ngayDangXem) === team;
+      const a = assignments[o.id] || {};
+      return a.to === team || Object.values(a.support_by_date || {}).includes(team);
+    });
+    // KH chỉ thuộc ngày gốc và tổ được phân công ban đầu. HT chỉ lấy số Đóng gói
+    // thực nhập trong ngày đang xem, đồng thời ghi cho đúng tổ thực hiện ngày đó.
+    const keHoach = orders.filter(o=>isPlannedOrder(o) && toKeHoachCuaDon(o) === team)
+      .reduce((a,o)=>a+keHoachTrongNgay(o,ngayDangXem),0);
+    const hoanThanh = orders.reduce((a,o)=>a+soCongDoanCuaTo(o,'dong_goi',team,ngayDangXem),0);
     if(keHoach === 0){
       // Tổ không có kế hoạch riêng. Hai trường hợp khác nhau:
       //   - Có hỗ trợ tổ khác -> vòng tròn XANH, 0% (phân biệt rõ với tổ ngồi không)
@@ -2902,7 +3169,7 @@ function renderAutoPlan(){
     <div class="kpi k-warning"><div class="label">Đang sản xuất</div><div class="value">${dangSXCount}</div></div>
     <div class="kpi" style="border-top-color:var(--danger);"><div class="label">Đơn rớt chưa sản xuất</div><div class="value" style="color:var(--danger);">${rotCount}</div></div>
   `;
-  renderTeamRings('autoPlanTeamRings', filtered, dayVal !== 'all');   // 'Tất cả ngày' -> chỉ hiện vòng tròn %
+  renderTeamRings('autoPlanTeamRings', filtered, dayVal !== 'all', false, dayVal);   // 'Tất cả ngày' -> chỉ hiện vòng tròn %
   canhBaoAnhChupRong();
   const tbody = document.querySelector('#autoPlanTable tbody');
   tbody.innerHTML = sortOrdersForDisplay(filtered, dayVal === 'all').map(r=>{
@@ -2925,7 +3192,7 @@ function renderAutoPlan(){
       toCell = assignedTo ? `<span style="font-weight:600;">${assignedTo}</span>` : '<span style="color:var(--text2);">—</span>';
     } else {
       toCell = `<select class="to-select ${!assignedTo?'to-select-empty':''}" data-order-id="${r.id}">
-          <option value="" ${!assignedTo?'selected':''}>Nhập tổ phụ trách</option>
+          <option value="" ${!assignedTo?'selected':''}>Chọn tổ</option>
           ${TEAM_OPTIONS.map(t=>`<option value="${t}" ${assignedTo===t?'selected':''}>${t}</option>`).join('')}
         </select>`;
     }
@@ -2934,15 +3201,20 @@ function renderAutoPlan(){
       : 0;
     return `
     <tr class="${rowClass}">
-      <td>${r.date}${lockBadgeHtml(r.date)}${backupBadgeHtml(r)}${madeUpNoteHtml(r)}</td>
-      <td>${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}${lotBadgeHtml(r)}</td>
-      <td>${r.dong||'-'}</td>
-      <td>${kichThuocHtml(r)}</td>
-      <td>${r.so_luong||'-'}</td>
-      <td>${toCell}</td>
-      <td>${statusBadgeHtml(r)}${daysLate>0?` <span class="badge badge-rot">Trễ ${daysLate} ngày</span>`:''}${nhanUuTien(r)}${r.ghi_chu?`<br><span class="note" style="font-size:11px;">${r.ghi_chu}</span>`:''}${changeNoteHtml(r)}</td>
-      <td class="only-manager" style="text-align:center;">${r.is_warranty ? '' : `<input type="checkbox" class="uutien-tick" data-order-id="${r.id}" ${laUuTien(r.id)?'checked':''} title="Ưu tiên kế hoạch tuần">`}</td>
-      <td class="only-manager" style="text-align:right;">${r.is_warranty ? '' : `<button class="trash-btn" data-order-id="${r.id}" title="Xoá đơn này">🗑</button>`}</td>
+      <td class="col-date">${r.date}${lockBadgeHtml(r.date)}${backupBadgeHtml(r)}${madeUpNoteHtml(r)}</td>
+      <td class="col-code">${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}${lotBadgeHtml(r)}</td>
+      <td class="col-product">${r.dong||'-'}</td>
+      <td class="col-size">${kichThuocHtml(r)}</td>
+      <td class="col-number">${r.so_luong||'-'}</td>
+      <td class="col-group">${nhomDonHangHtml(r)}</td>
+      <td class="col-team">${toCell}</td>
+      <td class="col-support">${spinoffCellHtml(r,dayVal)}</td>
+      <td class="col-number">${congDoanChiDocHtml(r,dayVal,'dan')}</td>
+      <td class="col-number">${congDoanChiDocHtml(r,dayVal,'may')}</td>
+      <td class="col-number">${congDoanChiDocHtml(r,dayVal,'dong_goi')}</td>
+      <td class="col-status">${statusBadgeHtml(r)}${daysLate>0?` <span class="badge badge-rot">Trễ ${daysLate} ngày</span>`:''}${nhanUuTien(r)}${r.ghi_chu?`<br><span class="note" style="font-size:11px;">${r.ghi_chu}</span>`:''}${changeNoteHtml(r)}</td>
+      <td class="col-action only-manager">${r.is_warranty ? '' : `<input type="checkbox" class="uutien-tick" data-order-id="${r.id}" ${laUuTien(r.id)?'checked':''} title="Ưu tiên kế hoạch tuần">`}</td>
+      <td class="col-action only-manager">${r.is_warranty ? '' : `<button class="trash-btn" data-order-id="${r.id}" title="Xoá đơn này">🗑</button>`}</td>
     </tr>`;
   }).join('');
 }
@@ -2952,7 +3224,10 @@ function parseDMYForDate(dmy){
   return [y, m-1, d];
 }
 
-document.getElementById('autoPlanRefreshBtn').addEventListener('click', fetchAutoPlan);
+document.getElementById('autoPlanRefreshBtn').addEventListener('click', async ()=>{
+  await Promise.all([fetchAutoPlan(), fetchOrderGroups()]);
+  renderAutoPlan();
+});
 document.getElementById('autoPlanDaySelect').addEventListener('change', renderAutoPlan);
 document.getElementById('autoPlanSearchBox').addEventListener('input', renderAutoPlan);
 document.getElementById('autoPlanAssignFilter').addEventListener('change', renderAutoPlan);
@@ -3050,13 +3325,49 @@ async function handleAssignChange(orderId, val){
   if(o && !o.is_drop && !canManage()) return;
   if(o && o.is_drop && !canManage2()) return;
   if(!assignments[orderId]) assignments[orderId] = {to:null, so_luong_hoan_thanh:null, spinoff_id:null};
-  assignments[orderId].to = val || null;
+  const a = assignments[orderId];
+  const toCu = a.to || null;
+  // Lần đầu phân công là tổ sở hữu KH. Trước khi đổi tổ, chụp tổ cũ vào mọi
+  // số công đoạn lịch sử chưa có dấu vết để chúng không bị chuyển chủ theo.
+  if(!a.to_goc && val) a.to_goc = val;
+  if(toCu && val && toCu !== val){
+    Object.values(a.stage_by_date || {}).forEach(e=>{
+      if(!e || typeof e !== 'object') return;
+      CONG_DOAN.forEach(k=>{
+        if(e[k] != null && e[k] !== '' && !e[`_${k}_to`]) e[`_${k}_to`] = toCu;
+      });
+    });
+  }
+  a.to = val || null;
   // Đơn rớt / đơn tách (is_drop) khi được 1 tổ nhận -> hiểu là tổ đó đã xử lý xong phần thiếu ngay,
   // không tạo thêm một tác vụ sản xuất chờ nhập số lượng riêng (khác đơn kế hoạch gốc, vẫn cần theo dõi tiến độ).
   if(o && o.is_drop){
     // Bỏ tổ hỗ trợ -> phần thiếu quay lại trạng thái "đơn rớt chưa ai nhận".
-    assignments[orderId].so_luong_hoan_thanh = val ? o.so_luong : null;
-    assignments[orderId].ngay_hoan_thanh = val ? formatDMY(new Date()) : null;
+    a.so_luong_hoan_thanh = val ? o.so_luong : null;
+    a.ngay_hoan_thanh = val ? formatDMY(new Date()) : null;
+  }
+  renderAutoPlan();
+  renderProgress();
+  scheduleMonthlySync();
+  queueSave('assignments');
+}
+
+async function handleSupportDayChange(orderId, ngay, val){
+  if(!canManage2() || !ngay || ngay === 'all') return;
+  const o = getOrderById(orderId);
+  if(!o || ngay === o.date || !getCarryForwardDates(o).includes(ngay)) return;
+  if(!assignments[orderId]) assignments[orderId] = {to:null, so_luong_hoan_thanh:null, spinoff_id:null};
+  const a = assignments[orderId];
+  if(!a.support_by_date || typeof a.support_by_date !== 'object') a.support_by_date = {};
+  if(val) a.support_by_date[ngay] = val; else delete a.support_by_date[ngay];
+  if(!Object.keys(a.support_by_date).length) delete a.support_by_date;
+  // Nếu số của ngày này đã được nhập trước khi chọn tổ hỗ trợ, cập nhật dấu vết
+  // về đúng tổ vừa xác nhận. Bỏ hỗ trợ thì trả lại cho tổ phụ trách chính.
+  const e = a.stage_by_date && a.stage_by_date[ngay];
+  if(e){
+    CONG_DOAN.forEach(k=>{
+      if(e[k] != null && e[k] !== '') e[`_${k}_to`] = val || a.to || null;
+    });
   }
   renderAutoPlan();
   renderProgress();
@@ -3065,8 +3376,11 @@ async function handleAssignChange(orderId, val){
 }
 
 document.querySelector('#autoPlanTable tbody').addEventListener('change', async (e)=>{
-  if(!e.target.classList.contains('to-select')) return;
-  await handleAssignChange(e.target.dataset.orderId, e.target.value);
+  if(e.target.classList.contains('to-select')){
+    await handleAssignChange(e.target.dataset.orderId, e.target.value);
+  } else if(e.target.classList.contains('support-day-select')){
+    await handleSupportDayChange(e.target.dataset.orderId, e.target.dataset.day, e.target.value);
+  }
 });
 
 // ---- Tick ưu tiên kế hoạch tuần (chỉ Quản lý) ----
@@ -3235,16 +3549,21 @@ function syncOrdersToMonthlyData(){
     // nhập ở tab Tiến độ (0 nếu chưa làm), không ép cho bằng kế hoạch.
     const a = assignments[o.id] || {};
     const ke_hoach = isPlannedOrder(o) ? o.so_luong : 0;
-    const daLam = a.so_luong_hoan_thanh || 0;
-    const ngayLam = a.ngay_hoan_thanh || o.date;
-    if(ngayLam === o.date){
-      (closedByDate[o.date] = closedByDate[o.date]||[]).push({o, a, ke_hoach, dong_goi:daLam});
-    }else{
-      // Làm bù sang ngày khác: KẾ HOẠCH vẫn thuộc ngày gốc (để thấy ngày đó hụt),
-      // SẢN LƯỢNG ghi cho ngày làm thật (để thành tích ngày đó đúng thực tế).
-      (closedByDate[o.date] = closedByDate[o.date]||[]).push({o, a, ke_hoach, dong_goi:0});
-      (closedByDate[ngayLam] = closedByDate[ngayLam]||[]).push({o, a, ke_hoach:0, dong_goi:daLam});
+    const dongGoiTheoNgay = dongGoiTheoNgayCuaDon(o);
+    // Tách KH và HT thành các dòng độc lập: KH giữ tổ ban đầu/ngày gốc;
+    // HT thuộc đúng ngày và đúng tổ thực sự nhập Đóng gói.
+    if(ke_hoach){
+      (closedByDate[o.date] = closedByDate[o.date]||[]).push({
+        o, a:{...a,to:toKeHoachCuaDon(o)}, ke_hoach, dong_goi:0, ngayLam:o.date
+      });
     }
+    Object.entries(dongGoiTheoNgay).forEach(([ngayLam,daLam])=>{
+      if(!daLam) return;
+      const toLam = toThucHienCongDoanNgay(o,ngayLam,'dong_goi') || a.to;
+      (closedByDate[ngayLam] = closedByDate[ngayLam]||[]).push({
+        o, a:{...a,to:toLam}, ke_hoach:0, dong_goi:daLam, ngayLam
+      });
+    });
   });
 
   Object.entries(closedByDate).forEach(([date, list])=>{
@@ -3253,7 +3572,7 @@ function syncOrdersToMonthlyData(){
       key = 'foam_'+date.split('/').reverse().join('-');
       allDays[key] = {date, rows:[], team_progress:[]};
     }
-    list.forEach(({o, a, ke_hoach, dong_goi, laBaoHanh})=>{
+    list.forEach(({o, a, ke_hoach, dong_goi, laBaoHanh, ngayLam})=>{
       const rootInfo = laBaoHanh ? {id:o.id||'',qty:Number(o.so_luong)||0} : rootOrderInfoForKpi(o);
       allDays[key].rows.push({
         to: extractTeamNumber(a.to),
@@ -3269,7 +3588,7 @@ function syncOrdersToMonthlyData(){
         _is_manual: !!o.is_manual,
         _is_ghost: !!o.is_ghost,
         _origin_date: o.date || '',
-        _done_date: (a && a.ngay_hoan_thanh) || ''
+        _done_date: ngayLam || (a && a.ngay_hoan_thanh) || ''
       });
     });
     allDays[key].team_progress = computeTeamProgressFromRows(allDays[key].rows);
@@ -3386,12 +3705,39 @@ function laNgayTuongLai(dateStr){
   return d > homNay;
 }
 
+// Rule riêng cho Nhân viên: đơn của hôm nay chỉ mở từ 07:00 theo giờ Việt Nam.
+// Đơn quá khứ vẫn xem được; đơn tương lai luôn bị ẩn. Các vai quản lý không bị giới hạn.
+function thoiGianVietNam(hienTai = new Date()){
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone:'Asia/Ho_Chi_Minh', year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', hourCycle:'h23'
+  }).formatToParts(hienTai).reduce((out,p)=>{ out[p.type]=p.value; return out; },{});
+  return {
+    y:Number(parts.year), m:Number(parts.month), d:Number(parts.day),
+    hour:Number(parts.hour), minute:Number(parts.minute)
+  };
+}
+function duocXemNgayTheoVai(dateStr, role, hienTai = new Date()){
+  if(role !== 'nhan_vien') return true;
+  const p = parseDMY(dateStr);
+  if(!p) return true;
+  const vn = thoiGianVietNam(hienTai);
+  const ngayDon = p.y*10000 + p.m*100 + p.d;
+  const homNay = vn.y*10000 + vn.m*100 + vn.d;
+  if(ngayDon < homNay) return true;
+  if(ngayDon > homNay) return false;
+  return vn.hour*60 + vn.minute >= 7*60;
+}
+function nhanVienDuocXemNgay(dateStr, hienTai = new Date()){
+  return duocXemNgayTheoVai(dateStr, currentUser ? currentUser.role : '', hienTai);
+}
+
 function populateProgressSelects(){
   const prevDay = progressDaySelect.value || 'all';
   const chan = chanNgayTuongLai();
   const assignedDates = Array.from(new Set(
     getOrders().filter(r=>assignments[r.id]?.to).flatMap(r=>getCarryForwardDates(r))
-  )).filter(d=>!(chan && laNgayTuongLai(d))).sort((a,b)=>{
+  )).filter(d=>!(chan && laNgayTuongLai(d)) && nhanVienDuocXemNgay(d)).sort((a,b)=>{
     const da = a.split('/').reverse().join(''), db = b.split('/').reverse().join('');
     return da.localeCompare(db);
   });
@@ -3422,14 +3768,183 @@ function getFilteredProgressRows(){
   return getOrders().filter(r=>assignments[r.id]?.to).filter(r=>{
     // Tài khoản gắn tổ: chỉ thấy đơn của tổ mình (kể cả phần thiếu được giao hỗ trợ).
     // Đơn chưa phân công tổ không hiện, để tránh hai tổ cùng nhận một đơn.
-    if(toMinh && assignments[r.id].to !== toMinh) return false;
+    if(toMinh){
+      if(dayVal !== 'all'){
+        if(toPhuTrachTheoNgay(r,dayVal) !== toMinh) return false;
+      }else{
+        const coNgayCuaTo = getCarryForwardDates(r)
+          .filter(d=>nhanVienDuocXemNgay(d))
+          .some(d=>toPhuTrachTheoNgay(r,d) === toMinh);
+        if(!coNgayCuaTo) return false;
+      }
+    }
     // Tài khoản gắn tổ: bỏ hẳn đơn của ngày mai trở đi, kể cả khi đang xem "Tất cả ngày"
     if(toMinh && laNgayTuongLai(r.date)) return false;
+    // Nhân viên: trước 07:00 không thấy đơn hôm nay; Quản lý 2 và Quản lý không đi qua rule này.
+    if(!nhanVienDuocXemNgay(r.date)) return false;
     if(dayVal !== 'all' && !getCarryForwardDates(r).includes(dayVal)) return false;
-    if(teamVal !== 'all' && assignments[r.id].to !== teamVal) return false;
+    if(teamVal !== 'all'){
+      if(dayVal !== 'all'){
+        if(toPhuTrachTheoNgay(r,dayVal) !== teamVal) return false;
+      }else{
+        const coNgayCuaTo = getCarryForwardDates(r).some(d=>toPhuTrachTheoNgay(r,d) === teamVal);
+        if(!coNgayCuaTo) return false;
+      }
+    }
     if(q && !r.dong.toLowerCase().includes(q) && !r.ma.toLowerCase().includes(q) && !formatKichThuoc(r).toLowerCase().includes(q)) return false;
     return true;
   });
+}
+
+function khoaNhapCongDoan(o, ngay){
+  if(!canEdit() || !ngay || ngay === 'all') return true;
+  if(laNgayTuongLai(ngay) && !editUnlocked) return true;
+  if(lockedProgressDates.includes(ngay) && !editUnlocked) return true;
+  if(assignments[o.id]?.spinoff_id && !editUnlocked) return true;
+  return false;
+}
+function thongTinCongDoanNgay(o, ngay){
+  const current = {
+    dan: giaTriCongDoanNgay(o,ngay,'dan'),
+    may: giaTriCongDoanNgay(o,ngay,'may'),
+    dong_goi: giaTriCongDoanNgay(o,ngay,'dong_goi')
+  };
+  const before = {
+    dan: tongCongDoanTruocNgay(o,'dan',ngay),
+    may: tongCongDoanTruocNgay(o,'may',ngay),
+    dong_goi: tongCongDoanTruocNgay(o,'dong_goi',ngay)
+  };
+  const total = {
+    dan: tongCongDoan(o,'dan'),
+    may: tongCongDoan(o,'may'),
+    dong_goi: tongCongDoan(o,'dong_goi')
+  };
+  const otherMay = total.may - soCongDoan(current.may);
+  const otherDongGoi = total.dong_goi - soCongDoan(current.dong_goi);
+  const maxMay = Math.max(0, total.dan - otherMay);
+  const maxDongGoi = Math.max(0, total.may - otherDongGoi);
+  return {current,before,total,maxMay,maxDongGoi};
+}
+function hintCongDoanHtml(o, ngay, congDoan, info){
+  const target = soCongDoan(o.so_luong);
+  const danDaDu = info.total.dan >= target;
+  const mayDaDu = danDaDu && info.total.may >= info.total.dan;
+  const dongGoiDaDu = mayDaDu && info.total.dong_goi >= info.total.may;
+  if(congDoan === 'dan' && danDaDu) return '<span class="stage-hint">Đã đủ</span>';
+  if(congDoan === 'may' && mayDaDu) return '<span class="stage-hint">Đã đủ</span>';
+  if(congDoan === 'dong_goi' && dongGoiDaDu) return '<span class="stage-hint">Đã đủ</span>';
+  if(ngay === o.date){
+    if(congDoan === 'may') return info.maxMay>0 ? `<span class="stage-hint wait">Tối đa ${info.maxMay}</span>` : '<span class="stage-hint">Chờ dán</span>';
+    if(congDoan === 'dong_goi') return info.maxDongGoi>0 ? `<span class="stage-hint wait">Tối đa ${info.maxDongGoi}</span>` : '<span class="stage-hint">Chờ may</span>';
+    return '';
+  }
+  if(congDoan === 'dan'){
+    const rotDan = Math.max(0, soCongDoan(o.so_luong) - info.before.dan);
+    return rotDan ? `<span class="stage-hint drop">Rớt dán ${rotDan}</span>` : '<span class="stage-hint">Dán đã đủ</span>';
+  }
+  if(congDoan === 'may'){
+    const choMay = Math.max(0, info.before.dan - info.before.may);
+    return choMay ? `<span class="stage-hint wait">Chờ may ${choMay}<br>Tối đa ${info.maxMay}</span>`
+                  : (info.maxMay>0 ? `<span class="stage-hint wait">Tối đa ${info.maxMay}</span>` : '<span class="stage-hint">Chờ dán</span>');
+  }
+  const choDongGoi = Math.max(0, info.before.may - info.before.dong_goi);
+  return choDongGoi ? `<span class="stage-hint wait">Chờ đóng gói ${choDongGoi}<br>Tối đa ${info.maxDongGoi}</span>`
+                    : (info.maxDongGoi>0 ? `<span class="stage-hint wait">Tối đa ${info.maxDongGoi}</span>` : '<span class="stage-hint">Chờ may</span>');
+}
+function oNhapCongDoanHtml(o, ngay, congDoan){
+  if(!ngay || ngay === 'all') return `<div class="stage-total">${tongCongDoan(o,congDoan).toLocaleString('vi-VN')}</div>`;
+  const info = thongTinCongDoanNgay(o,ngay);
+  const target = soCongDoan(o.so_luong);
+  const baseLocked = khoaNhapCongDoan(o,ngay);
+  const danDaKhoa = info.total.dan >= target;
+  const mayDaKhoa = danDaKhoa && info.total.may >= info.total.dan;
+  const dongGoiDaKhoa = mayDaKhoa && info.total.dong_goi >= info.total.may;
+  let enabled = false, maxAttr = '';
+  if(congDoan === 'dan') enabled = !baseLocked && (!danDaKhoa || editUnlocked);
+  if(congDoan === 'may'){
+    enabled = !baseLocked && info.maxMay>0 && (!mayDaKhoa || editUnlocked);
+    maxAttr = ` max="${info.maxMay}"`;
+  }
+  if(congDoan === 'dong_goi'){
+    enabled = !baseLocked && info.maxDongGoi>0 && (!dongGoiDaKhoa || editUnlocked);
+    maxAttr = ` max="${info.maxDongGoi}"`;
+  }
+  const value = info.current[congDoan];
+  const readyClass = enabled ? ' stage-ready' : '';
+  return `<div class="stage-cell">
+    <input type="number" class="qty-input stage-qty-input${readyClass}" data-order-id="${o.id}" data-stage="${congDoan}" data-day="${ngay}"
+      min="0" step="1"${maxAttr} value="${value == null ? '' : value}" placeholder="Nhập số..." ${enabled?'':'disabled'}>
+    ${hintCongDoanHtml(o,ngay,congDoan,info)}
+  </div>`;
+}
+function congDoanChiDocHtml(o, ngay, congDoan){
+  if(!ngay || ngay === 'all'){
+    return `<div class="stage-readonly">${tongCongDoan(o,congDoan).toLocaleString('vi-VN')}</div>`;
+  }
+  const value = giaTriCongDoanNgay(o,ngay,congDoan);
+  const info = thongTinCongDoanNgay(o,ngay);
+  return `<div class="stage-cell">
+    <div class="stage-readonly">${soCongDoan(value).toLocaleString('vi-VN')}</div>
+    ${hintCongDoanHtml(o,ngay,congDoan,info)}
+  </div>`;
+}
+function suaCongDoanCellHtml(o, ngay){
+  if(!canEdit() || !ngay || ngay === 'all') return '<span style="color:var(--text2);">—</span>';
+  const e = lichSuCongDoanDeDoc(o)[ngay];
+  const coSo = e && CONG_DOAN.some(k=>e[k] != null && e[k] !== '');
+  if(!coSo) return '<span style="color:var(--text2);">—</span>';
+  if((lockedProgressDates.includes(ngay) || assignments[o.id]?.spinoff_id) && !editUnlocked){
+    return '<span title="Ngày đã chốt tiến độ" style="color:var(--text2);">🔒</span>';
+  }
+  return `<button class="reset-stage-btn" data-order-id="${o.id}" data-day="${ngay}" style="font-size:11.5px;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;">Sửa</button>`;
+}
+
+async function handleStageQtyChange(orderId, ngay, congDoan, rawVal){
+  if(!canEdit() || !CONG_DOAN.includes(congDoan)) return;
+  const o = getOrderById(orderId);
+  if(!o || khoaNhapCongDoan(o,ngay)) return;
+  const parsed = rawVal === '' ? null : Number(rawVal);
+  if(parsed != null && (!Number.isInteger(parsed) || parsed < 0)){
+    alert('Số lượng phải là số nguyên từ 0 trở lên.');
+    renderProgress();
+    return;
+  }
+  const history = damBaoLichSuCongDoan(o);
+  const entry = history[ngay] || (history[ngay] = {});
+  const oldVal = soCongDoan(entry[congDoan]);
+  const newVal = parsed == null ? 0 : parsed;
+  const totalDanMoi = tongCongDoan(o,'dan') - (congDoan==='dan' ? oldVal : 0) + (congDoan==='dan' ? newVal : 0);
+  const totalMayMoi = tongCongDoan(o,'may') - (congDoan==='may' ? oldVal : 0) + (congDoan==='may' ? newVal : 0);
+  const totalDongGoiMoi = tongCongDoan(o,'dong_goi') - (congDoan==='dong_goi' ? oldVal : 0) + (congDoan==='dong_goi' ? newVal : 0);
+  if(totalMayMoi > totalDanMoi){
+    if(congDoan === 'dan') alert(`Không thể giảm Đã dán xuống ${totalDanMoi} vì đã có ${totalMayMoi} sản phẩm Đã may.`);
+    else alert(`Đã may không được lớn hơn Đã dán. Hiện có thể ghi tối đa ${Math.max(0,totalDanMoi-(tongCongDoan(o,'may')-oldVal))}.`);
+    renderProgress();
+    return;
+  }
+  if(totalDongGoiMoi > totalMayMoi){
+    if(congDoan === 'may') alert(`Không thể giảm Đã may xuống ${totalMayMoi} vì đã có ${totalDongGoiMoi} sản phẩm Đã đóng gói.`);
+    else alert(`Đã đóng gói không được lớn hơn Đã may. Hiện có thể ghi tối đa ${Math.max(0,totalMayMoi-(tongCongDoan(o,'dong_goi')-oldVal))}.`);
+    renderProgress();
+    return;
+  }
+  if(parsed == null){
+    delete entry[congDoan];
+    delete entry[`_${congDoan}_to`];
+  }else{
+    entry[congDoan] = parsed;
+    // Nhân viên gắn tổ được ưu tiên; quản lý nhập thay thì dùng tổ phụ trách/hỗ trợ
+    // của đúng ngày đang xem. Dấu vết này giữ KPI theo tổ không bị đổi theo phân công sau đó.
+    const toLam = toCuaToi() || toPhuTrachTheoNgay(o,ngay);
+    if(toLam) entry[`_${congDoan}_to`] = toLam;
+  }
+  delete entry._legacy;
+  if(!CONG_DOAN.some(k=>entry[k] != null && entry[k] !== '')) delete history[ngay];
+  dongBoSoHoanThanhCu(o);
+  renderAutoPlan();
+  renderProgress();
+  scheduleMonthlySync();
+  queueSave('assignments');
 }
 
 function renderProgress(){
@@ -3438,10 +3953,15 @@ function renderProgress(){
   // Thẻ tổ ở tab Tiến độ: Nhân viên thì dòng đã xong biến mất, quản lý vẫn thấy đủ
   const dayValRing = progressDaySelect.value;
   renderTeamRings('progressTeamRings', filtered, dayValRing !== 'all',
-                  currentUser && currentUser.role === 'nhan_vien');
+                  currentUser && currentUser.role === 'nhan_vien', dayValRing);
 
-  const totalPlan = filtered.filter(isPlannedOrder).reduce((a,r)=>a+(r.so_luong||0),0);
-  const totalDone = filtered.reduce((a,r)=>a+(assignments[r.id].so_luong_hoan_thanh||0),0);
+  const dayVal = progressDaySelect.value;
+  const totalPlan = filtered.filter(isPlannedOrder).reduce((a,r)=>a+keHoachTrongNgay(r,dayVal),0);
+  // Chọn một ngày: chỉ cộng Đóng gói phát sinh đúng ngày đó. "Tất cả ngày"
+  // mới dùng tổng tích luỹ; nhờ vậy đơn rớt không bị cộng lại sản lượng ngày cũ.
+  const totalDone = filtered.reduce((a,r)=>a+(dayVal === 'all'
+    ? tongCongDoan(r,'dong_goi')
+    : soCongDoan(giaTriCongDoanNgay(r,dayVal,'dong_goi'))),0);
   const doneCount = filtered.filter(r=>getOrderStatus(r)==='hoan_thanh').length;
   const partialCount = filtered.filter(r=>getOrderStatus(r)==='partial').length;
   const inProgressCount = filtered.length - doneCount - partialCount;
@@ -3462,32 +3982,37 @@ function renderProgress(){
       <div class="value" style="color:${thieuChuaGiao>0?'var(--danger)':'var(--text2)'}">${thieuChuaGiao}</div>
       ${thieuChuaGiao>0 ? `<div class="kpi-phu" style="color:var(--danger);font-weight:700;">Cần ghi nhận tổ đã hỗ trợ</div>` : ''}
     </div>` : ''}
+    ${dayVal==='all' ? '<div class="kpi" style="border-top-color:#4aa3df;"><div class="label">Nhập công đoạn</div><div class="kpi-phu" style="color:#2475a9;font-weight:700;">Chọn một ngày để nhập số</div></div>' : ''}
   `;
 
   const tbody = document.querySelector('#progressTable tbody');
   if(filtered.length===0){
-    tbody.innerHTML = `<tr><td colspan="11" style="color:var(--text2);text-align:center;padding:20px;">Chưa có đơn nào được chọn tổ phụ trách. Vào tab "Kế hoạch tuần (tự động)" để phân công.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="13" style="color:var(--text2);text-align:center;padding:20px;">Chưa có đơn nào được chọn tổ phụ trách. Vào tab "Kế hoạch tuần (tự động)" để phân công.</td></tr>`;
     return;
   }
   tbody.innerHTML = sortOrdersForDisplay(filtered, progressDaySelect.value === 'all').map(r=>{
     const a = assignments[r.id];
-    const locked = isOrderLocked(r);
+    const status = getOrderStatus(r);
+    const ngayDong = dayVal === 'all' ? r.date : dayVal;
+    const ngayGocHtml = ngayDong !== r.date ? `<span style="display:block;color:var(--text2);font-size:10.5px;">Gốc ${r.date}</span>` : '';
 
     // Tổ phụ trách chính chỉ được gán/đổi từ tab Kế hoạch tuần — ở đây luôn hiển thị tĩnh.
     const toCell = `<span style="font-weight:600;">${a.to}</span>`;
 
-    return `<tr class="${r.is_ghost ? 'row-ghost' : (laUuTien(r.id) ? 'row-uutien' : '')}">
-      <td>${r.date}${lockBadgeHtml(r.date)}${backupBadgeHtml(r)}${madeUpNoteHtml(r)}</td>
-      <td>${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}${lotBadgeHtml(r)}</td>
-      <td>${r.dong||'-'}</td>
-      <td>${kichThuocHtml(r)}</td>
-      <td>${r.so_luong||'-'}</td>
-      <td>${toCell}</td>
-      <td><input type="number" class="qty-input" data-order-id="${r.id}" min="0" max="${r.so_luong}" value="${a.so_luong_hoan_thanh??''}" placeholder="Nhập số..." ${locked?'disabled':''}></td>
-      <td class="only-editor">${resetQtyCellHtml(r)}</td>
-      <td>${spinoffCellHtml(r)}</td>
-      <td>${statusBadgeHtml(r)}</td>
-      <td class="${r.ghi_chu?'note':''}">${nhanUuTien(r)}${r.ghi_chu||''}${changeNoteHtml(r)}</td>
+    return `<tr class="${r.is_ghost ? 'row-ghost' : (laUuTien(r.id) ? 'row-uutien' : (status==='rot' ? 'row-rot' : ''))}">
+      <td class="col-date">${ngayDong}${lockBadgeHtml(ngayDong)}${backupBadgeHtml(r)}${ngayGocHtml}${madeUpNoteHtml(r)}</td>
+      <td class="col-code">${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}${lotBadgeHtml(r)}</td>
+      <td class="col-product">${r.dong||'-'}</td>
+      <td class="col-size">${kichThuocHtml(r)}</td>
+      <td class="col-number">${keHoachTrongNgay(r,dayVal).toLocaleString('vi-VN')}</td>
+      <td class="col-team">${toCell}</td>
+      <td class="col-support">${spinoffCellHtml(r,dayVal)}</td>
+      <td class="col-number">${oNhapCongDoanHtml(r,dayVal,'dan')}</td>
+      <td class="col-number">${oNhapCongDoanHtml(r,dayVal,'may')}</td>
+      <td class="col-number">${oNhapCongDoanHtml(r,dayVal,'dong_goi')}</td>
+      <td class="col-action only-editor">${suaCongDoanCellHtml(r,dayVal)}</td>
+      <td class="col-status">${statusBadgeHtml(r)}</td>
+      <td class="col-note ${r.ghi_chu?'note':''}">${nhanUuTien(r)}${r.ghi_chu||''}${changeNoteHtml(r)}</td>
     </tr>`;
   }).join('');
 }
@@ -3496,60 +4021,78 @@ progressDaySelect.addEventListener('change', renderProgress);
 progressTeamSelect.addEventListener('change', renderProgress);
 progressSearchBox.addEventListener('input', renderProgress);
 document.querySelector('#progressTable tbody').addEventListener('keydown', (e)=>{
-  if(e.target.classList.contains('qty-input') && e.key === 'Enter'){
+  if(e.target.classList.contains('stage-qty-input') && e.key === 'Enter'){
     e.target.blur();
   }
 });
 document.querySelector('#progressTable tbody').addEventListener('change', async (e)=>{
-  if(e.target.classList.contains('qty-input')){
-    await handleQtyChange(e.target.dataset.orderId, e.target.value);
+  if(e.target.classList.contains('stage-qty-input')){
+    await handleStageQtyChange(e.target.dataset.orderId, e.target.dataset.day, e.target.dataset.stage, e.target.value);
   } else if(e.target.classList.contains('spinoff-to-select')){
     // Khi đang mở khoá sửa đổi, chọn giá trị rỗng nghĩa là bỏ tổ hỗ trợ — vẫn phải xử lý.
     await handleAssignChange(e.target.dataset.spinoffId, e.target.value);
+  } else if(e.target.classList.contains('support-day-select')){
+    await handleSupportDayChange(e.target.dataset.orderId, e.target.dataset.day, e.target.value);
   }
 });
 
-// ---- Nút "Hoàn thành": điền nhanh số hoàn thành = kế hoạch cho các đơn CHƯA nhập, trong phạm vi đang lọc ----
+// ---- Nút "Hoàn thành": khép đủ cả ba công đoạn cho đúng ngày đang chọn ----
 document.getElementById('bulkCompleteBtn').addEventListener('click', async ()=>{
   if(!canManage2()) return;
-  const targets = getFilteredProgressRows().filter(r=>assignments[r.id].so_luong_hoan_thanh == null && !isProgressLocked(r));
-  if(targets.length === 0){
-    alert('Không có đơn nào cần điền — tất cả đơn đang hiển thị đều đã có số lượng hoàn thành.');
+  const ngay = progressDaySelect.value;
+  if(ngay === 'all'){
+    alert('Vui lòng chọn một ngày cụ thể trước khi điền nhanh Hoàn thành.');
     return;
   }
-  const tong = targets.reduce((a,r)=>a+(r.so_luong||0),0);
-  if(!confirm(`Điền số hoàn thành = kế hoạch cho ${targets.length} đơn chưa nhập (tổng ${tong.toLocaleString()} sản phẩm)?\n\nCác đơn đã nhập số lượng sẽ được giữ nguyên.`)) return;
-  const homNay = formatDMY(new Date());
-  targets.forEach(r=>{ assignments[r.id].so_luong_hoan_thanh = r.so_luong; assignments[r.id].ngay_hoan_thanh = homNay; });
+  const targets = getFilteredProgressRows().filter(r=>tongCongDoan(r,'dong_goi') < Math.max(soCongDoan(r.so_luong),tongCongDoan(r,'dan')) && !khoaNhapCongDoan(r,ngay));
+  if(targets.length === 0){
+    alert('Không có đơn nào cần điền — tất cả đơn đang hiển thị đã khép đủ ba công đoạn.');
+    return;
+  }
+  const tong = targets.reduce((s,r)=>s+Math.max(0,Math.max(soCongDoan(r.so_luong),tongCongDoan(r,'dan'))-tongCongDoan(r,'dong_goi')),0);
+  if(!confirm(`Khép đủ Dán → May → Đóng gói cho ${targets.length} đơn trong ngày ${ngay} (còn ${tong.toLocaleString()} sản phẩm)?`)) return;
+  targets.forEach(r=>{
+    const history = damBaoLichSuCongDoan(r);
+    const entry = history[ngay] || (history[ngay] = {});
+    const toLam = toCuaToi() || toPhuTrachTheoNgay(r,ngay);
+    const danKhacNgay = tongCongDoan(r,'dan') - soCongDoan(entry.dan);
+    const mucTieuDan = Math.max(soCongDoan(r.so_luong),tongCongDoan(r,'dan'));
+    entry.dan = Math.max(0,mucTieuDan-danKhacNgay);
+    if(toLam) entry._dan_to = toLam;
+    const mayKhacNgay = tongCongDoan(r,'may') - soCongDoan(entry.may);
+    entry.may = Math.max(0,tongCongDoan(r,'dan')-mayKhacNgay);
+    if(toLam) entry._may_to = toLam;
+    const dongGoiKhacNgay = tongCongDoan(r,'dong_goi') - soCongDoan(entry.dong_goi);
+    entry.dong_goi = Math.max(0,tongCongDoan(r,'may')-dongGoiKhacNgay);
+    if(toLam) entry._dong_goi_to = toLam;
+    delete entry._legacy;
+    dongBoSoHoanThanhCu(r);
+  });
   renderAutoPlan();
   renderProgress();
   scheduleMonthlySync();
   queueSave('assignments');
 });
 
-// ---- Nút "Sửa" từng dòng: xoá số đã nhập, đưa đơn về đúng trạng thái như chưa từng cập nhật ----
-async function handleResetQty(orderId){
+// ---- Nút "Sửa" từng dòng: xoá ba số của đúng ngày đang xem, không đụng ngày cũ ----
+async function handleResetStages(orderId, ngay){
   if(!canEdit()) return;
   const o = getOrderById(orderId);
   const a = assignments[orderId];
   if(!o || !a) return;
-  if(!confirm(`Xoá số lượng hoàn thành đã nhập của đơn này (${o.dong || o.ma}) để nhập lại?`)) return;
-  // Bỏ luôn phần đã tách cho tổ hỗ trợ (nếu có) để đơn trở về nguyên trạng ban đầu.
-  if(a.spinoff_id){
-    dynamicOrders = dynamicOrders.filter(d=>d.id !== a.spinoff_id);
-    delete assignments[a.spinoff_id];
-    a.spinoff_id = null;
-  }
-  a.so_luong_hoan_thanh = null;
-  a.ngay_hoan_thanh = null;
+  if((lockedProgressDates.includes(ngay) || a.spinoff_id) && !editUnlocked) return;
+  if(!confirm(`Xoá số Đã dán, Đã may và Đã đóng gói của ${o.dong || o.ma} trong ngày ${ngay} để nhập lại?\n\nDữ liệu các ngày khác được giữ nguyên.`)) return;
+  const history = damBaoLichSuCongDoan(o);
+  delete history[ngay];
+  dongBoSoHoanThanhCu(o);
   renderAutoPlan();
   renderProgress();
   scheduleMonthlySync();
-  queueSave('assignments','dynamic');
+  queueSave('assignments');
 }
 document.querySelector('#progressTable tbody').addEventListener('click', async (e)=>{
-  const btn = e.target.closest('.reset-qty-btn');
-  if(btn) await handleResetQty(btn.dataset.orderId);
+  const btn = e.target.closest('.reset-stage-btn');
+  if(btn) await handleResetStages(btn.dataset.orderId, btn.dataset.day);
 });
 
 // ---- Nút đỏ "Sửa đổi số liệu": mở/khoá quyền sửa các đơn đã chốt ----
@@ -3586,6 +4129,7 @@ function markSynced(ok){
 }
 
 async function pollForUpdates(){
+  if(LOCAL_DROP_DEMO_MODE) return; // giữ nguyên số đang thử, không nhận dữ liệu thật ghi đè lên đơn mô phỏng
   if(document.hidden) return; // không tải khi tab đang ẩn, đỡ tốn tài nguyên
   try{
     // Xác thực lại phiên (mã bị thu hồi) — không cần làm mỗi lượt, đỡ tốn mạng trên điện thoại
@@ -3710,6 +4254,18 @@ function startPolling(){
     if(!document.hidden) pollForUpdates();
   });
 }
+
+// Tự mở danh sách đúng 07:00 mà không cần tải lại trang; chỉ vẽ lại khi trạng thái ngày/giờ đổi.
+let trangThaiMoNgayNhanVien = '';
+setInterval(()=>{
+  const vn = thoiGianVietNam();
+  const tiepTheo = currentUser && currentUser.role === 'nhan_vien'
+    ? `${vn.y}-${vn.m}-${vn.d}:${vn.hour*60+vn.minute >= 7*60 ? 'mo' : 'khoa'}` : '';
+  if(tiepTheo && tiepTheo !== trangThaiMoNgayNhanVien && currentUser && currentUser.role === 'nhan_vien'){
+    renderProgress();
+  }
+  trangThaiMoNgayNhanVien = tiepTheo;
+}, 1000);
 
 // ============ Chốt đầu vào (KHSX) & chốt tiến độ (TDSX) ============
 function renderLockDateList(containerId, dates, lockedList){
@@ -4220,6 +4776,20 @@ document.getElementById('doSaveQuarterTargetBtn').addEventListener('click', asyn
 //  Dashboard lo phần nghiệp vụ, script chỉ thay người đánh máy.
 // ============================================================================
 const REPORT_API_URL = 'https://script.google.com/macros/s/AKfycbxnwBq-NJ58hiRvcveRJJLMcxscIj7DQt_thvrEZ5LuLaMpWYtfB8KBkufMfgio8uEVRQ/exec';
+
+// Đọc nhóm đơn hàng từ chính Apps Script xuất báo cáo. Apps Script chạy bằng tài khoản
+// của chủ dashboard nên đọc được sheet đơn đặt mà không phụ thuộc quyền/CORS của trình duyệt.
+async function fetchOrderGroups(){
+  try{
+    const res = await jsonpRequest(`${REPORT_API_URL}?action=orderGroups&_cb=${Date.now()}`);
+    if(res && res.ok && Array.isArray(res.rows)){
+      orderGroupRows = res.rows;
+      saveLocalCache();
+      return true;
+    }
+  }catch(e){ console.warn('Không tải được Nhóm đơn hàng, giữ bản lưu gần nhất.', e); }
+  return false;
+}
 const NGAY_LE_MAC_DINH = ['01/01','30/04','01/05','02/09','03/09'];   // ngày lễ cố định hằng năm
 let danhSachBaoCao = [];
 
@@ -4254,10 +4824,11 @@ function chuanHoaMaBaoCao(t){
 function chuanBiDongBaoCao(ngay){
   const nhom = {};
   getOrders().forEach(o=>{
-    if(o.date !== ngay) return;
     if(o.is_ghost) return;                       // đơn công ty đã bỏ -> không đưa vào báo cáo
     if(o.is_warranty) return;                    // bảo hành có báo cáo riêng, không vào báo cáo đóng gói
     const a = assignments[o.id] || {};
+    const dongGoiNgayNay = dongGoiTheoNgayCuaDon(o)[ngay] || 0;
+    if(o.date !== ngay && !dongGoiNgayNay) return;
 
     // Kích thước: ưu tiên 3 cột riêng, nếu thiếu thì tách từ chuỗi kiểu "160x200x15"
     let ngang = o.ngang, dai = o.dai, day = o.day;
@@ -4276,11 +4847,9 @@ function chuanBiDongBaoCao(ngay){
     //   - phần thiếu tách ra (is_drop): đã nằm trong kế hoạch của đơn gốc
     //   - đơn phát sinh (is_manual): không thuộc kế hoạch công ty giao
     // Cả hai vẫn được cộng vào THỰC TẾ ở dòng dưới. Giống cách tính của Thống kê tháng.
-    if(!o.is_drop && !o.is_manual) nhom[key].keHoach += Number(o.so_luong) || 0;
-    // Hoàn thành chỉ tính theo NGÀY HOÀN THÀNH thực tế.
-    if(a.ngay_hoan_thanh === ngay){
-      nhom[key].thucTe += Number(a.so_luong_hoan_thanh) || 0;
-    }
+    if(o.date === ngay && !o.is_drop && !o.is_manual) nhom[key].keHoach += Number(o.so_luong) || 0;
+    // Đóng gói ngày nào chỉ cộng sản lượng phát sinh đúng ngày đó.
+    nhom[key].thucTe += dongGoiNgayNay;
     if(o.ghi_chu && nhom[key].ghiChu.indexOf(o.ghi_chu) === -1) nhom[key].ghiChu.push(o.ghi_chu);
   });
 
@@ -4368,6 +4937,10 @@ function capNhatThongTinXuat(){
 
 async function xuatBaoCao(){
   if(!canManage2()) return;
+  if(LOCAL_PREVIEW_MODE){
+    alert('Bản xem thử local không tạo hoặc ghi đè báo cáo thật.');
+    return;
+  }
   const ngay = document.getElementById('exportDateSelect').value;
   const st = document.getElementById('exportStatus');
   const rows = chuanBiDongBaoCao(ngay);
@@ -4887,6 +5460,7 @@ async function bootstrap(){
   const cached = loadLocalCache();
   if(cached && cached.sheetRows && cached.sheetRows.length){
     sheetRows = cached.sheetRows;
+    if(Array.isArray(cached.orderGroupRows)) orderGroupRows = cached.orderGroupRows;
     assignments = cached.assignments || {};
     dynamicOrders = cached.dynamicOrders || [];
     deletedOrderIds = cached.deletedOrderIds || [];
@@ -4933,9 +5507,11 @@ async function bootstrap(){
       markSynced();
     })(),
     fetchAutoPlan(),
+    fetchOrderGroups(),
     fetchBaoHanh()
   ]);
 
+  applyLocalDropDemoFixture();
   renderAutoPlanDaySelect();
   renderAutoPlan();
   renderProgress();
