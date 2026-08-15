@@ -259,6 +259,14 @@
   body.role-chi-xem .only-manager2{display:none !important;}
   body.role-chi-xem .only-editor{display:none !important;}
   body.role-nhan-vien .tab-overview{display:none !important;}
+  /* Nhân viên mỗi công đoạn chỉ thấy đúng cột mình cần nhập. Quản lý và khách xem
+     không có các class stage-view-* nên vẫn thấy đủ ba công đoạn để đối chiếu. */
+  body.stage-view-dan #progressTable [data-stage-col]:not([data-stage-col="dan"]),
+  body.stage-view-may #progressTable [data-stage-col]:not([data-stage-col="may"]),
+  body.stage-view-dong-goi #progressTable [data-stage-col]:not([data-stage-col="dong_goi"]){display:none !important;}
+  body.stage-view-dan #progressTable,
+  body.stage-view-may #progressTable,
+  body.stage-view-dong-goi #progressTable{min-width:1160px !important;}
 
   /* Cụm người dùng / công cụ: một nút gọn, menu xổ xuống canh phải */
   #userBar{margin-left:auto;min-width:0;}
@@ -831,7 +839,7 @@
     <div class="table-scroll">
       <table id="progressTable">
         <thead>
-          <tr><th class="col-date">Ngày</th><th class="col-code">Mã</th><th class="col-product">Dòng</th><th class="col-size">Kích thước</th><th class="col-number">Kế hoạch</th><th class="col-team">Tổ phụ trách</th><th class="col-support">Tổ hỗ trợ</th><th class="col-number">Đã dán</th><th class="col-number">Đã may</th><th class="col-number">Đã đóng gói</th><th class="col-action only-editor">Sửa</th><th class="col-status">Trạng thái</th><th class="col-note">Ghi chú</th></tr>
+          <tr><th class="col-date">Ngày</th><th class="col-code">Mã</th><th class="col-product">Dòng</th><th class="col-size">Kích thước</th><th class="col-number">Kế hoạch</th><th class="col-team">Tổ phụ trách</th><th class="col-support">Tổ hỗ trợ</th><th class="col-number" data-stage-col="dan">Đã dán</th><th class="col-number" data-stage-col="may">Đã may</th><th class="col-number" data-stage-col="dong_goi">Đã đóng gói</th><th class="col-action only-editor">Sửa</th><th class="col-status">Trạng thái</th><th class="col-note">Ghi chú</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -1601,7 +1609,21 @@ async function saveQuarterTarget(nam, quy, soLuong){
 // Đơn vị của người đang đăng nhập: Tổ 1–5, Tổ may, Tổ đóng gói; hoặc null nếu không gắn.
 function toCuaToi(){
   if(!currentUser || !currentUser.code) return null;
-  return userTeams[currentUser.code] || null;
+  return toGanTheoMa(currentUser.code) || null;
+}
+function chuanMaNguoiDung(code){ return String(code || '').trim().toLowerCase(); }
+function toGanTheoMa(code, danhSach = userTeams){
+  const key = chuanMaNguoiDung(code);
+  if(!key || !danhSach || typeof danhSach !== 'object') return '';
+  const maDaLuu = Object.keys(danhSach).find(k=>chuanMaNguoiDung(k) === key);
+  return maDaLuu ? (danhSach[maDaLuu] || '') : '';
+}
+function ganToVaoBanSao(danhSach, code, toGan){
+  const next = {...((danhSach && typeof danhSach === 'object') ? danhSach : {})};
+  const key = chuanMaNguoiDung(code);
+  Object.keys(next).forEach(k=>{ if(chuanMaNguoiDung(k) === key) delete next[k]; });
+  if(toGan) next[String(code).trim()] = toGan;
+  return next;
 }
 function congDoanBoPhanCuaToi(){
   return PROCESS_TEAM_STAGE[toCuaToi()] || null;
@@ -1615,6 +1637,16 @@ function congDoanNhanVienDuocNhap(){
   if(!currentUser || currentUser.role !== 'nhan_vien') return null;
   if(laToSanXuatCuaToi()) return 'dan';
   return congDoanBoPhanCuaToi();
+}
+function soLuongConChoCongDoan(o, congDoan){
+  if(!o || !CONG_DOAN.includes(congDoan)) return 0;
+  if(congDoan === 'dan'){
+    // Phần thiếu đã tách thành đơn riêng thì đơn gốc không còn việc Dán phải giữ lại.
+    if(assignments[o.id]?.spinoff_id) return 0;
+    return Math.max(0, soCongDoan(o.so_luong) - tongCongDoan(o,'dan'));
+  }
+  if(congDoan === 'may') return Math.max(0, tongCongDoan(o,'dan') - tongCongDoan(o,'may'));
+  return Math.max(0, tongCongDoan(o,'may') - tongCongDoan(o,'dong_goi'));
 }
 function coQuyenNhapCongDoan(congDoan){
   if(!canEdit() || !CONG_DOAN.includes(congDoan)) return false;
@@ -1994,7 +2026,7 @@ setInterval(()=>{
 // ---- Tự tải lại khi có bản mới ----
 // Máy nào mở bản mới sẽ ghi số bản lên máy chủ. Các máy còn lại thấy số lớn hơn
 // số bản của mình thì tự tải lại trang (kèm ?v= để không dính bản cũ trong bộ đệm).
-const APP_VERSION = 61;
+const APP_VERSION = 62;
 const APP_VERSION_KEY = 'khsx_app_version';
 const RELOAD_MARK_KEY = 'khsx_reload_for_version';
 
@@ -2100,6 +2132,9 @@ function applyRoleUI(){
   const role = currentUser ? currentUser.role : 'chi_xem';
   document.body.classList.remove('role-quan-ly','role-nhan-vien','role-chi-xem');
   document.body.classList.add('role-' + role.replace(/_/g,'-'));
+  document.body.classList.remove('stage-view-dan','stage-view-may','stage-view-dong-goi');
+  const congDoanNhanVien = congDoanNhanVienDuocNhap();
+  if(congDoanNhanVien) document.body.classList.add('stage-view-' + congDoanNhanVien.replace(/_/g,'-'));
   // Tài khoản gắn tổ: khoá cứng bộ lọc Tổ và ẩn đi, vì chỉ xem được một tổ
   const toMinh = toCuaToi();
   const oLocTo = document.getElementById('progressTeamSelect');
@@ -3799,7 +3834,9 @@ function getFilteredProgressRows(){
   const q = progressSearchBox.value.trim().toLowerCase();
   const toMinh = toCuaToi();
   const toSanXuat = TEAM_OPTIONS.includes(toMinh) ? toMinh : null;
-  const congDoanBoPhan = PROCESS_TEAM_STAGE[toMinh] || null;
+  const congDoanNhanVien = congDoanNhanVienDuocNhap();
+  // Nhân viên chưa gắn tổ (hoặc đang chờ tải thông tin tổ) không được thấy đơn nào.
+  if(currentUser && currentUser.role === 'nhan_vien' && !toMinh) return [];
   return getOrders().filter(r=>assignments[r.id]?.to).filter(r=>{
     // Tổ 1–5: chỉ thấy đơn của tổ mình (kể cả phần thiếu được giao hỗ trợ).
     // Đơn chưa phân công tổ không hiện, để tránh hai tổ cùng nhận một đơn.
@@ -3813,10 +3850,10 @@ function getFilteredProgressRows(){
         if(!coNgayCuaTo) return false;
       }
     }
-    // Tổ may và Tổ đóng gói xem xuyên Tổ 1–5, nhưng chỉ thấy đúng việc đang chờ
-    // công đoạn của mình. Nhập đủ xong thì dòng tự biến mất khỏi tài khoản đó.
-    if(congDoanBoPhan === 'may' && tongCongDoan(r,'dan') <= tongCongDoan(r,'may')) return false;
-    if(congDoanBoPhan === 'dong_goi' && tongCongDoan(r,'may') <= tongCongDoan(r,'dong_goi')) return false;
+    // Mỗi tài khoản công đoạn chỉ giữ lại đúng việc còn chờ mình. Dán đủ kế hoạch,
+    // May bắt kịp Dán, hoặc Đóng gói bắt kịp May thì dòng biến mất ngay.
+    // Nếu công đoạn trước phát sinh thêm số, hiệu số tăng và dòng tự xuất hiện lại.
+    if(congDoanNhanVien && soLuongConChoCongDoan(r,congDoanNhanVien) <= 0) return false;
     // Tài khoản gắn tổ: bỏ hẳn đơn của ngày mai trở đi, kể cả khi đang xem "Tất cả ngày"
     if(toMinh && laNgayTuongLai(r.date)) return false;
     // Nhân viên: trước 07:00 không thấy đơn hôm nay; Quản lý 2 và Quản lý không đi qua rule này.
@@ -3990,12 +4027,12 @@ async function handleStageQtyChange(orderId, ngay, congDoan, rawVal){
 function renderProgress(){
   populateProgressSelects();
   const filtered = getFilteredProgressRows();
-  const congDoanBoPhan = congDoanBoPhanCuaToi();
-  // Tổ may/đóng gói chỉ xem hàng chờ của công đoạn mình, nên không hiện vòng KPI
-  // theo tổ từ tập dữ liệu đã lọc (tránh tạo ra phần trăm sai và gây hiểu nhầm).
+  const congDoanNhanVien = congDoanNhanVienDuocNhap();
+  // Nhân viên chỉ xem hàng chờ công đoạn mình, nên không hiện vòng KPI theo tổ
+  // từ tập dữ liệu đã lọc (tránh tạo ra phần trăm sai và gây hiểu nhầm).
   const dayValRing = progressDaySelect.value;
   const ringBox = document.getElementById('progressTeamRings');
-  if(congDoanBoPhan){
+  if(congDoanNhanVien){
     ringBox.style.display = 'none';
     ringBox.innerHTML = '';
   }else{
@@ -4020,15 +4057,14 @@ function renderProgress(){
   // không lọc theo ngày, để quản lý không bỏ sót đơn nào.
   const thieuChuaGiao = getOrders().filter(o => o.is_drop && !assignments[o.id]?.to).length;
 
-  if(congDoanBoPhan){
-    const laMay = congDoanBoPhan === 'may';
-    const soCho = filtered.reduce((tong,o)=>tong + Math.max(0,
-      laMay ? tongCongDoan(o,'dan') - tongCongDoan(o,'may')
-            : tongCongDoan(o,'may') - tongCongDoan(o,'dong_goi')),0);
+  if(congDoanNhanVien){
+    const tenCongDoan = congDoanNhanVien === 'dan' ? 'dán' : (congDoanNhanVien === 'may' ? 'may' : 'đóng gói');
+    const nhanCongDoan = congDoanNhanVien === 'dan' ? 'Đã dán' : (congDoanNhanVien === 'may' ? 'Đã may' : 'Đã đóng gói');
+    const soCho = filtered.reduce((tong,o)=>tong + soLuongConChoCongDoan(o,congDoanNhanVien),0);
     document.getElementById('progressKpis').innerHTML = `
-      <div class="kpi k-warning"><div class="label">Đơn chờ ${laMay?'may':'đóng gói'}</div><div class="value">${filtered.length}</div></div>
-      <div class="kpi k-accent"><div class="label">Số lượng chờ ${laMay?'may':'đóng gói'}</div><div class="value">${soCho.toLocaleString('vi-VN')}</div></div>
-      <div class="kpi k-success"><div class="label">Công đoạn được nhập</div><div class="value" style="font-size:18px;">${laMay?'Đã may':'Đã đóng gói'}</div></div>
+      <div class="kpi k-warning"><div class="label">Đơn chờ ${tenCongDoan}</div><div class="value">${filtered.length}</div></div>
+      <div class="kpi k-accent"><div class="label">Số lượng chờ ${tenCongDoan}</div><div class="value">${soCho.toLocaleString('vi-VN')}</div></div>
+      <div class="kpi k-success"><div class="label">Công đoạn được nhập</div><div class="value" style="font-size:18px;">${nhanCongDoan}</div></div>
       ${dayVal==='all' ? '<div class="kpi" style="border-top-color:#4aa3df;"><div class="label">Nhập công đoạn</div><div class="kpi-phu" style="color:#2475a9;font-weight:700;">Chọn một ngày để nhập số</div></div>' : ''}
     `;
   }else{
@@ -4049,8 +4085,8 @@ function renderProgress(){
 
   const tbody = document.querySelector('#progressTable tbody');
   if(filtered.length===0){
-    const emptyText = congDoanBoPhan
-      ? `Hiện không có đơn nào đang chờ ${congDoanBoPhan==='may'?'may':'đóng gói'}.`
+    const emptyText = congDoanNhanVien
+      ? `Hiện không có đơn nào đang chờ ${congDoanNhanVien==='dan'?'dán':(congDoanNhanVien==='may'?'may':'đóng gói')}.`
       : 'Chưa có đơn nào được chọn tổ phụ trách. Vào tab "Kế hoạch tuần (tự động)" để phân công.';
     tbody.innerHTML = `<tr><td colspan="13" style="color:var(--text2);text-align:center;padding:20px;">${emptyText}</td></tr>`;
     return;
@@ -4072,9 +4108,9 @@ function renderProgress(){
       <td class="col-number">${keHoachTrongNgay(r,dayVal).toLocaleString('vi-VN')}</td>
       <td class="col-team">${toCell}</td>
       <td class="col-support">${spinoffCellHtml(r,dayVal)}</td>
-      <td class="col-number">${oNhapCongDoanHtml(r,dayVal,'dan')}</td>
-      <td class="col-number">${oNhapCongDoanHtml(r,dayVal,'may')}</td>
-      <td class="col-number">${oNhapCongDoanHtml(r,dayVal,'dong_goi')}</td>
+      <td class="col-number" data-stage-col="dan">${oNhapCongDoanHtml(r,dayVal,'dan')}</td>
+      <td class="col-number" data-stage-col="may">${oNhapCongDoanHtml(r,dayVal,'may')}</td>
+      <td class="col-number" data-stage-col="dong_goi">${oNhapCongDoanHtml(r,dayVal,'dong_goi')}</td>
       <td class="col-action only-editor">${suaCongDoanCellHtml(r,dayVal)}</td>
       <td class="col-status">${statusBadgeHtml(r)}</td>
       <td class="col-note ${r.ghi_chu?'note':''}">${nhanUuTien(r)}${r.ghi_chu||''}${changeNoteHtml(r)}</td>
@@ -4245,7 +4281,7 @@ async function pollForUpdates(){
       ASSIGNMENT_STORAGE_KEY, DYNAMIC_ORDERS_KEY, DELETED_ORDERS_KEY,
       LOCKED_PLAN_KEY, LOCKED_PROGRESS_KEY, SNAP_VERSION_KEY, PRIORITY_ORDERS_KEY, USER_TEAMS_KEY, QUARTER_TARGET_KEY
     ]);
-    if(bundle[USER_TEAMS_KEY] && typeof bundle[USER_TEAMS_KEY] === 'object') userTeams = bundle[USER_TEAMS_KEY];
+    const newUserTeams = bundle[USER_TEAMS_KEY];
     const nextPriority = bundle[PRIORITY_ORDERS_KEY];
     const nextQuarterTargets = bundle[QUARTER_TARGET_KEY];
     const snapVerMoi = bundle[SNAP_VERSION_KEY];
@@ -4262,7 +4298,8 @@ async function pollForUpdates(){
     // "server không có dữ liệu" rồi xoá trắng những gì đang hiển thị. Chỉ nhận khi có dữ liệu thật.
     const okAssign = newAssignments && typeof newAssignments === 'object';
     const okOrders = Array.isArray(newDynamicOrders);
-    if(!okAssign && !okOrders){        // không đọc được gì -> giữ nguyên và BÁO RÕ
+    const okUserTeams = newUserTeams && typeof newUserTeams === 'object';
+    if(!okAssign && !okOrders && !okUserTeams){ // không đọc được gì -> giữ nguyên và BÁO RÕ
       markSynced(false);
       return;
     }
@@ -4293,12 +4330,15 @@ async function pollForUpdates(){
     const nextDeleted = Array.isArray(newDeleted) ? newDeleted : deletedOrderIds;
     const nextLockPlan = Array.isArray(newLockPlan) ? newLockPlan : lockedPlanDates;
     const nextLockProg = Array.isArray(newLockProg) ? newLockProg : lockedProgressDates;
+    const nextUserTeams = okUserTeams ? newUserTeams : userTeams;
+    const ganToDoi = JSON.stringify(nextUserTeams) !== JSON.stringify(userTeams);
 
     const changed = JSON.stringify(nextAssignments) !== JSON.stringify(assignments)
       || JSON.stringify(nextDynamic) !== JSON.stringify(dynamicOrders)
       || JSON.stringify(nextDeleted) !== JSON.stringify(deletedOrderIds)
       || JSON.stringify(nextLockPlan) !== JSON.stringify(lockedPlanDates)
       || JSON.stringify(nextLockProg) !== JSON.stringify(lockedProgressDates)
+      || ganToDoi
       || (Array.isArray(nextPriority) && JSON.stringify(nextPriority) !== JSON.stringify(priorityOrderIds))
       || (nextQuarterTargets && typeof nextQuarterTargets === 'object' && JSON.stringify(nextQuarterTargets) !== JSON.stringify(quarterTargets))
       || anhChupDoi;
@@ -4309,6 +4349,8 @@ async function pollForUpdates(){
     deletedOrderIds = nextDeleted;
     lockedPlanDates = nextLockPlan;
     lockedProgressDates = nextLockProg;
+    userTeams = nextUserTeams;
+    if(ganToDoi) applyRoleUI();
     if(Array.isArray(nextPriority)) priorityOrderIds = nextPriority;
     if(nextQuarterTargets && typeof nextQuarterTargets === 'object') quarterTargets = nextQuarterTargets;
     if(anhChupDoi) snapVersionSeen = snapVerMoi;
@@ -4479,16 +4521,47 @@ async function refreshSnapshots(force){
 }
 
 // ============ Quản lý mã đăng nhập (chỉ Quản lý) ============
+const CAC_DON_VI_NHAN_VIEN = [...TEAM_OPTIONS, ...Object.keys(PROCESS_TEAM_STAGE)];
+function tuyChonGanToHtml(toHienTai){
+  return `<option value="">Không gắn tổ</option>` + CAC_DON_VI_NHAN_VIEN.map(t=>
+    `<option value="${t}" ${toHienTai===t?'selected':''}>${t}</option>`
+  ).join('');
+}
+async function luuGanToCoXacNhan(userCode, toGan){
+  const u = staffUsers.find(x=>chuanMaNguoiDung(x.code) === chuanMaNguoiDung(userCode));
+  const maChuan = u ? u.code : String(userCode || '').trim();
+  for(let lan=0; lan<3; lan++){
+    const trenMayChu = await storageGet(USER_TEAMS_KEY);
+    const nen = trenMayChu && typeof trenMayChu === 'object' ? trenMayChu : userTeams;
+    const banMoi = ganToVaoBanSao(nen,maChuan,toGan);
+    await storageSet(USER_TEAMS_KEY,banMoi);
+    await new Promise(r=>setTimeout(r,700 + lan*400));
+    const docLai = await storageGet(USER_TEAMS_KEY);
+    if(docLai && typeof docLai === 'object' && toGanTheoMa(maChuan,docLai) === toGan){
+      userTeams = docLai;
+      return true;
+    }
+  }
+  const cuoi = await storageGet(USER_TEAMS_KEY);
+  if(cuoi && typeof cuoi === 'object') userTeams = cuoi;
+  return false;
+}
 function renderStaffUsersList(){
   const box = document.getElementById('staffUsersList');
-  const rows = staffUsers.length ? staffUsers.map(u=>`
-    <tr><td>${u.name}</td><td><code>${u.code}</code></td><td>${ROLE_LABELS[u.role] || u.role}${userTeams[u.code]?` · <b>${userTeams[u.code]}</b>`:''}</td>
+  const rows = staffUsers.length ? staffUsers.map(u=>{
+    const toHienTai = toGanTheoMa(u.code);
+    const oGanTo = u.role === 'nhan_vien'
+      ? `<select class="staff-team-select" data-code="${u.code}" style="width:130px;padding:6px 8px;">${tuyChonGanToHtml(toHienTai)}</select>`
+      : '<span style="color:var(--text2);">—</span>';
+    return `
+    <tr><td>${u.name}</td><td><code>${u.code}</code></td><td>${ROLE_LABELS[u.role] || u.role}</td><td>${oGanTo}</td>
         <td>${u.code === (currentUser && currentUser.code)
               ? '<span style="color:var(--text2);font-size:11.5px;">Đang đăng nhập</span>'
-              : `<button class="del-staff-btn" data-code="${u.code}" style="font-size:11.5px;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:#fff;color:var(--danger);cursor:pointer;">Thu hồi</button>`}</td></tr>`).join('')
-    : `<tr><td colspan="4" style="color:var(--text2);">Chưa tải được danh sách, hoặc chưa có mã nào.</td></tr>`;
+              : `<button class="del-staff-btn" data-code="${u.code}" style="font-size:11.5px;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:#fff;color:var(--danger);cursor:pointer;">Thu hồi</button>`}</td></tr>`;
+  }).join('')
+    : `<tr><td colspan="5" style="color:var(--text2);">Chưa tải được danh sách, hoặc chưa có mã nào.</td></tr>`;
   box.innerHTML = `<div class="table-scroll" style="max-height:280px;"><table>
-    <thead><tr><th>Tên</th><th>Mã đăng nhập</th><th>Vai</th><th></th></tr></thead>
+    <thead><tr><th>Tên</th><th>Mã đăng nhập</th><th>Vai</th><th>Gắn tổ</th><th></th></tr></thead>
     <tbody>${rows}</tbody></table></div>`;
 }
 
@@ -4539,17 +4612,42 @@ document.getElementById('addStaffBtn').addEventListener('click', async ()=>{
   statusEl.style.color = 'var(--text2)';
   const toGan = document.getElementById('newStaffTeam').value;
   await sendUserCommand({action:'addUser', newCode:code, name, role:roleEl.value});
-  if(toGan){
-    userTeams[code] = toGan;
-    await storageSet(USER_TEAMS_KEY, userTeams);
-  }
-  renderStaffUsersList();
-  if(staffUsers.some(u => u.code.toUpperCase() === code.toUpperCase())){
+  const userDaTao = staffUsers.find(u => u.code.toUpperCase() === code.toUpperCase());
+  if(userDaTao){
+    const ganToOk = !toGan || await luuGanToCoXacNhan(userDaTao.code,toGan);
+    renderStaffUsersList();
+    if(!ganToOk){
+      setErr(`Đã tạo mã cho ${name} nhưng chưa lưu được ${toGan}. Chọn lại tổ ngay trong danh sách bên dưới.`);
+      return;
+    }
     statusEl.textContent = `Đã tạo mã cho ${name}.`;
     statusEl.style.color = 'var(--success)';
     nameEl.value = ''; codeEl.value = '';
   }else{
     setErr('Máy chủ không tạo được mã này. Kiểm tra lại rồi thử lần nữa.');
+  }
+});
+
+document.getElementById('staffUsersList').addEventListener('change', async (e)=>{
+  const sel = e.target.closest('.staff-team-select');
+  if(!sel || !canManage()) return;
+  const ma = sel.dataset.code;
+  const toCu = toGanTheoMa(ma);
+  const toMoi = sel.value;
+  const statusEl = document.getElementById('staffStatus');
+  sel.disabled = true;
+  statusEl.textContent = `Đang lưu ${toMoi || 'Không gắn tổ'}...`;
+  statusEl.style.color = 'var(--text2)';
+  const ok = await luuGanToCoXacNhan(ma,toMoi);
+  renderStaffUsersList();
+  if(ok){
+    statusEl.textContent = toMoi ? `Đã gắn ${ma} vào ${toMoi}.` : `Đã bỏ gắn tổ của ${ma}.`;
+    statusEl.style.color = 'var(--success)';
+  }else{
+    statusEl.textContent = `Chưa lưu được thay đổi tổ của ${ma}. Dữ liệu cũ được giữ nguyên.`;
+    statusEl.style.color = 'var(--danger)';
+    const hienLai = document.querySelector(`.staff-team-select[data-code="${ma}"]`);
+    if(hienLai) hienLai.value = toCu;
   }
 });
 
