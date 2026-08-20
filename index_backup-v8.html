@@ -1543,6 +1543,15 @@ function isPlannedOrder(o){
   return !o.is_drop && !o.is_manual && !o.is_ghost;
 }
 const ASSIGNMENT_STORAGE_KEY = 'khsx_autoplan_assignments';
+// Lưu phân công theo tháng để không bao giờ chạm giới hạn 50.000 ký tự/ô (backend đã hỗ trợ
+// sẵn khoá khsx_assign_YYYY_MM, xem StorageAPI.gs). Khoá cũ (ASSIGNMENT_STORAGE_KEY) chỉ còn
+// được ĐỌC (không ghi nữa) — coi như bản gốc đứng yên, dữ liệu mới từ giờ chỉ vào khoá tháng.
+const MONTHS_KEY = 'khsx_assign_months';
+function monthKeyOf(dateStr){
+  const p = parseDMY(String(dateStr || ''));
+  if(!p || !p.y || !p.m) return null;
+  return 'khsx_assign_' + p.y + '_' + String(p.m).padStart(2,'0');
+}
 const DYNAMIC_ORDERS_KEY = 'khsx_dynamic_orders';
 const DELETED_ORDERS_KEY = 'khsx_deleted_orders';
 // Đơn được đánh dấu ưu tiên trong tuần — chỉ Quản lý đánh dấu, mọi máy đều thấy
@@ -2390,14 +2399,37 @@ function loadLocalCache(){
   }catch(e){ return null; }
 }
 
+// Nền: khoá cũ (đứng yên, không ghi nữa) + các khoá tháng (đang hoạt động).
+// Tháng nào cũng có thì đè lên nền cho đúng bản mới nhất; đơn nào chưa từng
+// được sửa lại từ lúc chuyển qua lưu theo tháng thì vẫn đọc được từ khoá cũ.
+// Trả về null nếu đọc khoá cũ thất bại (không đủ tin để dùng) — dùng chung cho
+// loadAssignments (tải lần đầu) và pollForUpdates (đồng bộ định kỳ).
+async function fetchMergedAssignments(){
+  const legacy = await storageGet(ASSIGNMENT_STORAGE_KEY);
+  if(!legacy || typeof legacy !== 'object') return null;
+  let merged = {...legacy};
+  const months = await storageGet(MONTHS_KEY);
+  if(Array.isArray(months) && months.length){
+    const bundle = await storageGetAll(months);
+    months.forEach(mk=>{
+      const obj = bundle[mk];
+      if(obj && typeof obj === 'object') merged = {...merged, ...obj};
+    });
+  }
+  return merged;
+}
 async function loadAssignments(){
-  assignments = (await storageGet(ASSIGNMENT_STORAGE_KEY)) || {};
+  assignments = (await fetchMergedAssignments()) || {};
 }
 // ---- Hàng đợi gửi dữ liệu ----
 // Vẽ lại giao diện ngay khi người dùng nhập, việc gửi lên máy chủ làm ở chế độ nền và
 // gộp nhiều thay đổi liên tiếp thành 1 lần gửi -> nhập trên điện thoại không bị đứng.
 const pendingSaves = new Set();
 let saveTimer = null;
+// Đơn nào vừa sửa ở máy này, chờ gộp lên bản mới nhất của server lúc gửi (xem flushAssignments).
+// Map orderId -> khoá tháng (khsx_assign_YYYY_MM), chốt NGAY LÚC SỬA (trước khi đơn có thể bị
+// xoá) vì sau đó không còn cách nào tra lại đơn đó thuộc tháng nào.
+const dirtyAssignmentIds = new Map();
 
 // Máy chủ (Apps Script) mất 1-3 giây mới ghi xong. Trong khoảng đó, lượt kiểm tra định kỳ
 // nếu đọc dữ liệu sẽ nhận được bản CŨ và ghi đè lên những gì vừa nhập.
@@ -2418,12 +2450,91 @@ async function flushSaves(){
   const keys = Array.from(pendingSaves);
   pendingSaves.clear();
   for(const k of keys){
-    if(k === 'assignments') await storageSet(ASSIGNMENT_STORAGE_KEY, assignments);
+    if(k === 'assignments') await flushAssignments();
     else if(k === 'dynamic') await storageSet(DYNAMIC_ORDERS_KEY, dynamicOrders);
     else if(k === 'deleted') await storageSet(DELETED_ORDERS_KEY, deletedOrderIds);
     else if(k === 'priority') await storageSet(PRIORITY_ORDERS_KEY, priorityOrderIds);
   }
   markLocalWrite();   // máy chủ có thể còn đang ghi -> giữ khoảng im lặng thêm một nhịp
+}
+// Gộp thay đổi cục bộ lên bản MỚI NHẤT từ server trước khi ghi. Trước đây gửi thẳng
+// bản assignments trong bộ nhớ của máy này -> nếu 2 máy cùng sửa 2 đơn khác nhau
+// trong vài giây, máy lưu sau ghi đè mất bản của máy lưu trước (mất dữ liệu thật).
+// Cách này chỉ đè đúng các đơn mình vừa sửa (dirtyAssignmentIds) lên bản mới nhất
+// của server, giữ nguyên các đơn máy khác vừa lưu mà mình chưa kịp biết.
+async function flushAssignments(retriesLeft = 3){
+  const entries = Array.from(dirtyAssignmentIds.entries()); // [id, monthKey][]
+  if(!entries.length) return;
+
+  // Gom theo tháng — mỗi tháng gộp-ghi riêng, không đụng tháng khác.
+  const byMonth = {};
+  const unresolved = []; // không xác định được tháng (vd đơn không có ngày hợp lệ) -> ghi vào khoá cũ cho an toàn
+  entries.forEach(([id, mk])=>{
+    if(mk) (byMonth[mk] = byMonth[mk] || []).push(id);
+    else unresolved.push(id);
+  });
+
+  // LƯU Ý TRIỂN KHAI: phải chạy 1 lần storageSet(MONTHS_KEY, []) trong Apps Script TRƯỚC khi
+  // đưa bản này lên live, để khoá này chắc chắn đã tồn tại (có 1 dòng thật trong AppStorage).
+  // Nếu không, storageGet trả null y hệt lúc lỗi mạng lẫn lúc key thật sự chưa từng có —
+  // hai trường hợp không phân biệt được — code dưới đây LUÔN xử lý null là lỗi mạng (an toàn,
+  // không liều ghi đè mất danh sách tháng cũ), nên nếu key chưa được khởi tạo trước, lượt lưu
+  // đầu tiên sẽ cứ hoãn/thử lại mãi không bao giờ thành công.
+  const monthsRaw = await storageGet(MONTHS_KEY);
+  if(!Array.isArray(monthsRaw)){
+    if(retriesLeft > 0) setTimeout(()=>flushAssignments(retriesLeft-1), 3000);
+    else console.error('flushAssignments: không đọc được danh sách tháng (mạng lỗi hoặc MONTHS_KEY chưa khởi tạo), tạm hoãn gửi.');
+    return;
+  }
+  const months = monthsRaw;
+
+  let khongLoi = true;
+  for(const mk of Object.keys(byMonth)){
+    // Tháng mới chưa từng có dữ liệu -> thêm tên tháng vào danh sách TRƯỚC khi ghi dữ liệu
+    // tháng đó. Làm ngược lại: nếu bước ghi dữ liệu lỗi, tháng coi như "không tồn tại" với
+    // mọi người đọc sau -> mất trắng không dấu vết. Làm đúng thứ tự thì xấu nhất chỉ là
+    // tháng có tên trong danh sách nhưng chưa có dữ liệu (vô hại, đọc ra rỗng).
+    if(!months.includes(mk)){
+      months.push(mk);
+      await storageSet(MONTHS_KEY, months);
+    }
+    const server = await storageGet(mk);
+    // storageGet trả về null CẢ KHI server thật sự chưa có dữ liệu LẪN KHI đọc lỗi
+    // (mạng hụt/JSONP timeout) — hai trường hợp này không phân biệt được ở đây. Nếu coi
+    // null là "rỗng" rồi cứ ghi tiếp, merged sẽ chỉ còn đúng các đơn vừa sửa và XOÁ MẤT
+    // toàn bộ đơn khác của tháng đó trên server. Vì vậy: đọc lỗi thì bỏ qua tháng này,
+    // giữ lại trong dirtyAssignmentIds để thử lại ở lượt sau, không ghi liều.
+    if(!server || typeof server !== 'object'){
+      khongLoi = false;
+      continue;
+    }
+    const merged = {...server};
+    byMonth[mk].forEach(id=>{
+      if(assignments[id] !== undefined) merged[id] = assignments[id];
+      else delete merged[id];   // đơn đã bị xoá ở máy này -> xoá luôn trong bản gộp
+      dirtyAssignmentIds.delete(id);
+    });
+    await storageSet(mk, merged);
+  }
+
+  // Đơn không xác định được tháng (hiếm, dữ liệu ngày lỗi) -> vẫn theo cơ chế cũ cho an toàn.
+  if(unresolved.length){
+    const server = await storageGet(ASSIGNMENT_STORAGE_KEY);
+    if(server && typeof server === 'object'){
+      const merged = {...server};
+      unresolved.forEach(id=>{
+        if(assignments[id] !== undefined) merged[id] = assignments[id];
+        else delete merged[id];
+        dirtyAssignmentIds.delete(id);
+      });
+      await storageSet(ASSIGNMENT_STORAGE_KEY, merged);
+    } else khongLoi = false;
+  }
+
+  if(!khongLoi && retriesLeft > 0) setTimeout(()=>flushAssignments(retriesLeft-1), 3000);
+  saveLocalCache();
+  renderAutoPlan();
+  renderProgress();
 }
 // Rời trang / khoá máy giữa lúc còn dữ liệu chưa gửi -> gửi ngay
 window.addEventListener('pagehide', ()=>{ clearTimeout(saveTimer); flushSaves(); });
@@ -3319,6 +3430,7 @@ async function createManualOrder({dateVal, name, size, qty, note, team}){
   dynamicOrders.push(newOrder);
   if(team){
     assignments[newOrder.id] = {to: team, so_luong_hoan_thanh: null, spinoff_id: null};
+    dirtyAssignmentIds.set(newOrder.id, monthKeyOf(newOrder.date));
     queueSave('assignments');
   }
   queueSave('dynamic');
@@ -3417,6 +3529,7 @@ async function handleAssignChange(orderId, val){
   renderAutoPlan();
   renderProgress();
   scheduleMonthlySync();
+  dirtyAssignmentIds.set(orderId, monthKeyOf(o && o.date));
   queueSave('assignments');
 }
 
@@ -3440,6 +3553,7 @@ async function handleSupportDayChange(orderId, ngay, val){
   renderAutoPlan();
   renderProgress();
   scheduleMonthlySync();
+  dirtyAssignmentIds.set(orderId, monthKeyOf(o && o.date));
   queueSave('assignments');
 }
 
@@ -3480,8 +3594,10 @@ document.querySelector('#autoPlanTable tbody').addEventListener('click', async (
   const a = assignments[id];
   // Xoá luôn phần đã tách cho tổ hỗ trợ của đơn này (nếu có)
   if(a && a.spinoff_id){
+    const spinOrder = getOrderById(a.spinoff_id);   // lấy ngày TRƯỚC khi lọc khỏi dynamicOrders
     dynamicOrders = dynamicOrders.filter(d=>d.id !== a.spinoff_id);
     delete assignments[a.spinoff_id];
+    dirtyAssignmentIds.set(a.spinoff_id, monthKeyOf(spinOrder && spinOrder.date));
   }
   delete assignments[id];
   dynamicOrders = dynamicOrders.filter(d=>d.id !== id);
@@ -3491,6 +3607,7 @@ document.querySelector('#autoPlanTable tbody').addEventListener('click', async (
   renderAutoPlan();
   renderProgress();
   scheduleMonthlySync();
+  dirtyAssignmentIds.set(id, monthKeyOf(o.date));
   queueSave('assignments','dynamic','deleted');
 });
 
@@ -4021,6 +4138,7 @@ async function handleStageQtyChange(orderId, ngay, congDoan, rawVal){
   renderAutoPlan();
   renderProgress();
   scheduleMonthlySync();
+  dirtyAssignmentIds.set(orderId, monthKeyOf(o.date));
   queueSave('assignments');
 }
 
@@ -4168,6 +4286,7 @@ document.getElementById('bulkCompleteBtn').addEventListener('click', async ()=>{
     if(toLam) entry._dong_goi_to = toLam;
     delete entry._legacy;
     dongBoSoHoanThanhCu(r);
+    dirtyAssignmentIds.set(r.id, monthKeyOf(r.date));
   });
   renderAutoPlan();
   renderProgress();
@@ -4211,6 +4330,7 @@ async function handleResetStages(orderId, ngay, requestedStage=''){
   renderAutoPlan();
   renderProgress();
   scheduleMonthlySync();
+  dirtyAssignmentIds.set(orderId, monthKeyOf(o.date));
   queueSave('assignments');
 }
 document.querySelector('#progressTable tbody').addEventListener('click', async (e)=>{
@@ -4277,9 +4397,14 @@ async function pollForUpdates(){
       return;
     }
 
-    const bundle = await storageGetAll([
-      ASSIGNMENT_STORAGE_KEY, DYNAMIC_ORDERS_KEY, DELETED_ORDERS_KEY,
-      LOCKED_PLAN_KEY, LOCKED_PROGRESS_KEY, SNAP_VERSION_KEY, PRIORITY_ORDERS_KEY, USER_TEAMS_KEY, QUARTER_TARGET_KEY
+    // Phân công đọc riêng qua fetchMergedAssignments (khoá cũ + các khoá tháng — xem mục 5.2
+    // đổi cách lưu theo tháng), phần còn lại vẫn gộp 1 lượt gọi mạng như trước cho nhẹ.
+    const [mergedAssign, bundle] = await Promise.all([
+      fetchMergedAssignments(),
+      storageGetAll([
+        DYNAMIC_ORDERS_KEY, DELETED_ORDERS_KEY,
+        LOCKED_PLAN_KEY, LOCKED_PROGRESS_KEY, SNAP_VERSION_KEY, PRIORITY_ORDERS_KEY, USER_TEAMS_KEY, QUARTER_TARGET_KEY
+      ])
     ]);
     const newUserTeams = bundle[USER_TEAMS_KEY];
     const nextPriority = bundle[PRIORITY_ORDERS_KEY];
@@ -4288,7 +4413,7 @@ async function pollForUpdates(){
     // Ảnh chụp ngày đã chốt vừa được chốt lại ở máy khác -> phải coi là "có thay đổi",
     // dù danh sách ngày chốt trông y như cũ.
     const anhChupDoi = snapVerMoi != null && String(snapVerMoi) !== String(snapVersionSeen);
-    const newAssignments  = bundle[ASSIGNMENT_STORAGE_KEY];
+    const newAssignments  = mergedAssign;
     const newDynamicOrders = bundle[DYNAMIC_ORDERS_KEY];
     const newDeleted      = bundle[DELETED_ORDERS_KEY];
     const newLockPlan     = bundle[LOCKED_PLAN_KEY];
@@ -4795,10 +4920,15 @@ async function taiGoiSaoLuu(){
   st.style.color = 'var(--text2)';
 
   try{
-    // Lấy bản mới nhất từ máy chủ để gói sao lưu không bị cũ
-    const b = await storageGetAll([
-      ASSIGNMENT_STORAGE_KEY, DYNAMIC_ORDERS_KEY, DELETED_ORDERS_KEY,
-      LOCKED_PLAN_KEY, LOCKED_PROGRESS_KEY, QUARTER_TARGET_KEY
+    // Lấy bản mới nhất từ máy chủ để gói sao lưu không bị cũ. Phân công đọc riêng qua
+    // fetchMergedAssignments (khoá cũ + các khoá tháng), không chỉ đọc khoá cũ — nếu không
+    // gói sao lưu sẽ THIẾU MẤT toàn bộ dữ liệu đã lưu theo tháng từ lúc chuyển đổi.
+    const [mergedAssign, b] = await Promise.all([
+      fetchMergedAssignments(),
+      storageGetAll([
+        DYNAMIC_ORDERS_KEY, DELETED_ORDERS_KEY,
+        LOCKED_PLAN_KEY, LOCKED_PROGRESS_KEY, QUARTER_TARGET_KEY
+      ])
     ]);
     await loadStaffUsers();
     await refreshSnapshots(true);
@@ -4820,7 +4950,7 @@ async function taiGoiSaoLuu(){
     const goi = {
       meta,
       data: {
-        khsx_autoplan_assignments:  b[ASSIGNMENT_STORAGE_KEY] || assignments,
+        khsx_autoplan_assignments:  mergedAssign || assignments,
         khsx_dynamic_orders:        b[DYNAMIC_ORDERS_KEY] || dynamicOrders,
         khsx_deleted_orders:        b[DELETED_ORDERS_KEY] || deletedOrderIds,
         khsx_locked_plan_dates:     b[LOCKED_PLAN_KEY] || lockedPlanDates,
@@ -4848,6 +4978,28 @@ async function taiGoiSaoLuu(){
     st.textContent = 'Không tải được gói sao lưu: ' + e;
     st.style.color = 'var(--danger)';
   }
+}
+
+// Ghi lại toàn bộ phân công từ gói sao lưu, đúng theo tháng (không đè hết vào khoá cũ —
+// nếu làm vậy, dữ liệu tháng hiện tại trên server sẽ VẪN ĐƯỢC ĐỌC ĐÈ LÊN gói vừa nạp vì
+// khoá tháng được gộp lên trên khoá cũ lúc đọc, làm hỏng đúng mục đích "ghi đè toàn bộ").
+// Đơn không xác định được tháng (id lạ, không khớp mẫu ngày) -> ghi vào khoá cũ cho an toàn.
+async function napLaiPhanCongTheoThang_(assignObj, dynamicList){
+  const dynById = {};
+  (dynamicList || []).forEach(o=>{ if(o && o.id) dynById[o.id] = o; });
+  const byMonth = {}; const unresolved = {};
+  Object.keys(assignObj).forEach(id=>{
+    let mk = null;
+    const m = /^r_(\d{2})_(\d{2})_(\d{4})_/.exec(id);
+    if(m) mk = 'khsx_assign_' + m[3] + '_' + m[2];
+    else if(dynById[id] && dynById[id].date) mk = monthKeyOf(dynById[id].date);
+    if(mk){ (byMonth[mk] = byMonth[mk] || {})[id] = assignObj[id]; }
+    else unresolved[id] = assignObj[id];
+  });
+  const months = Object.keys(byMonth);
+  await storageSet(MONTHS_KEY, months);
+  for(const mk of months) await storageSet(mk, byMonth[mk]);
+  await storageSet(ASSIGNMENT_STORAGE_KEY, unresolved);
 }
 
 async function napLaiTuGoi(){
@@ -4879,7 +5031,7 @@ async function napLaiTuGoi(){
   st.textContent = 'Đang nạp...';
   st.style.color = 'var(--text2)';
   try{
-    if(d.khsx_autoplan_assignments)  await storageSet(ASSIGNMENT_STORAGE_KEY, d.khsx_autoplan_assignments);
+    if(d.khsx_autoplan_assignments) await napLaiPhanCongTheoThang_(d.khsx_autoplan_assignments, d.khsx_dynamic_orders || []);
     if(d.khsx_dynamic_orders)        await storageSet(DYNAMIC_ORDERS_KEY, d.khsx_dynamic_orders);
     if(d.khsx_deleted_orders)        await storageSet(DELETED_ORDERS_KEY, d.khsx_deleted_orders);
     if(d.khsx_locked_plan_dates)     await storageSet(LOCKED_PLAN_KEY, d.khsx_locked_plan_dates);
