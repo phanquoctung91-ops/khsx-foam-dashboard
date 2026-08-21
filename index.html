@@ -75,6 +75,7 @@
   #autoPlanTable .col-product, #progressTable .col-product{width:74px;text-align:center;white-space:normal;}
   #autoPlanTable .col-size, #progressTable .col-size{width:76px;text-align:center;white-space:normal;}
   #autoPlanTable .col-number, #progressTable .col-number{width:64px;min-width:0;max-width:none;text-align:center;}
+  #progressTable .col-number[data-stage-col]{width:82px;}
   #autoPlanTable .col-group{width:104px;text-align:center;white-space:normal;}
   #autoPlanTable .col-team, #progressTable .col-team{width:92px;min-width:0;max-width:none;text-align:center;white-space:normal;}
   #autoPlanTable .col-support, #progressTable .col-support{width:88px;min-width:0;max-width:none;text-align:center;white-space:normal;}
@@ -90,6 +91,7 @@
   .stage-summary-item{padding:4px 3px;border-radius:7px;background:#f3f6fa;color:var(--text2);font-size:9.5px;line-height:1.15;text-align:center;}
   .stage-summary-item strong{display:block;margin-top:2px;color:var(--text);font-size:13px;}
   .cell-note{margin-top:5px;font-size:10.5px;line-height:1.3;color:var(--text2);font-weight:500;}
+  .employee-mobile-summary,.employee-mobile-group{display:none;}
   tbody tr:hover td{background:#f8f9fb;}
   .table-scroll{overflow-x:auto;max-height:520px;overflow-y:auto;border-radius:10px;border:1px solid var(--border);}
   .table-scroll table{border:none;}
@@ -116,10 +118,7 @@
     #autoPlanTable, #progressTable{font-size:11px;}
     #autoPlanTable th, #autoPlanTable td,
     #progressTable th, #progressTable td{padding:6px 5px;}
-    #autoPlanTable{min-width:1040px;}
-    #progressTable{min-width:980px;}
-    #autoPlanTable .col-status, #progressTable .col-status{min-width:145px;max-width:190px;}
-    #progressTable .col-note{min-width:110px;max-width:150px;}
+    #autoPlanTable, #progressTable{min-width:0;}
   }
   /* Điện thoại nằm dọc (chiều hẹp nhất) */
   @media(max-width:480px){
@@ -206,8 +205,8 @@
   select.to-select{width:100%;min-width:0;max-width:100%;padding-left:7px;padding-right:24px;}
   select.to-select-empty{color:var(--text2);font-style:italic;}
   select.spinoff-to-select, select.support-day-select{width:100%;min-width:0;max-width:100%;font-size:11px;padding:4px 22px 4px 5px;border-radius:6px;}
-  input.qty-input{width:78px;padding:6px 7px;text-align:center;}
-  .stage-cell{display:flex;flex-direction:column;align-items:center;gap:4px;width:78px;min-width:78px;margin:0 auto;}
+  input.qty-input{width:100%;min-width:0;max-width:100%;padding:6px 5px;text-align:center;}
+  .stage-cell{display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;min-width:0;margin:0 auto;}
   .stage-cell input.qty-input{transition:border-color .15s,box-shadow .15s,background .15s;}
   .stage-cell input.stage-ready{background:#fff;border-color:#4aa3df;box-shadow:0 0 0 2px rgba(74,163,223,.12);}
   .stage-cell input:disabled{background:#f1f3f6;color:#8b94a3;border-color:#dfe3e9;box-shadow:none;}
@@ -247,12 +246,13 @@
     font-size:11.5px;line-height:1.5;text-align:left;width:100%;max-width:360px;}
   /* Đường kẻ chấm mờ chạy suốt mỗi dòng để mắt dò không bị lệch hàng */
   .team-ring-list > *{border-bottom:1px dotted #d8dee8;padding-top:3px;padding-bottom:3px;}
-  .team-ring-list .t{color:var(--text);white-space:nowrap;padding-left:4px;padding-right:8px;}
+  .team-ring-list .t{color:var(--text);min-width:0;white-space:normal;overflow-wrap:break-word;padding-left:4px;padding-right:8px;}
   .team-ring-list .ho-tro{font-style:normal;font-size:10px;font-weight:700;color:var(--accent);}
   .team-ring-list-xong{margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);
     font-size:11.5px;font-weight:700;color:var(--success);}
   .team-ring-list .k{color:var(--text2);text-align:right;white-space:nowrap;padding-left:4px;padding-right:4px;}
   .team-ring-list b{color:var(--text);text-align:right;padding-left:4px;padding-right:4px;}
+  .team-ring-done-tick{display:inline-block;margin-left:4px;color:var(--success);font-size:12px;font-weight:900;line-height:1;vertical-align:1px;}
   /* Ưu tiên: tô liền cả ba ô Tên + Kích thước + Số lượng của đúng một dòng.
      Không thêm biểu tượng và không đổi cấu trúc lưới nên thẻ không bị rộng/tràn chữ. */
   .team-ring-list .team-ring-row-uutien{background:#fff7d9;}
@@ -357,32 +357,80 @@
     .team-ring-inner{width:42px;height:42px;font-size:11px;}
     .primary-btn{padding:8px 14px;font-size:12.5px;}
     select, input{font-size:12.5px;padding:7px 10px;}
-    select.to-select{width:92px;min-width:92px;max-width:92px;}
-    select.spinoff-to-select, select.support-day-select{width:92px;min-width:92px;max-width:92px;}
-    input.qty-input{width:74px;}
-    .stage-cell{width:74px;min-width:74px;}
+    select.to-select, select.spinoff-to-select, select.support-day-select{width:100%;min-width:0;max-width:100%;}
+    input.qty-input,.stage-cell{width:100%;min-width:0;max-width:100%;}
     .chart-wrap{height:200px !important;}
+
+    /* Màn hình hẹp: mỗi đơn là một thẻ, không ép bảng PC vào điện thoại. */
+    #autoPlanTable thead, #progressTable thead{display:none;}
+    #autoPlanTable tbody, #progressTable tbody{display:block;padding:8px;background:#f5f7fa;}
+    #autoPlanTable tbody tr, #progressTable tbody tr{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 7px rgba(26,39,62,.05);}
+    #autoPlanTable tbody td, #progressTable tbody td{display:flex;flex-direction:column;justify-content:flex-start;align-items:center;grid-column:span 2;width:auto!important;min-width:0!important;max-width:none!important;padding:9px 7px;border:0;border-right:1px solid #eef1f5;border-bottom:1px solid #eef1f5;white-space:normal;text-align:center;overflow-wrap:break-word;}
+    #autoPlanTable tbody td::before, #progressTable tbody td::before{display:block;margin-bottom:5px;color:var(--text2);font-size:9px;font-weight:800;line-height:1.15;text-transform:uppercase;letter-spacing:.15px;}
+    #autoPlanTable tbody .col-date, #progressTable tbody .col-date,
+    #autoPlanTable tbody .col-code, #progressTable tbody .col-code,
+    #autoPlanTable tbody .col-product, #progressTable tbody .col-product,
+    #autoPlanTable tbody .col-size, #progressTable tbody .col-size{grid-column:span 3;}
+    #autoPlanTable tbody .col-group{grid-column:span 4;}
+    #autoPlanTable tbody .col-team, #progressTable tbody .col-team,
+    #autoPlanTable tbody .col-support, #progressTable tbody .col-support{grid-column:span 3;}
+    #autoPlanTable tbody .col-progress, #autoPlanTable tbody .col-status,
+    #progressTable tbody .col-status{grid-column:span 6;align-items:flex-start;text-align:left;}
+    #autoPlanTable tbody .col-progress{align-items:stretch;text-align:center;}
+    #autoPlanTable tbody .col-action, #progressTable tbody .col-action{grid-column:span 3;}
+    #autoPlanTable tbody .col-date::before, #progressTable tbody .col-date::before{content:'Ngày';}
+    #autoPlanTable tbody .col-code::before, #progressTable tbody .col-code::before{content:'Mã';}
+    #autoPlanTable tbody .col-product::before, #progressTable tbody .col-product::before{content:'Dòng';}
+    #autoPlanTable tbody .col-size::before, #progressTable tbody .col-size::before{content:'Kích thước';}
+    #autoPlanTable tbody .col-number:not([data-stage-col])::before,
+    #progressTable tbody .col-number:not([data-stage-col])::before{content:'Kế hoạch';}
+    #autoPlanTable tbody .col-group::before{content:'Nhóm đơn hàng';}
+    #autoPlanTable tbody .col-team::before, #progressTable tbody .col-team::before{content:'Tổ phụ trách';}
+    #autoPlanTable tbody .col-support::before, #progressTable tbody .col-support::before{content:'Tổ hỗ trợ';}
+    #autoPlanTable tbody .col-progress::before{content:'Tiến độ';}
+    #progressTable tbody [data-stage-col='dan']::before{content:'Đã dán';}
+    #progressTable tbody [data-stage-col='may']::before{content:'Đã may';}
+    #progressTable tbody [data-stage-col='dong_goi']::before{content:'Đã đóng gói';}
+    #autoPlanTable tbody .col-status::before, #progressTable tbody .col-status::before{content:'Trạng thái / ghi chú';}
+    #autoPlanTable tbody .col-action::before, #progressTable tbody .col-action::before{content:'Thao tác';}
+    .table-scroll{overflow-x:hidden;}
+
+    /* Thẻ TĐSX riêng cho nhân viên: chỉ giữ thông tin cần cho đúng công đoạn đang làm. */
+    #progressTable.employee-stage-view tbody .col-date,
+    #progressTable.employee-stage-view tbody .col-code,
+    #progressTable.employee-stage-view tbody .col-product,
+    #progressTable.employee-stage-view tbody .col-size,
+    #progressTable.employee-stage-view tbody .col-action,
+    #progressTable.employee-stage-view tbody [data-stage-col]{display:none;}
+    #progressTable.employee-stage-view tbody .employee-mobile-summary,
+    #progressTable.employee-stage-view tbody .employee-mobile-group{display:flex;grid-column:span 6;align-items:center;text-align:center;}
+    #progressTable.employee-stage-view tbody .employee-mobile-summary{padding:13px 8px 8px;font-size:17px;font-weight:800;color:var(--text);}
+    #progressTable.employee-stage-view tbody .employee-mobile-summary::before{display:none;}
+    #progressTable.employee-stage-view tbody .employee-mobile-group{padding:6px 8px 11px;}
+    #progressTable.employee-stage-view tbody .employee-mobile-group::before{display:none;}
+    #progressTable.employee-stage-view tbody .col-team,
+    #progressTable.employee-stage-view tbody .col-support,
+    #progressTable.employee-stage-view tbody .employee-stage-reference{display:flex;grid-column:span 3;}
+    #progressTable.employee-stage-view[data-employee-stage='dan'] tbody [data-stage-col='dan'],
+    #progressTable.employee-stage-view[data-employee-stage='may'] tbody [data-stage-col='may'],
+    #progressTable.employee-stage-view[data-employee-stage='dong_goi'] tbody [data-stage-col='dong_goi']{display:flex;grid-column:span 3;}
+    #progressTable.employee-stage-view tbody .col-status{grid-column:span 6;align-items:flex-start;text-align:left;}
+    #progressTable.employee-stage-view tbody .col-status::before{content:'Trạng thái / ghi chú';}
+    #progressTable.employee-stage-view tbody .employee-stage-reference::before{content:attr(data-mobile-label);}
   }
   @media(max-width:480px){
     .table-scroll{max-height:62vh;}
     #autoPlanTable th, #autoPlanTable td,
-    #progressTable th, #progressTable td{padding:6px 4px;font-size:10.5px;}
-    #autoPlanTable{min-width:1000px;}
-    #progressTable{min-width:940px;}
-    #autoPlanTable .col-status, #progressTable .col-status{min-width:120px;max-width:150px;}
-    #progressTable .col-note{min-width:96px;max-width:130px;}
-    #autoPlanTable .col-number, #progressTable .col-number{width:76px;min-width:76px;max-width:76px;}
-    #autoPlanTable .col-team, #progressTable .col-team,
-    #autoPlanTable .col-support, #progressTable .col-support{width:92px;min-width:92px;max-width:92px;}
-    input.qty-input{width:66px;}
-    .stage-cell{width:66px;min-width:66px;}
+    #progressTable th, #progressTable td{padding:8px 6px;font-size:12px;}
+    #autoPlanTable, #progressTable{min-width:0;}
+    input.qty-input,.stage-cell{width:100%;min-width:0;max-width:100%;}
     .stage-hint{font-size:9.5px;}
     /* Ô nhập trên điện thoại: cao hơn cho dễ bấm */
     input.qty-input, select.to-select, select.spinoff-to-select, select.support-day-select{min-height:34px;}
     .day-select-row{gap:7px;}
     .day-select-row .primary-btn{flex:1 1 100%;}
     .day-select-row select{flex:1 1 45%;min-width:0;}
-    .team-ring-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+    .team-ring-row{grid-template-columns:minmax(0,1fr);gap:8px;}
     .team-ring-row.mot-the{grid-template-columns:minmax(0,1fr);}
     .team-ring-card{padding:11px 8px;min-width:0;overflow:hidden;}
     .team-ring-list{grid-template-columns:minmax(0,1fr) auto auto;column-gap:5px;font-size:10.5px;max-width:100%;}
@@ -2462,6 +2510,11 @@ const VERIFIED_STAGE_DATE_CORRECTIONS = [
   'r_20_08_2026_SORA15_8_180_220_15_1_1',
   'r_20_08_2026_SORA20_4_140_160_30_1_1'
 ];
+const VERIFIED_COMPLETE_ON_PLAN_DATE = {
+  // LAEZ10-2 · Latex Enzo · 120x200x10 · SL 2 · Tổ 4:
+  // đã xác minh hoàn tất đủ ba công đoạn đúng ngày kế hoạch 15/08/2026.
+  'r_15_08_2026_LAEZ10_2_120_200_10_2_1': {date:'15/08/2026', qty:2, team:'Tổ 4'}
+};
 function applyVerifiedDataCorrections(source){
   if(!source || typeof source !== 'object') return source || {};
   VERIFIED_STAGE_DATE_CORRECTIONS.forEach(id=>{
@@ -2480,6 +2533,19 @@ function applyVerifiedDataCorrections(source){
       }
     }
     a.ngay_hoan_thanh = '20/08/2026';
+  });
+  Object.entries(VERIFIED_COMPLETE_ON_PLAN_DATE).forEach(([id,fix])=>{
+    const a = source[id];
+    if(!a) return;
+    a.to = fix.team;
+    a.stage_by_date = {
+      [fix.date]: {
+        dan:fix.qty, may:fix.qty, dong_goi:fix.qty,
+        _dan_to:fix.team, _may_to:fix.team, _dong_goi_to:fix.team
+      }
+    };
+    a.so_luong_hoan_thanh = fix.qty;
+    a.ngay_hoan_thanh = fix.date;
   });
   return source;
 }
@@ -2524,7 +2590,7 @@ async function fetchMergedAssignments(){
       if(obj && typeof obj === 'object') merged = {...merged, ...obj};
     });
   }
-  return applyVerifiedDataCorrections(merged);
+  return overlayConfirmedStageGuards(applyVerifiedDataCorrections(merged));
 }
 async function loadAssignments(){
   assignments = (await fetchMergedAssignments()) || {};
@@ -2541,6 +2607,32 @@ const dirtyAssignmentIds = new Map();
 const ASSIGNMENT_OUTBOX_KEY = 'khsx_assignment_outbox_v1';
 let dirtyStagePatches = {}; // {orderId:{day:{stage:{value,team}}}}
 let assignmentRetryTimer = null;
+const ASSIGNMENT_GUARD_KEY = 'khsx_assignment_confirm_guard_v1';
+const ASSIGNMENT_GUARD_MS = 15 * 60 * 1000;
+let confirmedStageGuards = {}; // giữ bản vừa xác nhận để phát hiện máy khác ghi đè ngược
+
+function persistConfirmedStageGuards(){
+  try{ localStorage.setItem(ASSIGNMENT_GUARD_KEY,JSON.stringify(confirmedStageGuards)); }catch(e){}
+}
+function restoreConfirmedStageGuards(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(ASSIGNMENT_GUARD_KEY)||'{}');
+    confirmedStageGuards=raw&&typeof raw==='object'?raw:{};
+  }catch(e){ confirmedStageGuards={}; }
+}
+function rememberConfirmedStagePatches(id, monthKey, patches){
+  if(!patches) return;
+  confirmedStageGuards[id]={monthKey,patches:JSON.parse(JSON.stringify(patches)),expires:Date.now()+ASSIGNMENT_GUARD_MS};
+  persistConfirmedStageGuards();
+}
+function removeStageFromConfirmedGuard(id,day,stage){
+  const g=confirmedStageGuards[id];
+  if(!g||!g.patches||!g.patches[day]) return;
+  delete g.patches[day][stage];
+  if(!Object.keys(g.patches[day]).length) delete g.patches[day];
+  if(!Object.keys(g.patches).length) delete confirmedStageGuards[id];
+  persistConfirmedStageGuards();
+}
 
 function persistAssignmentOutbox(){
   try{
@@ -2563,6 +2655,7 @@ function recordStagePatch(o, ngay, congDoan, value, team){
   const byDay=dirtyStagePatches[o.id]||(dirtyStagePatches[o.id]={});
   const byStage=byDay[ngay]||(byDay[ngay]={});
   byStage[congDoan]={value:value == null ? null : soCongDoan(value), team:team||null};
+  removeStageFromConfirmedGuard(o.id,ngay,congDoan);
   dirtyAssignmentIds.set(o.id,monthKeyOf(o.date));
   persistAssignmentOutbox();
 }
@@ -2611,6 +2704,27 @@ function overlayPendingAssignments(remote, local){
   });
   return out;
 }
+function overlayConfirmedStageGuards(remote){
+  const out={...((remote&&typeof remote==='object')?remote:{})};
+  let guardsChanged=false, canGuiLai=false;
+  Object.entries(confirmedStageGuards).forEach(([id,g])=>{
+    if(!g||!g.patches||Date.now()>Number(g.expires||0)){
+      delete confirmedStageGuards[id]; guardsChanged=true; return;
+    }
+    if(stagePatchesMatch(out[id],g.patches)) return;
+    // Máy chủ vừa tụt về bản cũ: giữ số đã xác nhận trên giao diện và tự đưa lại vào hàng gửi.
+    out[id]=applyStagePatches(out[id],out[id],g.patches);
+    const existing=dirtyStagePatches[id]||(dirtyStagePatches[id]={});
+    Object.entries(g.patches).forEach(([day,stages])=>{
+      existing[day]={...(stages||{}),...(existing[day]||{})};
+    });
+    dirtyAssignmentIds.set(id,g.monthKey||null);
+    canGuiLai=true;
+  });
+  if(guardsChanged) persistConfirmedStageGuards();
+  if(canGuiLai){ persistAssignmentOutbox(); scheduleAssignmentRetry(); }
+  return out;
+}
 function runLocalSyncSelfTests(){
   const out=[];
   const test=(name,ok)=>out.push({name,ok:!!ok});
@@ -2630,7 +2744,14 @@ function runLocalSyncSelfTests(){
   dirtyStagePatches={a:{'21/08/2026':{may:{value:7,team:'Tổ 1'}}}};
   const over=overlayPendingAssignments({a:{stage_by_date:{'21/08/2026':{dan:8}}}},local);
   test('mo_lai_van_giu_du_lieu_cho_gui',over.a.stage_by_date['21/08/2026'].dan===8&&over.a.stage_by_date['21/08/2026'].may===7);
+  const oldGuards=confirmedStageGuards,oldRetry=assignmentRetryTimer;
+  confirmedStageGuards={a:{monthKey:'khsx_assign_2026_08',expires:Date.now()+60000,patches:{'21/08/2026':{may:{value:9,team:'Tổ 1'}}}}};
+  assignmentRetryTimer=-1; dirtyAssignmentIds.clear(); dirtyStagePatches={};
+  const guarded=overlayConfirmedStageGuards({a:{stage_by_date:{'21/08/2026':{may:4}}}});
+  test('server_tut_lui_khong_tra_so_cu',guarded.a.stage_by_date['21/08/2026'].may===9&&dirtyAssignmentIds.has('a'));
+  confirmedStageGuards=oldGuards; assignmentRetryTimer=oldRetry;
   dirtyAssignmentIds.clear(); oldDirty.forEach((v,k)=>dirtyAssignmentIds.set(k,v)); dirtyStagePatches=oldPatches;
+  persistAssignmentOutbox();
   return out;
 }
 if(LOCAL_PREVIEW_MODE && new URLSearchParams(location.search).get('sync_test')==='1'){
@@ -2647,6 +2768,7 @@ function scheduleAssignmentRetry(){
   },5000);
 }
 restoreAssignmentOutbox();
+restoreConfirmedStageGuards();
 
 // Máy chủ (Apps Script) mất 1-3 giây mới ghi xong. Trong khoảng đó, lượt kiểm tra định kỳ
 // nếu đọc dữ liệu sẽ nhận được bản CŨ và ghi đè lên những gì vừa nhập.
@@ -2755,7 +2877,10 @@ async function flushAssignments(retriesLeft = 3){
       const patches=patchesWritten[id];
       const ok=patches ? stagePatchesMatch(confirmed[id],patches)
         : JSON.stringify(confirmed[id])===JSON.stringify(merged[id]);
-      if(ok){ dirtyAssignmentIds.delete(id); delete dirtyStagePatches[id]; }
+      if(ok){
+        if(patches) rememberConfirmedStagePatches(id,mk,patches);
+        dirtyAssignmentIds.delete(id); delete dirtyStagePatches[id];
+      }
       else khongLoi=false;
     });
   }
@@ -3449,6 +3574,13 @@ function hoaChuDau(t){
 // Danh sách đơn của một tổ, dạng "Sora 160x15: 9" — gộp các dòng trùng tên + kích thước
 // anDongDaXong = true -> bỏ những dòng đã làm xong (dùng cho vai Nhân viên ở tab Tiến độ,
 // để danh sách ngắn dần như một danh sách việc cần làm)
+function tenGonTrenTheTo(o){
+  const tenDayDu = String(o && o.dong || '');
+  if(tenDayDu.length <= 7) return tenDayDu;
+  const ma = String(o && o.ma || '').trim();
+  const dauMa = ma.match(/^[A-Za-z]+/);
+  return dauMa ? dauMa[0].toUpperCase() : tenDayDu;
+}
 function danhSachDonCuaTo(teamOrders, anDongDaXong){
   const gom = {};
   teamOrders.forEach(o=>{
@@ -3461,9 +3593,10 @@ function danhSachDonCuaTo(teamOrders, anDongDaXong){
     const kt = formatKichThuoc(o);
     const hoTro = toDuocHoTro(o);
     const k = ten + '|' + kt + '|' + (hoTro || '');
-    if(!gom[k]) gom[k] = {ten, kt, sl:0, hoTro, uuTien:false, day: parseFloat(o.day) || 0, ngang: parseFloat(o.ngang) || 0};
+    if(!gom[k]) gom[k] = {ten, tenGon:tenGonTrenTheTo(o), kt, sl:0, hoTro, uuTien:false, xong:true, day: parseFloat(o.day) || 0, ngang: parseFloat(o.ngang) || 0};
     gom[k].sl += Number(o.so_luong) || 0;
     if(laUuTien(o.id)) gom[k].uuTien = true;
+    if(getOrderStatus(o) !== 'hoan_thanh') gom[k].xong = false;
   });
   return Object.keys(gom).map(k=>gom[k])
     .sort((a,b)=> (a.day - b.day) || (a.ngang - b.ngang) || a.ten.localeCompare(b.ten,'vi'));
@@ -3476,10 +3609,12 @@ function htmlDanhSachDon(teamOrders, anDongDaXong){
   }
   // Ba cột thẳng hàng: tên bên trái, kích thước canh phải, số lượng canh phải
   return `<div class="team-ring-list">`
-    + ds.map(r=>{
+      + ds.map(r=>{
         const uuTienClass = r.uuTien ? ' team-ring-row-uutien' : '';
-        return `<span class="t${uuTienClass}">${r.ten}${r.hoTro?` <em class="ho-tro">hỗ trợ ${r.hoTro}</em>`:''}</span>`
-             + `<span class="k${uuTienClass}">${r.kt}:</span><b class="${uuTienClass.trim()}">${r.sl}</b>`;
+        const tickXong = canManage2() && r.xong
+          ? `<span class="team-ring-done-tick" title="Đã hoàn thành">✓</span>` : '';
+        return `<span class="t${uuTienClass}" title="${thoatHtml(r.ten)}">${thoatHtml(r.tenGon)}${r.hoTro?` <em class="ho-tro">hỗ trợ ${r.hoTro}</em>`:''}</span>`
+             + `<span class="k${uuTienClass}">${r.kt}:</span><b class="${uuTienClass.trim()}">${r.sl}${tickXong}</b>`;
       }).join('')
     + `</div>`;
 }
@@ -4402,6 +4537,10 @@ function renderProgress(){
   populateProgressSelects();
   const filtered = getFilteredProgressRows();
   const congDoanNhanVien = congDoanNhanVienDuocNhap();
+  const progressTable = document.getElementById('progressTable');
+  progressTable.classList.toggle('employee-stage-view', !!congDoanNhanVien);
+  if(congDoanNhanVien) progressTable.dataset.employeeStage = congDoanNhanVien;
+  else delete progressTable.dataset.employeeStage;
   // Nhân viên chỉ xem hàng chờ công đoạn mình, nên không hiện vòng KPI theo tổ
   // từ tập dữ liệu đã lọc (tránh tạo ra phần trăm sai và gây hiểu nhầm).
   const dayValRing = progressDaySelect.value;
@@ -4427,6 +4566,27 @@ function renderProgress(){
   const inProgressCount = filtered.length - doneCount - partialCount;
   const rate = totalPlan>0 ? Math.round((totalDone/totalPlan)*1000)/10 : 0;
 
+  // KPI giao hàng: chỉ xét đơn trong kế hoạch, không trộn bảo hành/phát sinh/đơn rớt tách nhánh.
+  // Ngày hoàn thành lấy ngày đóng gói cuối cùng để phản ánh đúng thời điểm sản phẩm thực sự xong.
+  const plannedForDeliveryKpi = filtered.filter(isPlannedOrder);
+  const deliveryKpi = plannedForDeliveryKpi.reduce((k,o)=>{
+    const status = getOrderStatus(o);
+    const packDays = Object.entries(lichSuCongDoanDeDoc(o))
+      .filter(([,e])=>soCongDoan(e && e.dong_goi)>0)
+      .map(([d])=>d).sort((a,b)=>khoaNgayDMY(a)-khoaNgayDMY(b));
+    const doneDate = packDays[packDays.length-1] || assignments[o.id]?.ngay_hoan_thanh || '';
+    if(status === 'hoan_thanh'){
+      k.completed++;
+      if(doneDate && khoaNgayDMY(doneDate) <= khoaNgayDMY(o.date)) k.onTime++;
+      else k.lateDone++;
+    }else if(isPastDate(o.date)){
+      k.overdueOpen++;
+    }
+    return k;
+  },{completed:0,onTime:0,lateDone:0,overdueOpen:0});
+  const onTimeRate = deliveryKpi.completed
+    ? Math.round(deliveryKpi.onTime/deliveryKpi.completed*1000)/10 : 0;
+
   // Phần thiếu đã tách ra nhưng CHƯA được giao tổ hỗ trợ — đếm trên toàn bộ dữ liệu,
   // không lọc theo ngày, để quản lý không bỏ sót đơn nào.
   const thieuChuaGiao = getOrders().filter(o => o.is_drop && !assignments[o.id]?.to).length;
@@ -4448,6 +4608,19 @@ function renderProgress(){
       <div class="kpi k-warning"><div class="label">Đang sản xuất</div><div class="value">${inProgressCount}</div></div>
       <div class="kpi" style="border-top-color:var(--accent);"><div class="label">Đã chia tổ (dở dang)</div><div class="value" style="color:var(--accent);">${partialCount}</div></div>
       <div class="kpi ${rate>=95?'k-success':'k-warning'}"><div class="label">Tỷ lệ hoàn thành</div><div class="value" style="color:${rate>=95?'var(--success)':rate>=80?'var(--warning)':'var(--danger)'}">${rate}%</div></div>
+      <div class="kpi ${onTimeRate>=95?'k-success':'k-warning'}">
+        <div class="label">Hoàn thành đúng hạn</div>
+        <div class="value" style="color:${onTimeRate>=95?'var(--success)':onTimeRate>=80?'var(--warning)':'var(--danger)'}">${onTimeRate}%</div>
+        <div class="kpi-phu"><b>${deliveryKpi.onTime}/${deliveryKpi.completed}</b> đơn đã hoàn thành</div>
+      </div>
+      <div class="kpi" style="border-top-color:${deliveryKpi.lateDone>0?'var(--warning)':'var(--border)'};">
+        <div class="label">Hoàn thành trễ</div>
+        <div class="value" style="color:${deliveryKpi.lateDone>0?'var(--warning)':'var(--text2)'}">${deliveryKpi.lateDone}</div>
+      </div>
+      <div class="kpi" style="border-top-color:${deliveryKpi.overdueOpen>0?'var(--danger)':'var(--border)'};">
+        <div class="label">Quá hạn chưa xong</div>
+        <div class="value" style="color:${deliveryKpi.overdueOpen>0?'var(--danger)':'var(--text2)'}">${deliveryKpi.overdueOpen}</div>
+      </div>
       ${canManage2() ? `<div class="kpi" style="border-top-color:${thieuChuaGiao>0?'var(--danger)':'var(--border)'};">
         <div class="label">Phần thiếu chưa giao tổ</div>
         <div class="value" style="color:${thieuChuaGiao>0?'var(--danger)':'var(--text2)'}">${thieuChuaGiao}</div>
@@ -4473,20 +4646,30 @@ function renderProgress(){
 
     // Tổ phụ trách chính chỉ được gán/đổi từ tab Kế hoạch tuần — ở đây luôn hiển thị tĩnh.
     const toCell = `<span style="font-weight:600;">${a.to}</span>`;
+    const stageMobileConfig = congDoanNhanVien ? {
+      dan:{refLabel:'Kế hoạch',refValue:keHoachTrongNgay(r,dayVal),waiting:'Chờ sản xuất',done:'Dán hoàn thành'},
+      may:{refLabel:'Đã dán',refValue:dayVal==='all'?tongCongDoan(r,'dan'):soCongDoan(giaTriCongDoanNgay(r,dayVal,'dan')),waiting:'Chờ may',done:'May hoàn thành'},
+      dong_goi:{refLabel:'Đã may',refValue:dayVal==='all'?tongCongDoan(r,'may'):soCongDoan(giaTriCongDoanNgay(r,dayVal,'may')),waiting:'Chờ đóng gói',done:'Sẵn sàng chuyển kho'}
+    }[congDoanNhanVien] : null;
+    const stageMobileDone = congDoanNhanVien ? soLuongConChoCongDoan(r,congDoanNhanVien) <= 0 : false;
+    const stageMobileStatus = stageMobileConfig
+      ? `<span class="badge ${stageMobileDone?'badge-done':'badge-progress'}">${stageMobileDone?'✓ ':''}${stageMobileDone?stageMobileConfig.done:stageMobileConfig.waiting}</span>`
+      : statusBadgeHtml(r);
 
     return `<tr class="${r.is_ghost ? 'row-ghost' : (laUuTien(r.id) ? 'row-uutien' : (status==='rot' ? 'row-rot' : ''))}" data-order-id="${r.id}">
+      ${congDoanNhanVien ? `<td class="employee-mobile-summary">${thoatHtml(r.dong||'-')} · ${kichThuocHtml(r)}</td><td class="employee-mobile-group">${nhomDonHangHtml(r)}</td>` : ''}
       <td class="col-date"><span class="date-main">${ngayDong}${lockBadgeHtml(ngayDong)}</span>${backupBadgeHtml(r)}${ngayGocHtml}${madeUpNoteHtml(r)}</td>
       <td class="col-code">${r.ma || (r.is_manual ? '<span class="badge" style="background:var(--accent-l);color:var(--accent);">Phát sinh</span>' : '-')}${lotBadgeHtml(r)}</td>
       <td class="col-product">${r.dong||'-'}</td>
       <td class="col-size">${kichThuocHtml(r)}</td>
-      <td class="col-number">${keHoachTrongNgay(r,dayVal).toLocaleString('vi-VN')}</td>
+      <td class="col-number ${congDoanNhanVien?'employee-stage-reference':''}"${stageMobileConfig?` data-mobile-label="${stageMobileConfig.refLabel}"`:''}>${(stageMobileConfig?stageMobileConfig.refValue:keHoachTrongNgay(r,dayVal)).toLocaleString('vi-VN')}</td>
       <td class="col-team">${toCell}</td>
       <td class="col-support">${spinoffCellHtml(r,dayVal)}</td>
       <td class="col-number" data-stage-col="dan">${oNhapCongDoanHtml(r,dayVal,'dan')}</td>
       <td class="col-number" data-stage-col="may">${oNhapCongDoanHtml(r,dayVal,'may')}</td>
       <td class="col-number" data-stage-col="dong_goi">${oNhapCongDoanHtml(r,dayVal,'dong_goi')}</td>
       <td class="col-action only-editor">${suaCongDoanCellHtml(r,dayVal)}</td>
-      <td class="col-status">${statusBadgeHtml(r)}<div class="cell-note ${r.ghi_chu?'note':''}">${nhanUuTien(r)}${r.ghi_chu||''}${changeNoteHtml(r)}</div></td>
+      <td class="col-status">${stageMobileStatus}<div class="cell-note ${r.ghi_chu?'note':''}">${nhanUuTien(r)}${r.ghi_chu||''}${changeNoteHtml(r)}</div></td>
     </tr>`;
   }).join('');
 }
@@ -6077,7 +6260,7 @@ async function bootstrap(){
   if(cached && cached.sheetRows && cached.sheetRows.length){
     sheetRows = cached.sheetRows;
     if(Array.isArray(cached.orderGroupRows)) orderGroupRows = cached.orderGroupRows;
-    assignments = applyVerifiedDataCorrections(cached.assignments || {});
+    assignments = overlayConfirmedStageGuards(applyVerifiedDataCorrections(cached.assignments || {}));
     dynamicOrders = cached.dynamicOrders || [];
     deletedOrderIds = cached.deletedOrderIds || [];
     lockedPlanDates = cached.lockedPlanDates || [];
@@ -6163,3 +6346,4 @@ if(window.screen && window.screen.orientation){
 </script>
 </body>
 </html>
+
