@@ -2033,36 +2033,81 @@ setInterval(()=>{
 },60000);
 
 // ---- Tự tải lại khi có bản mới ----
-// Máy nào mở bản mới sẽ ghi số bản lên máy chủ. Các máy còn lại thấy số lớn hơn
-// số bản của mình thì tự tải lại trang (kèm ?v= để không dính bản cũ trong bộ đệm).
-const APP_VERSION = 62;
+// index.html trên GitHub Pages là nguồn phiên bản chuẩn. AppStorage vẫn được giữ
+// để các bản cũ (chưa có cơ chế đọc index.html) cũng nhận được tín hiệu cập nhật.
+const APP_VERSION = 63;
 const APP_VERSION_KEY = 'khsx_app_version';
 const RELOAD_MARK_KEY = 'khsx_reload_for_version';
+let checkingAppVersion = false;
+
+function getCanonicalDashboardUrl(){
+  return new URL('index.html', location.href.split('?')[0].split('#')[0]);
+}
+
+function isCanonicalDashboardPage(){
+  const path = location.pathname.replace(/\/+$/, '');
+  return /\/index\.html$/i.test(path) || !/\/[^/]+\.[^/]+$/i.test(path);
+}
+
+async function getRepoAppVersion(){
+  // Ở local chỉ thử giao diện/dữ liệu giả lập, tuyệt đối không tự nhảy sang index.html.
+  if(LOCAL_PREVIEW_MODE) return 0;
+  const url = getCanonicalDashboardUrl();
+  url.searchParams.set('_version_check', Date.now());
+  const res = await fetch(url.href, {cache:'no-store'});
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const html = await res.text();
+  const match = html.match(/const\s+APP_VERSION\s*=\s*(\d+)/);
+  return match ? Number(match[1]) : 0;
+}
+
+function reloadCanonicalDashboard(v){
+  const url = getCanonicalDashboardUrl();
+  url.searchParams.set('v', v);
+  location.replace(url.href);
+}
 
 async function checkAppVersion(){
+  if(checkingAppVersion || LOCAL_PREVIEW_MODE) return;
+  checkingAppVersion = true;
   try{
-    const remote = await storageGet(APP_VERSION_KEY);
-    const rv = Number(remote) || 0;
-    if(rv > APP_VERSION){
+    // GitHub Pages là nguồn chuẩn; AppStorage là cầu nối tương thích với các bản cũ.
+    const [repoResult, storageResult] = await Promise.allSettled([
+      getRepoAppVersion(),
+      storageGet(APP_VERSION_KEY)
+    ]);
+    const repoVersion = repoResult.status === 'fulfilled' ? Number(repoResult.value) || 0 : 0;
+    const storageVersion = storageResult.status === 'fulfilled' ? Number(storageResult.value) || 0 : 0;
+    // Khi đọc được repo thì tuyệt đối theo repo; AppStorage có thể còn giữ một số
+    // phiên bản cũ hoặc từng bị một file backup công bố nhầm.
+    const rv = repoVersion || storageVersion;
+    const repoHasCurrentVersion = repoVersion >= APP_VERSION;
+    const mustUseCanonicalPage = repoHasCurrentVersion && !isCanonicalDashboardPage();
+
+    if(rv > APP_VERSION || mustUseCanonicalPage){
+      const targetVersion = Math.max(rv, APP_VERSION);
       let tried = null;
       try{ tried = localStorage.getItem(RELOAD_MARK_KEY); }catch(e){}
-      if(String(tried) === String(rv)){
+      const reloadMark = `${targetVersion}:index`;
+      if(String(tried) === reloadMark && isCanonicalDashboardPage()){
         // Đã tải lại rồi mà vẫn là bản cũ -> nhắc người dùng, không tải lại vòng vòng
-        showNewVersionBanner(rv, false);
+        showNewVersionBanner(targetVersion, false);
         return;
       }
-      try{ localStorage.setItem(RELOAD_MARK_KEY, String(rv)); }catch(e){}
-      showNewVersionBanner(rv, true);
+      try{ localStorage.setItem(RELOAD_MARK_KEY, reloadMark); }catch(e){}
+      showNewVersionBanner(targetVersion, true);
       setTimeout(()=>{
-        const base = location.href.split('?')[0].split('#')[0];
-        location.replace(base + '?v=' + rv);
+        reloadCanonicalDashboard(targetVersion);
       }, 1800);
-    }else if(rv < APP_VERSION && currentUser && currentUser.code){
-      // Mình đang là bản mới nhất -> công bố cho các máy khác biết
+    }else if(repoHasCurrentVersion && storageVersion < APP_VERSION && currentUser && currentUser.code){
+      // Chỉ công bố khi bản này đã thật sự được đưa thành index.html trên repo.
       await storageSet(APP_VERSION_KEY, APP_VERSION);
+      try{ localStorage.removeItem(RELOAD_MARK_KEY); }catch(e){}
     }
   }catch(e){
     console.warn('Không kiểm tra được số bản', e);
+  }finally{
+    checkingAppVersion = false;
   }
 }
 
@@ -5878,3 +5923,4 @@ if(window.screen && window.screen.orientation){
 </script>
 </body>
 </html>
+
