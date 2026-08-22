@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Kế Hoạch sản xuất - Tổ Mút Foam</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
@@ -2094,13 +2097,44 @@ setInterval(()=>{
 // ---- Tự tải lại khi có bản mới ----
 // index.html trên GitHub Pages là nguồn phiên bản chuẩn. AppStorage vẫn được giữ
 // để các bản cũ (chưa có cơ chế đọc index.html) cũng nhận được tín hiệu cập nhật.
-const APP_VERSION = 64;
+const APP_VERSION = 65;
 const APP_VERSION_KEY = 'khsx_app_version';
 const RELOAD_MARK_KEY = 'khsx_reload_for_version';
 let checkingAppVersion = false;
 
 function getCanonicalDashboardUrl(){
   return new URL('index.html', location.href.split('?')[0].split('#')[0]);
+}
+
+function getDashboardScopePath(){
+  const path = getCanonicalDashboardUrl().pathname;
+  return path.slice(0, path.lastIndexOf('/') + 1);
+}
+
+async function cleanupLegacyDashboardCache(){
+  // Service worker vẫn có thể tồn tại trên máy dù file đăng ký đã bị xoá khỏi repo.
+  // Chỉ dọn đúng phạm vi /khsx-foam-dashboard/, không đụng các web khác cùng GitHub Pages.
+  if('serviceWorker' in navigator){
+    try{
+      const scopePath = getDashboardScopePath();
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(reg=>{
+        try{
+          const scope = new URL(reg.scope);
+          return scope.origin === location.origin && scope.pathname.startsWith(scopePath)
+            ? reg.unregister() : false;
+        }catch(e){ return false; }
+      }));
+    }catch(e){ console.warn('Không dọn được service worker cũ', e); }
+  }
+  if('caches' in window){
+    try{
+      const keys = await caches.keys();
+      await Promise.all(keys
+        .filter(k=>/khsx|foam[-_ ]?dashboard/i.test(k))
+        .map(k=>caches.delete(k)));
+    }catch(e){ console.warn('Không dọn được cache dashboard cũ', e); }
+  }
 }
 
 function isCanonicalDashboardPage(){
@@ -2123,6 +2157,7 @@ async function getRepoAppVersion(){
 function reloadCanonicalDashboard(v){
   const url = getCanonicalDashboardUrl();
   url.searchParams.set('v', v);
+  url.searchParams.set('_refresh', Date.now());
   location.replace(url.href);
 }
 
@@ -2169,6 +2204,18 @@ async function checkAppVersion(){
     checkingAppVersion = false;
   }
 }
+
+function checkVersionWhenAppReturns(){
+  if(document.hidden || LOCAL_PREVIEW_MODE) return;
+  checkAppVersion();
+}
+
+// Lối tắt điện thoại thường bị treo nền và không chạy setInterval. Kiểm tra ngay
+// khi app được khôi phục, lấy lại focus hoặc vừa có mạng; không xoá phiên đăng nhập.
+window.addEventListener('pageshow', checkVersionWhenAppReturns);
+window.addEventListener('focus', checkVersionWhenAppReturns);
+window.addEventListener('online', checkVersionWhenAppReturns);
+document.addEventListener('visibilitychange', checkVersionWhenAppReturns);
 
 function showNewVersionBanner(v, autoReload){
   let el = document.getElementById('newVersionBanner');
@@ -2510,6 +2557,7 @@ const VERIFIED_STAGE_DATE_CORRECTIONS = [
   'r_20_08_2026_SORA15_8_180_220_15_1_1',
   'r_20_08_2026_SORA20_4_140_160_30_1_1'
 ];
+const VERIFIED_COMPLETE_DATES = new Set(['21/08/2026']);
 const VERIFIED_COMPLETE_ON_PLAN_DATE = {
   // LAEZ10-2 · Latex Enzo · 120x200x10 · SL 2 · Tổ 4:
   // đã xác minh hoàn tất đủ ba công đoạn đúng ngày kế hoạch 15/08/2026.
@@ -2546,6 +2594,23 @@ function applyVerifiedDataCorrections(source){
     };
     a.so_luong_hoan_thanh = fix.qty;
     a.ngay_hoan_thanh = fix.date;
+  });
+  getOrders().forEach(o=>{
+    if(!VERIFIED_COMPLETE_DATES.has(o.date) || o.is_ghost || o.is_warranty) return;
+    const qty = soCongDoan(o.so_luong);
+    const old = source[o.id] && typeof source[o.id] === 'object' ? source[o.id] : {};
+    const team = old.to || null;
+    const history = {...((old.stage_by_date && typeof old.stage_by_date === 'object') ? old.stage_by_date : {})};
+    history[o.date] = {
+      ...((history[o.date] && typeof history[o.date] === 'object') ? history[o.date] : {}),
+      dan:qty, may:qty, dong_goi:qty,
+      _dan_to:team, _may_to:team, _dong_goi_to:team
+    };
+    source[o.id] = {
+      ...old, stage_by_date:history,
+      so_luong_da_dan:qty, so_luong_da_may:qty,
+      so_luong_hoan_thanh:qty, ngay_hoan_thanh:o.date
+    };
   });
   return source;
 }
@@ -6250,6 +6315,7 @@ async function revalidateSessionBackground(){
 }
 
 async function bootstrap(){
+  cleanupLegacyDashboardCache();
   const coSession = restoreLoginFast();
   recomputeAllDayKeys();
   populateMonthYearFilters();
