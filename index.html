@@ -272,6 +272,8 @@
   .team-ring-done-tick{display:inline-block;margin-left:4px;color:var(--success);font-size:12px;font-weight:900;line-height:1;vertical-align:1px;}
   /* Ưu tiên: tô liền cả ba ô Tên + Kích thước + Số lượng của đúng một dòng.
      Không thêm biểu tượng và không đổi cấu trúc lưới nên thẻ không bị rộng/tràn chữ. */
+  .team-ring-clickable{cursor:pointer;}
+  .team-ring-list .team-ring-clickable:hover{background:#eef3fb;}
   .team-ring-list .team-ring-row-uutien{background:#fff7d9;}
   .team-ring-list .t.team-ring-row-uutien{border-radius:4px 0 0 4px;}
   .team-ring-list b.team-ring-row-uutien{border-radius:0 4px 4px 0;}
@@ -4064,20 +4066,20 @@ async function boSungNhanSuBaoHanh(nguon){
 }
 function phanBoNhanSuBaoHanh(ngay,chiTiet){
   const rows=(Array.isArray(chiTiet)?chiTiet:[]).map(x=>({...x,bh_may_phan_bo:[],bh_dong_goi_phan_bo:[]}));
-  const laDuLieuCu=khoaNgayDMY(ngay)>0 && khoaNgayDMY(ngay)<=WARRANTY_LEGACY_ACTOR_CUTOFF;
   const to5=[];
   rows.forEach((x,i)=>{
     const qty=soCongDoan(x.so_luong);
     const may=tenNhanSuBaoHanh(x,'may');
     const pack=tenNhanSuBaoHanh(x,'dong_goi');
     if(may) x.bh_may_phan_bo=[{name:may,so_luong:qty}];
-    else if(laDuLieuCu){
+    else{
+      // Quét Sheet không thấy tên thật (mọi ngày, không riêng dữ liệu cũ) mới đoán theo rule.
       const team=chuanToBaoHanh(x.to);
       if(WARRANTY_LEGACY_MAY_BY_TEAM[team]) x.bh_may_phan_bo=[{name:WARRANTY_LEGACY_MAY_BY_TEAM[team],so_luong:qty}];
       else if(team==='Tổ 5') to5.push({i,qty});
     }
     if(pack) x.bh_dong_goi_phan_bo=[{name:pack,so_luong:qty}];
-    else if(laDuLieuCu) x.bh_dong_goi_phan_bo=[{name:'Minh Thuận',so_luong:qty}];
+    else x.bh_dong_goi_phan_bo=[{name:'Minh Thuận',so_luong:qty}];
   });
   // Tổ 5 chia đều tổng sản lượng cũ; nếu lẻ thì Thảo Vy nhận phần dư.
   let phanVy=Math.ceil(to5.reduce((s,x)=>s+x.qty,0)/2);
@@ -4335,8 +4337,9 @@ function danhSachDonCuaTo(teamOrders, anDongDaXong, congDoan='dong_goi'){
     const kt = formatKichThuoc(o);
     const hoTro = toDuocHoTro(o);
     const k = ten + '|' + kt + '|' + (hoTro || '');
-    if(!gom[k]) gom[k] = {ten, tenGon:tenGonTrenTheTo(o), kt, sl:0, hoTro, uuTien:false, xong:true, day: parseFloat(o.day) || 0, ngang: parseFloat(o.ngang) || 0};
+    if(!gom[k]) gom[k] = {ten, tenGon:tenGonTrenTheTo(o), kt, sl:0, hoTro, uuTien:false, xong:true, day: parseFloat(o.day) || 0, ngang: parseFloat(o.ngang) || 0, ids:[]};
     gom[k].sl += Number(o.so_luong) || 0;
+    gom[k].ids.push(o.id);
     if(laUuTien(o.id)) gom[k].uuTien = true;
     // Tick xanh nghĩa là công đoạn đã đủ TOÀN BỘ kế hoạch của đơn. Không dùng
     // "còn chờ = 0" vì May/Đóng gói chưa có đầu vào cũng cho kết quả 0 và từng
@@ -4347,27 +4350,53 @@ function danhSachDonCuaTo(teamOrders, anDongDaXong, congDoan='dong_goi'){
     .sort((a,b)=> (a.day - b.day) || (a.ngang - b.ngang) || a.ten.localeCompare(b.ten,'vi'));
 }
 
-function htmlDanhSachDon(teamOrders, anDongDaXong, congDoan='dong_goi'){
+function htmlDanhSachDon(teamOrders, anDongDaXong, congDoan='dong_goi', ngay=null){
   const ds = danhSachDonCuaTo(teamOrders, anDongDaXong, congDoan);
   if(!ds.length){
     return anDongDaXong ? `<div class="team-ring-list-xong">✓ Đã xong hết</div>` : '';
   }
+  // Bấm trực tiếp vào dòng (đang có ngày cụ thể + quyền nhập công đoạn) sẽ mở popup
+  // nhập số ngay tại đó, khỏi phải kéo xuống bảng phía dưới mới nhập được.
+  const coTheBam = !!ngay && coQuyenNhapCongDoan(congDoan);
   // Ba cột thẳng hàng: tên bên trái, kích thước canh phải, số lượng canh phải
   return `<div class="team-ring-list">`
       + ds.map(r=>{
         const uuTienClass = r.uuTien ? ' team-ring-row-uutien' : '';
         const tickXong = canManage2() && r.xong
           ? `<span class="team-ring-done-tick" title="Đã hoàn thành">✓</span>` : '';
-        return `<span class="t${uuTienClass}" title="${thoatHtml(r.ten)}">${thoatHtml(r.tenGon)}${r.hoTro?` <em class="ho-tro">hỗ trợ ${r.hoTro}</em>`:''}</span>`
-             + `<span class="k${uuTienClass}">${r.kt}:</span><b class="${uuTienClass.trim()}">${r.sl}${tickXong}</b>`;
+        const dataAttr = coTheBam ? ` data-ids="${r.ids.join('|')}" data-ngay="${ngay}" data-stage="${congDoan}"` : '';
+        const clickCls = coTheBam ? ' team-ring-clickable' : '';
+        return `<span class="t${uuTienClass}${clickCls}"${dataAttr} title="${thoatHtml(r.ten)}${coTheBam?' — bấm để nhập số':''}">${thoatHtml(r.tenGon)}${r.hoTro?` <em class="ho-tro">hỗ trợ ${r.hoTro}</em>`:''}</span>`
+             + `<span class="k${uuTienClass}${clickCls}"${dataAttr}>${r.kt}:</span><b class="${uuTienClass.trim()}${clickCls}"${dataAttr}>${r.sl}${tickXong}</b>`;
       }).join('')
     + `</div>`;
 }
+// Bấm 1 dòng trong thẻ tổ -> nhập số ngay tại đó, không cần cuộn tới bảng bên dưới.
+// Nếu 1 dòng gộp nhiều đơn trùng tên/kích thước, chỉ nhập cho đơn đầu tiên còn thiếu.
+async function moPopupNhapNhanhCongDoan(ids, ngay, congDoan){
+  if(!coQuyenNhapCongDoan(congDoan)) return;
+  const id = ids.find(i=>soLuongConChoCongDoan(getOrderById(i), congDoan) > 0) || ids[0];
+  const o = getOrderById(id);
+  if(!o) return;
+  const hienTai = giaTriCongDoanNgay(o, ngay, congDoan);
+  const nhan = congDoan==='dan' ? 'Dán' : (congDoan==='may' ? 'May' : 'Đóng gói');
+  const raw = prompt(`${nhan} — ${o.dong||o.ma||''} ${formatKichThuoc(o)} — ngày ${ngay}:\nNhập số lượng đã làm`, hienTai!=null?String(hienTai):'');
+  if(raw==null) return;
+  await handleStageQtyChange(id, ngay, congDoan, raw);
+}
+document.getElementById('progressTeamRings').addEventListener('click', (e)=>{
+  const t = e.target.closest('.team-ring-clickable');
+  if(!t) return;
+  const ids = (t.dataset.ids||'').split('|').filter(Boolean);
+  const ngay = t.dataset.ngay, stage = t.dataset.stage;
+  if(!ids.length || !ngay || !stage) return;
+  moPopupNhapNhanhCongDoan(ids, ngay, stage);
+});
 
 function renderTeamRings(containerId, orders, hienDanhSach, anDongDaXong, ngayDangXem='all', congDoan='dong_goi', chiTo=null){
   const container = document.getElementById(containerId);
   if(!container) return;
-  const dsHtml = hienDanhSach ? (dh => htmlDanhSachDon(dh, anDongDaXong, congDoan)) : (()=> '');
+  const dsHtml = hienDanhSach ? (dh => htmlDanhSachDon(dh, anDongDaXong, congDoan, ngayDangXem)) : (()=> '');
   const motNgay = !!ngayDangXem && ngayDangXem !== 'all';
   const cacNgayDangXem = motNgay ? [ngayDangXem] : Array.from(new Set(orders.map(o=>o.date)));
   const toMinh = toCuaToi();
@@ -5949,14 +5978,28 @@ document.getElementById('lockPlanBtn').addEventListener('click', ()=>{
 
 document.getElementById('saveLockPlanBtn').addEventListener('click', async ()=>{
   if(!canManage()) return;
+  const rendered = Array.from(document.querySelectorAll('#lockPlanDates input')).map(i=>i.value);
   const picked = Array.from(document.querySelectorAll('#lockPlanDates input:checked')).map(i=>i.value);
   const statusEl = document.getElementById('lockPlanStatus');
   statusEl.textContent = 'Đang lưu...';
   statusEl.style.color = 'var(--text2)';
 
+  // Đọc lại đúng bản MỚI NHẤT từ server ngay trước khi ghi — máy khác có thể vừa chốt
+  // thêm/mở khoá ngày khác trong lúc bảng này đang mở, hoặc máy này đang cầm bản cũ vì
+  // ngày đó không còn nằm trong danh sách checkbox hiện tại (sheet đã trôi qua tuần khác).
+  // Ngày nào KHÔNG hiện trong checkbox lúc này thì giữ nguyên như trên server, tuyệt đối
+  // không được coi là "bỏ chốt" chỉ vì máy này không thấy nó — đây chính là nguyên nhân
+  // từng làm mất trắng ảnh chụp của 14/8 và 18/8 (ghi đè rỗng vào đúng ngày không hiện).
+  const serverLockPlan = await storageGet(LOCKED_PLAN_KEY);
+  const baseLockPlan = Array.isArray(serverLockPlan) ? serverLockPlan : lockedPlanDates;
+  const picked_ = Array.from(new Set([
+    ...baseLockPlan.filter(d=>!rendered.includes(d) || picked.includes(d)),
+    ...picked
+  ]));
+
   // Ngày mới được chốt -> chụp lại danh sách đơn hiện tại của ngày đó và lưu lên Google.
-  const added = picked.filter(d=>!lockedPlanDates.includes(d));
-  const removed = lockedPlanDates.filter(d=>!picked.includes(d));
+  const added = picked_.filter(d=>!baseLockPlan.includes(d));
+  const removed = rendered.filter(d=>baseLockPlan.includes(d) && !picked.includes(d));
 
   // Chụp từ ĐÚNG NHỮNG GÌ ĐANG HIỆN cho ngày đó, kể cả dữ liệu lớp dự phòng khi sheet
   // tạm thời không trả về ngày đó. Trước đây chỉ chụp từ dữ liệu sheet vừa tải, nên nếu
@@ -5978,7 +6021,7 @@ document.getElementById('saveLockPlanBtn').addEventListener('click', async ()=>{
     planSnapshots[d] = chupNgay(d);
   });
   removed.forEach(d=>{ delete planSnapshots[d]; });
-  lockedPlanDates = picked;
+  lockedPlanDates = picked_;
 
   let savedOk = await storageSet(LOCKED_PLAN_KEY, lockedPlanDates);
   for(const d of added){ savedOk = (await storageSet(snapshotKey(d), planSnapshots[d])) && savedOk; }
@@ -5989,7 +6032,7 @@ document.getElementById('saveLockPlanBtn').addEventListener('click', async ()=>{
   }
   saveLocalCache();
 
-  statusEl.textContent = savedOk ? `Đã chốt đầu vào ${picked.length} ngày.` : 'Chưa lưu được, bảng vẫn mở để thử lại.';
+  statusEl.textContent = savedOk ? `Đã chốt đầu vào ${picked_.length} ngày.` : 'Chưa lưu được, bảng vẫn mở để thử lại.';
   statusEl.style.color = savedOk ? 'var(--success)' : 'var(--danger)';
   if(savedOk) document.getElementById('lockPlanPanel').style.display='none';
   renderAutoPlanDaySelect();
@@ -6007,14 +6050,25 @@ document.getElementById('lockProgressBtn').addEventListener('click', ()=>{
 
 document.getElementById('saveLockProgressBtn').addEventListener('click', async ()=>{
   if(!canManage2()) return;   // Quản lý và Quản lý 2 đều được chốt tiến độ
+  const rendered = Array.from(document.querySelectorAll('#lockProgressDates input')).map(i=>i.value);
   const picked = Array.from(document.querySelectorAll('#lockProgressDates input:checked')).map(i=>i.value);
   const statusEl = document.getElementById('lockProgressStatus');
   statusEl.textContent = 'Đang lưu...';
   statusEl.style.color = 'var(--text2)';
-  lockedProgressDates = picked;
+
+  // Cùng nguyên tắc như Chốt đầu vào: đọc lại bản mới nhất từ server, ngày nào không
+  // hiện trong checkbox lúc này thì giữ nguyên, tránh máy cầm bản cũ xoá nhầm ngày đã chốt.
+  const serverLockProgress = await storageGet(LOCKED_PROGRESS_KEY);
+  const baseLockProgress = Array.isArray(serverLockProgress) ? serverLockProgress : lockedProgressDates;
+  const picked_ = Array.from(new Set([
+    ...baseLockProgress.filter(d=>!rendered.includes(d) || picked.includes(d)),
+    ...picked
+  ]));
+
+  lockedProgressDates = picked_;
   const savedOk = await storageSet(LOCKED_PROGRESS_KEY, lockedProgressDates);
   saveLocalCache();
-  statusEl.textContent = savedOk ? `Đã chốt tiến độ ${picked.length} ngày.` : 'Chưa lưu được, bảng vẫn mở để thử lại.';
+  statusEl.textContent = savedOk ? `Đã chốt tiến độ ${picked_.length} ngày.` : 'Chưa lưu được, bảng vẫn mở để thử lại.';
   statusEl.style.color = savedOk ? 'var(--success)' : 'var(--danger)';
   if(savedOk) document.getElementById('lockProgressPanel').style.display='none';
   renderAutoPlan();
