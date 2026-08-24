@@ -1992,11 +1992,11 @@ function dongGoiTheoNgayCuaDon(o){
   });
   return out;
 }
-// Tổ kế hoạch được giữ cố định từ lần phân công đầu tiên. Đổi người xử lý phần
-// rớt ngày sau không được kéo ngược KH hoặc sản lượng ngày cũ sang tổ mới.
+// Tổ kế hoạch luôn bám theo tổ phụ trách HIỆN TẠI — đổi tổ phụ trách là chuyển
+// hẳn kế hoạch + thành tích qua tổ mới, không khoá cứng vào lần gán đầu tiên.
 function toKeHoachCuaDon(o){
   const a = assignments[o.id] || {};
-  return a.to_goc || a.to || null;
+  return a.to || null;
 }
 function toHoTroTheoNgay(o, ngay){
   const a = assignments[o.id] || {};
