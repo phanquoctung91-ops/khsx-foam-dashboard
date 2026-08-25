@@ -5287,7 +5287,7 @@ function populateProgressSelects(){
 
 // Danh sách đơn đang hiển thị theo đúng bộ lọc hiện tại của tab Tiến độ —
 // dùng chung cho việc vẽ bảng và cho nút "Hoàn thành" (nút chỉ tác động lên đúng phần đang lọc).
-function getProgressRowsForCurrentFilters(chiConChoCongDoan=true){
+function getProgressRowsForCurrentFilters(chiConChoCongDoan=true, chiDungNgayGoc=false){
   const dayVal = progressDaySelect.value;
   const teamVal = progressTeamSelect.value;
   const q = progressSearchBox.value.trim().toLowerCase();
@@ -5317,7 +5317,12 @@ function getProgressRowsForCurrentFilters(chiConChoCongDoan=true){
     if(toMinh && laNgayTuongLai(r.date)) return false;
     // Nhân viên: trước 07:00 không thấy đơn hôm nay; Quản lý 2 và Quản lý không đi qua rule này.
     if(!nhanVienDuocXemNgay(r.date)) return false;
-    if(dayVal !== 'all' && !getCarryForwardDates(r).includes(dayVal)) return false;
+    // Thẻ tổ (chiDungNgayGoc) chỉ hiện đúng đơn được gán cho ngày này — đơn rớt
+    // trôi từ ngày trước qua không hiện ở đây, chỉ hiện ở bảng bên dưới (có carry-forward).
+    if(dayVal !== 'all'){
+      if(chiDungNgayGoc){ if(r.date !== dayVal) return false; }
+      else if(!getCarryForwardDates(r).includes(dayVal)) return false;
+    }
     if(teamVal !== 'all'){
       if(dayVal !== 'all'){
         if(toPhuTrachTheoNgay(r,dayVal) !== teamVal) return false;
@@ -5331,7 +5336,7 @@ function getProgressRowsForCurrentFilters(chiConChoCongDoan=true){
   });
 }
 function getFilteredProgressRows(){ return getProgressRowsForCurrentFilters(true); }
-function getProgressTeamCardRows(){ return getProgressRowsForCurrentFilters(false); }
+function getProgressTeamCardRows(){ return getProgressRowsForCurrentFilters(false, true); }
 
 function khoaNhapCongDoan(o, ngay){
   if(!canEdit() || !ngay || ngay === 'all') return true;
