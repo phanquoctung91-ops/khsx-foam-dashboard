@@ -5521,7 +5521,9 @@ function renderProgress(){
   // đơn trong bộ lọc; danh sách bên dưới chỉ giữ việc còn chờ để không làm rối thao tác.
   const dayValRing = progressDaySelect.value;
   const ringBox = document.getElementById('progressTeamRings');
-  const ringOrders = congDoanNhanVien ? getProgressTeamCardRows() : filtered;
+  // Thẻ tổ luôn chỉ lấy đúng ngày (không carry-forward đơn rớt) — áp dụng cho
+  // mọi vai (Quản lý xem tất cả tổ cũng như nhân viên xem tổ mình), không chỉ nhân viên.
+  const ringOrders = getProgressTeamCardRows();
   const chiTo = TEAM_OPTIONS.includes(progressTeamSelect.value) ? progressTeamSelect.value : null;
   ringBox.style.display = '';
   renderTeamRings('progressTeamRings', ringOrders, dayValRing !== 'all',
